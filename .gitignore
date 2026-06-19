@@ -81,6 +81,9 @@ pgdata/
 redisdata/
 kcpgdata/
 
+# ── Local tooling cache ───────────────────────────────────
+.atl/
+
 # ── Windows alternate data streams ────────────────────────
 *:Zone.Identifier
 **/*Zone.Identifier
