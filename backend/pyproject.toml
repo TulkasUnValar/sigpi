@@ -46,6 +46,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
+exclude = ["*/migrations/*"]
 
 [tool.mypy]
 python_version = "3.12"
