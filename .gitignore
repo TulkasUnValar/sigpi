@@ -1,0 +1,99 @@
+# SIGPI — Global .gitignore
+# Covers Python/Django backend, Next.js frontend, Docker, and OS files.
+
+# ── OS & Editor ───────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ── Python / Django ───────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+.venv-linux/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Coverage & testing
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+
+# ── Node / Next.js ────────────────────────────────────────
+node_modules/
+.next/
+out/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── Docker ────────────────────────────────────────────────
+*.env
+!.env.example
+.env.local
+.env.*.local
+
+# ── Infrastructure ────────────────────────────────────────
+pgdata/
+redisdata/
+kcpgdata/
+
+# ── Windows alternate data streams ────────────────────────
+*:Zone.Identifier
+**/*Zone.Identifier
+
+# ── Secrets (never commit) ────────────────────────────────
+*.pem
+*.key
+secrets/
+
+# ── Frontend coverage ─────────────────────────────────────
+frontend/coverage/
+
+# ── OpenSpec / SDD (archive only — active changes are ephemeral)
+# We keep openspec/ in git, but coverage artifacts inside it are excluded.
+openspec/**/.coverage
+openspec/**/htmlcov/

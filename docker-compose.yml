@@ -1,0 +1,122 @@
+# SIGPI — Docker Compose (development)
+# Stack: Django 5.1 + PostgreSQL 16 + Redis 7 + Keycloak 26
+version: "3.9"
+
+services:
+  # ── Django backend ──────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sigpi-backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_DEBUG=true
+      - DJANGO_SECRET_KEY=dev-secret-change-in-production
+      - POSTGRES_DB=sigpi
+      - POSTGRES_USER=sigpi
+      - POSTGRES_PASSWORD=sigpi
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - OIDC_RP_CLIENT_ID=sigpi-app
+      - OIDC_RP_CLIENT_SECRET=dev-client-secret
+      - OIDC_OP_AUTHORIZATION_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/auth
+      - OIDC_OP_TOKEN_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/token
+      - OIDC_OP_USER_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/userinfo
+      - OIDC_OP_JWKS_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/certs
+      - OIDC_OP_LOGOUT_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/logout
+      - OIDC_RP_SIGN_ALGO=RS256
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - sigpi-net
+
+  # ── PostgreSQL 16 ───────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: sigpi-db
+    environment:
+      - POSTGRES_DB=sigpi
+      - POSTGRES_USER=sigpi
+      - POSTGRES_PASSWORD=sigpi
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sigpi -d sigpi"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sigpi-net
+
+  # ── Redis 7 ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sigpi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - sigpi-net
+
+  # ── Keycloak 26 ─────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: sigpi-keycloak
+    command: start-dev
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://kc-db:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak
+      - KC_HOSTNAME=localhost
+      - KC_HTTP_ENABLED=true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/keycloak:/opt/keycloak/data/import
+    depends_on:
+      kc-db:
+        condition: service_healthy
+    networks:
+      - sigpi-net
+
+  # ── Keycloak DB ─────────────────────────────────────────
+  kc-db:
+    image: postgres:16-alpine
+    container_name: sigpi-kc-db
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=keycloak
+    volumes:
+      - kcpgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sigpi-net
+
+volumes:
+  pgdata:
+  redisdata:
+  kcpgdata:
+
+networks:
+  sigpi-net:
+    driver: bridge

@@ -1,0 +1,434 @@
+{
+  "id": "sigpi",
+  "realm": "sigpi",
+  "displayName": "SIGPI",
+  "displayNameHtml": "<strong>SIGPI</strong> — Sistema de Información para la Gestión de Proyectos de Investigación",
+  "enabled": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": true,
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "clientSessionIdleTimeout": 0,
+  "clientSessionMaxLifespan": 0,
+  "clientOfflineSessionIdleTimeout": 0,
+  "clientOfflineSessionMaxLifespan": 0,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+  "defaultSignatureAlgorithm": "RS256",
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 300,
+  "smtpServer": {},
+  "browserSecurityHeaders": {
+    "contentSecurityPolicyReportOnly": "",
+    "xContentTypeOptions": "nosniff",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+  "users": [],
+  "groups": [
+    {
+      "id": "inst-unal-group",
+      "name": "institutions/universidad-nacional",
+      "path": "/institutions/universidad-nacional",
+      "subGroups": [
+        {
+          "id": "inst-unal-researchers",
+          "name": "researchers",
+          "path": "/institutions/universidad-nacional/researchers"
+        },
+        {
+          "id": "inst-unal-admins",
+          "name": "admins",
+          "path": "/institutions/universidad-nacional/admins"
+        }
+      ]
+    },
+    {
+      "id": "inst-udea-group",
+      "name": "institutions/universidad-de-antioquia",
+      "path": "/institutions/universidad-de-antioquia",
+      "subGroups": [
+        {
+          "id": "inst-udea-researchers",
+          "name": "researchers",
+          "path": "/institutions/universidad-de-antioquia/researchers"
+        },
+        {
+          "id": "inst-udea-admins",
+          "name": "admins",
+          "path": "/institutions/universidad-de-antioquia/admins"
+        }
+      ]
+    }
+  ],
+  "defaultRole": {
+    "id": "default-roles-sigpi",
+    "name": "default-roles-sigpi",
+    "description": "${role_default-roles}",
+    "composite": true,
+    "clientRole": false,
+    "containerId": "sigpi"
+  },
+  "requiredCredentials": [
+    "password"
+  ],
+  "clients": [
+    {
+      "id": "sigpi-app",
+      "clientId": "sigpi-app",
+      "name": "SIGPI Application",
+      "description": "SIGPI OIDC confidential client for Django backend",
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "**********",
+      "redirectUris": [
+        "http://localhost:8000/*",
+        "http://backend:8000/*",
+        "https://sigpi.local/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8000",
+        "http://localhost:3000",
+        "https://sigpi.local"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "publicClient": false,
+      "bearerOnly": false,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:8000/*##http://localhost:3000/*",
+        "oauth2.device.authorization.grant.enabled": false,
+        "backchannel.logout.revoke.offline.tokens": false,
+        "use.refresh.tokens": true,
+        "oidc.ciba.grant.enabled": false,
+        "backchannel.logout.session.required": true,
+        "client_credentials.use_refresh_token": false,
+        "tls.client.certificate.bound.access.tokens": false,
+        "require.pushed.authorization.requests": false,
+        "acr.loa.map": {},
+        "display.on.consent.screen": false,
+        "token.response.type.bearer.lower-case": false
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "id": "mapper-oidc-sub",
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true
+          }
+        },
+        {
+          "id": "mapper-email-verified",
+          "name": "email_verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "config": {
+            "claim.name": "email_verified",
+            "user.attribute": "emailVerified",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true
+          }
+        },
+        {
+          "id": "mapper-preferred-username",
+          "name": "preferred_username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "config": {
+            "claim.name": "preferred_username",
+            "user.attribute": "username",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true
+          }
+        },
+        {
+          "id": "mapper-sigpi-institution",
+          "name": "sigpi_institution_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "claim.name": "sigpi_institution_id",
+            "user.attribute": "sigpi_institution_id",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true,
+            "multivalued": false
+          }
+        },
+        {
+          "id": "mapper-sigpi-centers",
+          "name": "sigpi_center_ids",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "claim.name": "sigpi_center_ids",
+            "user.attribute": "sigpi_center_ids",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true,
+            "multivalued": true
+          }
+        },
+        {
+          "id": "mapper-sigpi-role",
+          "name": "sigpi_role",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "claim.name": "sigpi_role",
+            "user.attribute": "sigpi_role",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true,
+            "multivalued": false
+          }
+        },
+        {
+          "id": "mapper-realm-roles",
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true,
+            "multivalued": true
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email",
+        "sigpi-custom-claims"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    },
+    {
+      "id": "sigpi-admin-cli",
+      "clientId": "sigpi-admin-cli",
+      "name": "SIGPI Admin CLI",
+      "description": "Service account for Celery role sync (Keycloak Admin REST API)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "**********",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "bearerOnly": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [],
+      "optionalClientScopes": []
+    }
+  ],
+  "clientScopes": [
+    {
+      "id": "sigpi-custom-claims",
+      "name": "sigpi-custom-claims",
+      "description": "SIGPI custom claims: institution_id, center_ids, role",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": true,
+        "display.on.consent.screen": true
+      },
+      "protocolMappers": [
+        {
+          "id": "scope-mapper-sigpi-institution",
+          "name": "sigpi_institution_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "claim.name": "sigpi_institution_id",
+            "user.attribute": "sigpi_institution_id",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true,
+            "multivalued": false
+          }
+        },
+        {
+          "id": "scope-mapper-sigpi-centers",
+          "name": "sigpi_center_ids",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "claim.name": "sigpi_center_ids",
+            "user.attribute": "sigpi_center_ids",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true,
+            "multivalued": true
+          }
+        },
+        {
+          "id": "scope-mapper-sigpi-role",
+          "name": "sigpi_role",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "claim.name": "sigpi_role",
+            "user.attribute": "sigpi_role",
+            "access.token.claim": true,
+            "id.token.claim": true,
+            "userinfo.token.claim": true,
+            "multivalued": false
+          }
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "id": "sigpi-offline-access",
+        "name": "offline_access",
+        "description": "${role_offline-access}"
+      },
+      {
+        "id": "sigpi-uma-authorization",
+        "name": "uma_authorization",
+        "description": "${role_uma_authorization}"
+      }
+    ],
+    "client": {
+      "sigpi-app": [
+        {
+          "id": "sigpi-superadmin-role",
+          "name": "sigpi_superadmin",
+          "description": "Global superadmin — local-only, never synced from Keycloak. Reserved placeholder.",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-app"
+        },
+        {
+          "id": "sigpi-admin-role",
+          "name": "sigpi_admin",
+          "description": "Institutional administrator — manages users, projects, and calls within their institution",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-app"
+        },
+        {
+          "id": "sigpi-center-director-role",
+          "name": "sigpi_center_director",
+          "description": "Research center director — approves projects and manages center resources",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-app"
+        },
+        {
+          "id": "sigpi-researcher-role",
+          "name": "sigpi_researcher",
+          "description": "Principal researcher — creates and manages their own research projects",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-app"
+        },
+        {
+          "id": "sigpi-coinvestigator-role",
+          "name": "sigpi_coinvestigator",
+          "description": "Co-investigator — participates in existing projects with limited write access",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-app"
+        },
+        {
+          "id": "sigpi-committee-role",
+          "name": "sigpi_committee",
+          "description": "Evaluation committee member — reviews and evaluates project proposals",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-app"
+        },
+        {
+          "id": "sigpi-auditor-role",
+          "name": "sigpi_auditor",
+          "description": "Auditor — read-only access across all institutions for compliance review",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-app"
+        }
+      ],
+      "sigpi-admin-cli": [
+        {
+          "id": "sigpi-admin-sync-role",
+          "name": "sigpi_role_sync",
+          "description": "Service account role for Celery role sync task — read users and roles",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "sigpi-admin-cli"
+        }
+      ]
+    }
+  },
+  "scopeMappings": [
+    {
+      "clientScope": "sigpi-custom-claims",
+      "roles": []
+    }
+  ],
+  "keycloakVersion": "26.0.0",
+  "userManagedAccessAllowed": false,
+  "clientProfiles": {
+    "profiles": []
+  },
+  "clientPolicies": {
+    "policies": []
+  }
+}

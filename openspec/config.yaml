@@ -1,0 +1,72 @@
+project: sigpi
+name: "Sistema de Información para la Gestión de Proyectos de Investigación"
+persistence: openspec
+strict_tdd: true
+spec_path: SPEC_sigpi.md
+
+stack:
+  backend:
+    framework: Django 5.1
+    api: Django REST Framework
+    language: Python 3.12
+    async: Celery + Redis
+    database: PostgreSQL 16
+    fsm: django-fsm
+    auth_primary: Keycloak 26 (OIDC/SAML)
+    auth_fallback: django-allauth
+    search: Meilisearch
+    storage: MinIO (S3 API)
+    pdf: WeasyPrint
+  frontend:
+    framework: Next.js 15 App Router
+    ui_lib: React 19 + shadcn/ui
+    i18n: next-intl
+    themes: next-themes
+  bi:
+    tool: Apache Superset
+    mode: read replica
+  infra:
+    containers: Docker Compose
+    ci: GitHub Actions
+    hooks: pre-commit
+  docs:
+    tool: MkDocs Material
+
+testing:
+  backend:
+    runner: pytest
+    frameworks:
+      - pytest-django
+      - pytest-asyncio (Celery tasks)
+    coverage: pytest-cov
+    linting:
+      - ruff (linter + formatter)
+      - mypy (type checking)
+      - pre-commit hooks
+    layers:
+      - unit
+      - integration
+      - e2e
+    notes: "Django TestCase available as alternative to pytest-django for simpler test cases. Strict TDD enforced: write tests before implementation."
+  frontend:
+    runner: Jest (via Next.js built-in)
+    frameworks:
+      - React Testing Library
+      - jest-dom
+    e2e: Playwright (recommended)
+    coverage: jest --coverage
+    linting:
+      - ESLint
+      - Prettier
+      - TypeScript strict mode
+    layers:
+      - unit
+      - component
+      - e2e
+    notes: "Next.js 15 provides built-in Jest support via next/jest. Playwright recommended for E2E per microservice architecture."
+
+tdd_policy:
+  strict: true
+  rationale: "RNF-025 mandates automated tests for backend and frontend. Greenfield project — strict TDD is feasible and enforced."
+  red_green_refactor: true
+  coverage_floor: 80%
