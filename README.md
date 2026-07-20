@@ -76,7 +76,7 @@ See `openspec/` for artifact trail.
 | accounts (auth) | Archived | — | — |
 | institutions (6.1) | Archived | 245/245 | 96.5% |
 | researchers (6.3) | Archived | 207/207 | ~85-90% |
-| projects (6.4) | Active | 275+ | ≥80% |
+| projects (6.4) | Archived | 275/275 | ~96% |
 
 ## License
 
