@@ -35,6 +35,7 @@ THIRD_PARTY_APPS = [
     "allauth",
     "allauth.account",
     "corsheaders",
+    "django_filters",
 ]
 
 LOCAL_APPS = [

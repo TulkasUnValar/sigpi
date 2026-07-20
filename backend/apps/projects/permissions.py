@@ -97,8 +97,8 @@ class IsCenterDirectorForProject(BasePermission):
         if not HasRoleLevelOrHigher.has_level(request, 3):
             return False
 
-        # Superadmins bypass center check
-        if request.user.is_superuser:
+        # Superadmins and Admin+ (level ≤ 2) bypass center check
+        if request.user.is_superuser or HasRoleLevelOrHigher.has_level(request, 2):
             return True
 
         membership = getattr(request, "active_membership", None)

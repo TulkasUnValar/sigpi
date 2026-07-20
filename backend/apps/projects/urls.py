@@ -124,8 +124,6 @@ fsm_actions = [
 # ──────────────────────────────────────────────────────────
 
 project_nested = [
-    # FSM actions
-    *fsm_actions,
     # Members
     path(
         "members/",

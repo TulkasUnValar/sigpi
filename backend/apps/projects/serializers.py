@@ -143,6 +143,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             "start_date",
             "estimated_end_date",
             "actual_end_date",
+            "status",
             "is_active",
             "created_at",
             "updated_at",
@@ -150,6 +151,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "institution",
+            "status",
             "created_at",
             "updated_at",
         ]
