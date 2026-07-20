@@ -67,19 +67,19 @@ Chain strategy: pending
 
 ## Phase 3: DRF API — Serializers, Permissions, URLs, Filters
 
-- [ ] 3.1 Create `backend/apps/projects/permissions.py`: `IsProjectOwnerOrCoInvestigator` (PI or co_investigator member; Admin+ bypasses), `IsCenterDirectorForProject` (user's membership includes project's center with Director role), `CanCreateProjectInCenter` (Researcher level ≤ 4 AND `ResearcherAffiliation` with target center), `IsProjectEditable` (object-level: False if terminal AND user not Admin+). (~80 lines)
-- [ ] 3.2 Create `backend/apps/projects/serializers.py`: `ProjectListSerializer` (id, title, status, center, principal_investigator, start_date, created_at), `ProjectSerializer` (all fields + nested members/documents read-only), `ProjectCreateSerializer` (writable fields; institution injected by view), `ProjectMemberSerializer`, `ProjectDocumentSerializer`, `ProjectObservationSerializer` (read-only), `ProjectStateLogSerializer` (read-only). (~150 lines)
-- [ ] 3.3 Create `backend/apps/projects/filters.py`: `ProjectFilter` (django-filter FilterSet) with `status` (ChoiceFilter), `center` (UUIDFilter), `start_date_after` (DateFilter gte), `start_date_before` (DateFilter lte), `keywords` (CharFilter icontains). (~25 lines)
-- [ ] 3.4 Create `backend/apps/projects/urls.py`: manual nested paths — 22 URL patterns: `/projects/` (list/create), `/projects/{id}/` (retrieve/update/destroy), 16 FSM action POST endpoints, `/projects/{id}/members/` + detail, `/projects/{id}/documents/` + detail, `/projects/{id}/observations/`, `/projects/{id}/state_history/`. (~60 lines)
-- [ ] 3.5 Write `backend/apps/projects/tests/test_serializers.py`: field validation (required fields, choice validation), nested member/document serialization in `ProjectSerializer`, `ProjectCreateSerializer` institution injection, read-only fields in observation/state_log serializers. (~80 lines)
-- [ ] 3.6 Write `backend/apps/projects/tests/test_permissions.py`: full role × action matrix (6 roles × 15 actions = 90 cells). Test `IsProjectOwnerOrCoInvestigator` (PI allowed, CI allowed, other denied, admin bypass), `IsCenterDirectorForProject` (director of project's center allowed, other center denied), `CanCreateProjectInCenter` (affiliated researcher allowed, non-affiliated denied), `IsProjectEditable` (non-terminal allowed, terminal denied for non-admin). (~120 lines)
-- [ ] 3.7 Write `backend/apps/projects/tests/test_urls.py`: route resolution for all 22 URL patterns using `reverse()`. Verify nested paths, FSM action paths, detail routes. (~40 lines)
+- [x] 3.1 Create `backend/apps/projects/permissions.py`: `IsProjectOwnerOrCoInvestigator` (PI or co_investigator member; Admin+ bypasses), `IsCenterDirectorForProject` (user's membership includes project's center with Director role), `CanCreateProjectInCenter` (Researcher level ≤ 4 AND `ResearcherAffiliation` with target center), `IsProjectEditable` (object-level: False if terminal AND user not Admin+). (~80 lines)
+- [x] 3.2 Create `backend/apps/projects/serializers.py`: `ProjectListSerializer` (id, title, status, center, principal_investigator, start_date, created_at), `ProjectSerializer` (all fields + nested members/documents read-only), `ProjectCreateSerializer` (writable fields; institution injected by view), `ProjectMemberSerializer`, `ProjectDocumentSerializer`, `ProjectObservationSerializer` (read-only), `ProjectStateLogSerializer` (read-only). (~150 lines)
+- [x] 3.3 Create `backend/apps/projects/filters.py`: `ProjectFilter` (django-filter FilterSet) with `status` (ChoiceFilter), `center` (UUIDFilter), `start_date_after` (DateFilter gte), `start_date_before` (DateFilter lte), `keywords` (CharFilter icontains). (~25 lines)
+- [x] 3.4 Create `backend/apps/projects/urls.py`: manual nested paths — 22 URL patterns: `/projects/` (list/create), `/projects/{id}/` (retrieve/update/destroy), 16 FSM action POST endpoints, `/projects/{id}/members/` + detail, `/projects/{id}/documents/` + detail, `/projects/{id}/observations/`, `/projects/{id}/state_history/`. (~60 lines)
+- [x] 3.5 Write `backend/apps/projects/tests/test_serializers.py`: field validation (required fields, choice validation), nested member/document serialization in `ProjectSerializer`, `ProjectCreateSerializer` institution injection, read-only fields in observation/state_log serializers. (~80 lines)
+- [x] 3.6 Write `backend/apps/projects/tests/test_permissions.py`: full role × action matrix (6 roles × 15 actions = 90 cells). Test `IsProjectOwnerOrCoInvestigator` (PI allowed, CI allowed, other denied, admin bypass), `IsCenterDirectorForProject` (director of project's center allowed, other center denied), `CanCreateProjectInCenter` (affiliated researcher allowed, non-affiliated denied), `IsProjectEditable` (non-terminal allowed, terminal denied for non-admin). (~120 lines)
+- [x] 3.7 Write `backend/apps/projects/tests/test_urls.py`: route resolution for all 22 URL patterns using `reverse()`. Verify nested paths, FSM action paths, detail routes. (~40 lines)
 
 ### TDD Evidence: Phase 3
 
-- RED: Serializer, permission, and URL tests written BEFORE implementation files.
-- GREEN: All serializer validations pass; full permission matrix (90 cells) green; all 22 URLs resolve.
-- Refactor: Extract shared permission patterns if duplicated.
+- RED: Serializer, permission, and URL tests written BEFORE implementation files. (85 tests across 3 files, all initially failing with ImportError.)
+- GREEN: All 85 Phase 3 tests pass. Full project suite: 203 passed, 6 skipped.
+- Refactor: Ruff clean on all Phase 3 files. Import organization, line length, and unused variables fixed.
 
 ## Phase 4: ViewSets + Integration Tests
 
