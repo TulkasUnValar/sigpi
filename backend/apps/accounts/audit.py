@@ -6,10 +6,11 @@ role change, and permission denied.
 
 Design reference: openspec/changes/auth/design.md — AuditEventEmitter
 """
+
 import uuid
+
 from django.db import models
 from django.utils import timezone
-
 
 # ──────────────────────────────────────────────────────────
 # AuditEventType (Enum via TextChoices)
@@ -18,6 +19,7 @@ from django.utils import timezone
 
 class AuditEventType(models.TextChoices):
     """Types of auth audit events."""
+
     LOGIN = "LOGIN", "Login"
     LOGOUT = "LOGOUT", "Logout"
     FAILED_LOGIN = "FAILED_LOGIN", "Failed Login"

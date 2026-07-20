@@ -11,10 +11,9 @@ Tests verify:
 Spec references: FR-006
 Design reference: openspec/changes/auth/design.md — PostgreSQL RLS Design
 """
+
 import pytest
-from django.apps import apps
 from django.db import connection
-from django.db.migrations.state import ProjectState
 
 # ── RED: These imports WILL fail until migration is created ──
 # The RLS migration should exist at accounts/migrations/0004_rls_policies.py
@@ -58,9 +57,8 @@ class TestRLSMigrationStructure:
         migrations = loader.disk_migrations
 
         key = ("accounts", "0004_rls_policies")
-        assert key in migrations, (
-            f"RLS migration {key} not found. Available: {[k for k in migrations if k[0] == 'accounts']}"
-        )
+        available = [k for k in migrations if k[0] == "accounts"]
+        assert key in migrations, f"RLS migration {key} not found. Available: {available}"
 
     def test_rls_migration_has_operations(self, db):
         """RLS migration has RunPython operations (SQLite-safe)."""
@@ -72,6 +70,7 @@ class TestRLSMigrationStructure:
         assert len(migration.operations) > 0, "RLS migration should have operations"
         # At least one operation should be RunPython (which conditionally runs SQL)
         from django.db.migrations import RunPython
+
         has_runpython = any(isinstance(op, RunPython) for op in migration.operations)
         assert has_runpython, "RLS migration should contain RunPython operations"
 
@@ -109,9 +108,7 @@ class TestRLSMigrationStructure:
         ]
 
         for table in tenant_tables:
-            assert table.lower() in enable_sql.lower(), (
-                f"Table {table} not found in RLS SQL"
-            )
+            assert table.lower() in enable_sql.lower(), f"Table {table} not found in RLS SQL"
 
     def test_rls_sql_has_tenant_isolation_policy(self):
         """RLS SQL includes the tenant_isolation policy pattern."""
@@ -129,9 +126,10 @@ class TestRLSMigrationStructure:
 
         enable_sql = rls_module.ENABLE_RLS_SQL
 
-        assert "tenant_isolation" in enable_sql.lower() or "ENABLE ROW LEVEL SECURITY" in enable_sql.upper(), (
-            "RLS SQL should enable row-level security on tenant tables"
-        )
+        assert (
+            "tenant_isolation" in enable_sql.lower()
+            or "ENABLE ROW LEVEL SECURITY" in enable_sql.upper()
+        ), "RLS SQL should enable row-level security on tenant tables"
 
     def test_rls_sql_has_superadmin_bypass_policy(self):
         """RLS SQL includes the superadmin_bypass policy."""

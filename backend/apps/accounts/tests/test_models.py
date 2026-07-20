@@ -11,6 +11,7 @@ Note: The seed_roles migration runs before all tests, populating
 7 fixed roles. Tests that need roles should query existing ones
 or use Role.objects.get_or_create().
 """
+
 import uuid
 
 import pytest
@@ -20,18 +21,17 @@ from django.db import IntegrityError, transaction
 from apps.accounts.models import InstitutionMembership, Role, User
 from apps.institutions.models import Institution, ResearchCenter
 
-
 # ──────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────
+
 
 def _get_role(name: str) -> Role:
     """Get a seeded role by name. Roles are created by seed_roles migration."""
     return Role.objects.get(name=name)
 
 
-def _get_or_create_role(name: str, level: int,
-                        keycloak_role_name: str = "") -> Role:
+def _get_or_create_role(name: str, level: int, keycloak_role_name: str = "") -> Role:
     """Get existing role or create if not seeded (for edge-case tests)."""
     role, _ = Role.objects.get_or_create(
         name=name,
@@ -295,7 +295,9 @@ class TestMembershipCreation:
     def test_membership_related_name(self, db, user, institution, role):
         """User.memberships retrieves all InstitutionMembership records."""
         InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
         assert user.memberships.count() == 1
         assert user.memberships.first().institution == institution
@@ -303,13 +305,19 @@ class TestMembershipCreation:
     def test_centers_m2m(self, db, user, institution, role):
         """Membership can associate with multiple ResearchCenters."""
         center_a = ResearchCenter.objects.create(
-            name="Centro A", institution=institution, code="CA",
+            name="Centro A",
+            institution=institution,
+            code="CA",
         )
         center_b = ResearchCenter.objects.create(
-            name="Centro B", institution=institution, code="CB",
+            name="Centro B",
+            institution=institution,
+            code="CB",
         )
         membership = InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
         membership.centers.add(center_a, center_b)
         assert membership.centers.count() == 2
@@ -318,9 +326,11 @@ class TestMembershipCreation:
     def test_membership_string_representation(self, db, user, institution, role):
         """InstitutionMembership __str__ includes user email and institution."""
         membership = InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
-        expected = f"member@example.com — Universidad Nacional"
+        expected = "member@example.com — Universidad Nacional"
         assert str(membership) == expected
 
 
@@ -337,7 +347,8 @@ class TestMembershipConstraints:
     @pytest.fixture
     def institution(self):
         return Institution.objects.create(
-            name="Instituto X", code="IX",
+            name="Instituto X",
+            code="IX",
         )
 
     @pytest.fixture
@@ -347,36 +358,49 @@ class TestMembershipConstraints:
     def test_unique_user_institution(self, db, user, institution, role):
         """A user can only have one membership per institution."""
         InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
         with pytest.raises(ValidationError):
             InstitutionMembership.objects.create(
-                user=user, institution=institution, role=role,
+                user=user,
+                institution=institution,
+                role=role,
             )
 
     def test_different_institution_allowed(self, db, user, institution, role):
         """A user can have memberships in multiple institutions."""
         inst_b = Institution.objects.create(
-            name="Universidad B", code="UB",
+            name="Universidad B",
+            code="UB",
         )
         InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
         InstitutionMembership.objects.create(
-            user=user, institution=inst_b, role=role,
+            user=user,
+            institution=inst_b,
+            role=role,
         )
         assert user.memberships.count() == 2
 
     def test_is_primary_default_false(self, db, user, institution, role):
         """New memberships default to is_primary=False."""
         membership = InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
         assert membership.is_primary is False
 
     def test_is_active_default_true(self, db, user, institution, role):
         """New memberships default to is_active=True."""
         membership = InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
         assert membership.is_active is True

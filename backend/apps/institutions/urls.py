@@ -27,6 +27,7 @@ API contract (from spec.md):
 Spec reference: openspec/changes/institutions/spec.md — API Contract
 Design reference: openspec/changes/institutions/design.md — URL nesting
 """
+
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
@@ -52,7 +53,9 @@ institution_nested = [
     ),
     path(
         "sedes/<uuid:pk>/",
-        views.SedeViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
+        views.SedeViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="institution-sede-detail",
     ),
     # Facultades
@@ -63,7 +66,9 @@ institution_nested = [
     ),
     path(
         "facultades/<uuid:pk>/",
-        views.FacultadViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
+        views.FacultadViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="institution-facultad-detail",
     ),
     # Research Centers
@@ -74,7 +79,9 @@ institution_nested = [
     ),
     path(
         "centers/<uuid:pk>/",
-        views.ResearchCenterViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
+        views.ResearchCenterViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="institution-center-detail",
     ),
 ]
@@ -91,7 +98,9 @@ center_nested = [
     ),
     path(
         "groups/<uuid:pk>/",
-        views.ResearchGroupViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
+        views.ResearchGroupViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="center-group-detail",
     ),
 ]
@@ -108,7 +117,9 @@ group_nested = [
     ),
     path(
         "lines/<uuid:pk>/",
-        views.ResearchLineViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
+        views.ResearchLineViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="group-line-detail",
     ),
 ]

@@ -11,21 +11,21 @@ Implements the 6-entity hierarchy REST API with:
 Design reference: openspec/changes/institutions/design.md
 Spec reference: openspec/changes/institutions/spec.md
 """
+
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import Http404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from apps.institutions.models import (
-    Institution,
-    Sede,
     Facultad,
+    Institution,
     ResearchCenter,
     ResearchGroup,
     ResearchLine,
+    Sede,
 )
 from apps.institutions.permissions import (
     IsCenterDirectorOrReadOnly,
@@ -33,15 +33,14 @@ from apps.institutions.permissions import (
     IsSuperAdmin,
 )
 from apps.institutions.serializers import (
-    InstitutionSerializer,
-    SedeSerializer,
     FacultadSerializer,
+    InstitutionSerializer,
     ResearchCenterSerializer,
     ResearchGroupSerializer,
     ResearchLineSerializer,
+    SedeSerializer,
 )
 from apps.institutions.services import InstitutionLifecycleService
-
 
 # ──────────────────────────────────────────────────────────
 # Helper: lifecycle action response
@@ -99,23 +98,17 @@ class InstitutionViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def activate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.activate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.activate, instance, request)
 
     @action(detail=True, methods=["post"])
     def deactivate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.deactivate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.deactivate, instance, request)
 
     @action(detail=True, methods=["post"])
     def archive(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.archive, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.archive, instance, request)
 
 
 # ──────────────────────────────────────────────────────────
@@ -145,23 +138,17 @@ class SedeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def activate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.activate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.activate, instance, request)
 
     @action(detail=True, methods=["post"])
     def deactivate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.deactivate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.deactivate, instance, request)
 
     @action(detail=True, methods=["post"])
     def archive(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.archive, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.archive, instance, request)
 
 
 # ──────────────────────────────────────────────────────────
@@ -189,23 +176,17 @@ class FacultadViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def activate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.activate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.activate, instance, request)
 
     @action(detail=True, methods=["post"])
     def deactivate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.deactivate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.deactivate, instance, request)
 
     @action(detail=True, methods=["post"])
     def archive(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.archive, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.archive, instance, request)
 
 
 # ──────────────────────────────────────────────────────────
@@ -233,23 +214,17 @@ class ResearchCenterViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def activate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.activate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.activate, instance, request)
 
     @action(detail=True, methods=["post"])
     def deactivate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.deactivate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.deactivate, instance, request)
 
     @action(detail=True, methods=["post"])
     def archive(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.archive, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.archive, instance, request)
 
 
 # ──────────────────────────────────────────────────────────
@@ -277,23 +252,17 @@ class ResearchGroupViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def activate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.activate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.activate, instance, request)
 
     @action(detail=True, methods=["post"])
     def deactivate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.deactivate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.deactivate, instance, request)
 
     @action(detail=True, methods=["post"])
     def archive(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.archive, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.archive, instance, request)
 
 
 # ──────────────────────────────────────────────────────────
@@ -321,20 +290,14 @@ class ResearchLineViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def activate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.activate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.activate, instance, request)
 
     @action(detail=True, methods=["post"])
     def deactivate(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.deactivate, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.deactivate, instance, request)
 
     @action(detail=True, methods=["post"])
     def archive(self, request: Request, pk=None, **kwargs) -> Response:
         instance = self.get_object()
-        return _lifecycle_response(
-            InstitutionLifecycleService.archive, instance, request
-        )
+        return _lifecycle_response(InstitutionLifecycleService.archive, instance, request)

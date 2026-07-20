@@ -10,12 +10,12 @@ Implements the authentication backend chain defined in design.md:
 Spec references: FR-001, FR-003
 Design reference: openspec/changes/auth/design.md — OIDC Login Flow
 """
+
 import logging
 import uuid as uuid_module
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.exceptions import ImproperlyConfigured
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 from apps.accounts.models import InstitutionMembership, Role
@@ -35,6 +35,7 @@ class AccountLinkingError(Exception):
 
     Per spec FR-003: unverified email requires manual confirmation.
     """
+
     def __init__(self, message: str = "Confirm account linking manually."):
         self.message = message
         super().__init__(message)
@@ -157,14 +158,10 @@ class SIGPIOIDCBackend(OIDCAuthenticationBackend):
                 user.keycloak_uuid = kc_uuid
                 user.auth_source = User.AuthSource.KEYCLOAK
                 user.save(update_fields=["keycloak_uuid", "auth_source"])
-                logger.info(
-                    "Auto-linked user %s (email verified)", user.email
-                )
+                logger.info("Auto-linked user %s (email verified)", user.email)
             else:
                 # Manual confirmation required
-                raise AccountLinkingError(
-                    "Email not verified. Manual account linking required."
-                )
+                raise AccountLinkingError("Email not verified. Manual account linking required.")
         else:
             # Brand-new Keycloak user
             user = User.objects.create_user(

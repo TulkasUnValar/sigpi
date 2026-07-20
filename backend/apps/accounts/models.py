@@ -6,12 +6,12 @@ Implements the data model defined in design.md:
 - Role: 7 fixed roles with hierarchy levels
 - InstitutionMembership: join table linking User↔Institution with Role
 """
+
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.db import models
-
 
 # ──────────────────────────────────────────────
 # User Manager
@@ -21,8 +21,9 @@ from django.db import models
 class UserManager(BaseUserManager):
     """Custom manager for User model — email is the unique identifier."""
 
-    def create_user(self, email: str, auth_source: str = "local",
-                    password: str | None = None, **extra_fields) -> "User":
+    def create_user(
+        self, email: str, auth_source: str = "local", password: str | None = None, **extra_fields
+    ) -> "User":
         if not email:
             raise ValidationError("Users must have an email address")
         email = self.normalize_email(email)
@@ -34,8 +35,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email: str, password: str,
-                         **extra_fields) -> "User":
+    def create_superuser(self, email: str, password: str, **extra_fields) -> "User":
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("auth_source", "local")
@@ -212,15 +212,11 @@ class InstitutionMembership(models.Model):
     def clean(self):
         super().clean()
         if self.is_primary:
-            conflicting = (
-                InstitutionMembership.objects
-                .filter(user=self.user, is_primary=True)
-                .exclude(pk=self.pk)
-            )
+            conflicting = InstitutionMembership.objects.filter(
+                user=self.user, is_primary=True
+            ).exclude(pk=self.pk)
             if conflicting.exists():
-                raise ValidationError(
-                    {"is_primary": "User already has a primary membership."}
-                )
+                raise ValidationError({"is_primary": "User already has a primary membership."})
 
     def save(self, *args, **kwargs):
         self.full_clean()

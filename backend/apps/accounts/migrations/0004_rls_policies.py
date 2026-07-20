@@ -12,6 +12,7 @@ Policies applied to all tables with `institution_id` column:
 Note: RLS is a PostgreSQL feature. On SQLite (test environment),
 these operations are wrapped in a conditional that checks the DB engine.
 """
+
 from django.db import migrations
 
 
@@ -24,8 +25,8 @@ def _is_postgresql(schema_editor):
 # Tables that currently exist in the schema with institution_id column.
 # New tables should be added here when their models are created.
 TENANT_SCOPED_TABLES = [
-    "institutions_researchcenter",       # FK to institution
-    "accounts_institutionmembership",    # FK to institution
+    "institutions_researchcenter",  # FK to institution
+    "accounts_institutionmembership",  # FK to institution
 ]
 
 # Tables planned for future phases (included as comments for documentation):

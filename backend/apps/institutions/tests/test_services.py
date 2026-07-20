@@ -18,19 +18,19 @@ from django.core.exceptions import ValidationError
 from django_fsm import TransitionNotAllowed
 
 from apps.institutions.models import (
-    Institution,
-    Sede,
     Facultad,
+    Institution,
     ResearchCenter,
     ResearchGroup,
     ResearchLine,
+    Sede,
 )
 from apps.institutions.services import InstitutionLifecycleService
-
 
 # ──────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────
+
 
 def _make_institution(name="Test University", code="TU"):
     return Institution.objects.create(name=name, code=code)
@@ -46,12 +46,18 @@ def _make_facultad(institution, name="Engineering", code="ENG", sede=None):
 
 def _make_center(institution, name="AI Lab", code="AI", sede=None, facultad=None):
     return ResearchCenter.objects.create(
-        institution=institution, name=name, code=code, sede=sede, facultad=facultad,
+        institution=institution,
+        name=name,
+        code=code,
+        sede=sede,
+        facultad=facultad,
     )
 
 
 def _make_group(institution, center, name="NLP", code="NLP"):
-    return ResearchGroup.objects.create(institution=institution, center=center, name=name, code=code)
+    return ResearchGroup.objects.create(
+        institution=institution, center=center, name=name, code=code
+    )
 
 
 def _make_line(institution, group, name="SA", code="SA"):
@@ -360,9 +366,7 @@ class TestInstitutionChildScope:
         sede = _make_sede(inst, name="Campus", code="C1")
         InstitutionLifecycleService.deactivate(sede)  # child is deactivated
         _make_facultad(inst, name="Science", code="SCI")
-        InstitutionLifecycleService.deactivate(
-            Facultad.objects.get(code="SCI")
-        )
+        InstitutionLifecycleService.deactivate(Facultad.objects.get(code="SCI"))
 
         # now both children are deactivated, parent can deactivate
         updated = InstitutionLifecycleService.deactivate(inst)

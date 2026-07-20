@@ -15,16 +15,14 @@ Tests define the expected behavior of:
 Spec references: FR-005
 Design reference: openspec/changes/auth/design.md — DRF Permission Classes
 """
+
 from unittest.mock import MagicMock
 
 import pytest
 from django.http import HttpRequest
-from rest_framework.permissions import SAFE_METHODS
 from rest_framework.request import Request
 
 from apps.accounts.models import InstitutionMembership, Role, User
-from apps.institutions.models import Institution, ResearchCenter
-
 from apps.accounts.permissions import (
     HasRoleLevelOrHigher,
     IsAssistant,
@@ -36,7 +34,7 @@ from apps.accounts.permissions import (
     IsSameInstitution,
     IsSuperAdmin,
 )
-
+from apps.institutions.models import Institution, ResearchCenter
 
 # ──────────────────────────────────────────────────────────
 # Fixtures
@@ -104,10 +102,14 @@ def make_mock_request(
     return drf_request
 
 
-def make_membership(user: User, institution: Institution, role: Role,
-                    centers: list | None = None,
-                    is_primary: bool = True,
-                    is_active: bool = True) -> InstitutionMembership:
+def make_membership(
+    user: User,
+    institution: Institution,
+    role: Role,
+    centers: list | None = None,
+    is_primary: bool = True,
+    is_active: bool = True,
+) -> InstitutionMembership:
     """Create an InstitutionMembership for testing."""
     membership = InstitutionMembership.objects.create(
         user=user,
@@ -140,7 +142,9 @@ class TestHasRoleLevelOrHigher:
 
     def test_admin_has_level_2(self, db, institution):
         """Admin role (level 2) can access level <= 2."""
-        user = User.objects.create_user(email="admin@test.com", auth_source="local", password="pass")
+        user = User.objects.create_user(
+            email="admin@test.com", auth_source="local", password="pass"
+        )
         role_admin = Role.objects.get(name="Admin Institucional")
         membership = make_membership(user, institution, role_admin)
         request = make_mock_request(
@@ -165,13 +169,15 @@ class TestHasRoleLevelOrHigher:
 
     def test_no_membership_returns_false(self, db):
         """User without active membership cannot access any role level."""
-        user = User.objects.create_user(email="nomem@test.com", auth_source="local", password="pass")
+        user = User.objects.create_user(
+            email="nomem@test.com", auth_source="local", password="pass"
+        )
         request = make_mock_request(user=user, institution_id=None)
         assert HasRoleLevelOrHigher.has_level(request, 7) is False  # Even lowest level
 
     def test_no_institution_returns_false(self, db, user_with_membership):
         """User with membership but no active institution returns false."""
-        role_admin = Role.objects.get(name="Admin Institucional")
+        _role_admin = Role.objects.get(name="Admin Institucional")
         user = user_with_membership
         # user has researcher membership but no active institution
         request = make_mock_request(user=user, institution_id=None)
@@ -216,7 +222,9 @@ class TestIsSuperAdmin:
 
     def test_normal_user_denied(self, db, institution):
         """Normal researcher is denied."""
-        user = User.objects.create_user(email="normal@test.com", auth_source="local", password="pass")
+        user = User.objects.create_user(
+            email="normal@test.com", auth_source="local", password="pass"
+        )
         role_researcher = Role.objects.get(name="Investigador")
         membership = make_membership(user, institution, role_researcher)
         request = make_mock_request(
@@ -242,7 +250,9 @@ class TestIsInstitutionAdmin:
 
     def test_admin_role_has_permission(self, db, institution):
         """Admin Institucional has permission."""
-        user = User.objects.create_user(email="admin@test.com", auth_source="local", password="pass")
+        user = User.objects.create_user(
+            email="admin@test.com", auth_source="local", password="pass"
+        )
         role_admin = Role.objects.get(name="Admin Institucional")
         membership = make_membership(user, institution, role_admin)
         request = make_mock_request(
@@ -290,7 +300,9 @@ class TestIsInstitutionAdmin:
 
     def test_requires_active_institution(self, db):
         """Admin without active institution is denied."""
-        user = User.objects.create_user(email="admin@test.com", auth_source="local", password="pass")
+        user = User.objects.create_user(
+            email="admin@test.com", auth_source="local", password="pass"
+        )
         request = make_mock_request(
             user=user,
             institution_id=None,
@@ -321,6 +333,7 @@ class TestIsCenterDirector:
         # Mock object with center_id attribute
         class MockObj:
             center_id = center.id
+
         obj = MockObj()
 
         assert IsCenterDirector().has_object_permission(request, None, obj) is True
@@ -329,8 +342,12 @@ class TestIsCenterDirector:
         """Director assigned to center A cannot access center B."""
         user = User.objects.create_user(email="dir@test.com", auth_source="local", password="pass")
         role_dir = Role.objects.get(name="Director de Centro")
-        center_a = ResearchCenter.objects.create(name="Centro A", code="CA", institution=institution)
-        center_b = ResearchCenter.objects.create(name="Centro B", code="CB", institution=institution)
+        center_a = ResearchCenter.objects.create(
+            name="Centro A", code="CA", institution=institution
+        )
+        center_b = ResearchCenter.objects.create(
+            name="Centro B", code="CB", institution=institution
+        )
         membership = make_membership(user, institution, role_dir, centers=[center_a])
         request = make_mock_request(
             user=user,
@@ -340,6 +357,7 @@ class TestIsCenterDirector:
 
         class MockObj:
             center_id = center_b.id
+
         obj = MockObj()
 
         assert IsCenterDirector().has_object_permission(request, None, obj) is False
@@ -358,6 +376,7 @@ class TestIsCenterDirector:
 
         class MockObj:
             center_id = center.id
+
         obj = MockObj()
 
         assert IsCenterDirector().has_object_permission(request, None, obj) is False
@@ -373,7 +392,9 @@ class TestIsCenterDirector:
 
     def test_admin_role_has_center_director_permission(self, db, institution):
         """Admin Institucional (higher role) has center director access."""
-        user = User.objects.create_user(email="admin@test.com", auth_source="local", password="pass")
+        user = User.objects.create_user(
+            email="admin@test.com", auth_source="local", password="pass"
+        )
         role_admin = Role.objects.get(name="Admin Institucional")
         membership = make_membership(user, institution, role_admin)
         request = make_mock_request(
@@ -716,29 +737,67 @@ class TestRoleHierarchy:
         7: IsAuditor,
     }
 
-    @pytest.mark.parametrize("user_level,perm_level,expected", [
-        # Superadmin (1) can access everything
-        (1, 1, True), (1, 2, True), (1, 3, True), (1, 4, True),
-        (1, 5, True), (1, 6, True), (1, 7, True),
-        # Admin (2)
-        (2, 1, False), (2, 2, True), (2, 3, True), (2, 4, True),
-        (2, 5, True), (2, 6, True), (2, 7, True),
-        # Director (3)
-        (3, 1, False), (3, 2, False), (3, 3, True), (3, 4, True),
-        (3, 5, True), (3, 6, True), (3, 7, True),
-        # Researcher (4)
-        (4, 1, False), (4, 2, False), (4, 3, False), (4, 4, True),
-        (4, 5, True), (4, 6, True), (4, 7, True),
-        # Evaluador (5)
-        (5, 1, False), (5, 2, False), (5, 3, False), (5, 4, False),
-        (5, 5, True), (5, 6, True), (5, 7, True),
-        # Assistant (6)
-        (6, 1, False), (6, 2, False), (6, 3, False), (6, 4, False),
-        (6, 5, False), (6, 6, True), (6, 7, True),
-        # Auditor (7)
-        (7, 1, False), (7, 2, False), (7, 3, False), (7, 4, False),
-        (7, 5, False), (7, 6, False), (7, 7, True),
-    ])
+    @pytest.mark.parametrize(
+        "user_level,perm_level,expected",
+        [
+            # Superadmin (1) can access everything
+            (1, 1, True),
+            (1, 2, True),
+            (1, 3, True),
+            (1, 4, True),
+            (1, 5, True),
+            (1, 6, True),
+            (1, 7, True),
+            # Admin (2)
+            (2, 1, False),
+            (2, 2, True),
+            (2, 3, True),
+            (2, 4, True),
+            (2, 5, True),
+            (2, 6, True),
+            (2, 7, True),
+            # Director (3)
+            (3, 1, False),
+            (3, 2, False),
+            (3, 3, True),
+            (3, 4, True),
+            (3, 5, True),
+            (3, 6, True),
+            (3, 7, True),
+            # Researcher (4)
+            (4, 1, False),
+            (4, 2, False),
+            (4, 3, False),
+            (4, 4, True),
+            (4, 5, True),
+            (4, 6, True),
+            (4, 7, True),
+            # Evaluador (5)
+            (5, 1, False),
+            (5, 2, False),
+            (5, 3, False),
+            (5, 4, False),
+            (5, 5, True),
+            (5, 6, True),
+            (5, 7, True),
+            # Assistant (6)
+            (6, 1, False),
+            (6, 2, False),
+            (6, 3, False),
+            (6, 4, False),
+            (6, 5, False),
+            (6, 6, True),
+            (6, 7, True),
+            # Auditor (7)
+            (7, 1, False),
+            (7, 2, False),
+            (7, 3, False),
+            (7, 4, False),
+            (7, 5, False),
+            (7, 6, False),
+            (7, 7, True),
+        ],
+    )
     def test_hierarchy_matrix(self, db, institution, user_level, perm_level, expected):
         """Verify each role level can access the expected permission levels.
 

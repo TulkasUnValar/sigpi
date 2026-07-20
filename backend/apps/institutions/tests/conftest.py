@@ -4,16 +4,17 @@ Factory-boy factories for the 6-entity institution hierarchy.
 Provides ergonomic test data generation for Institution, Sede,
 Facultad, ResearchCenter, ResearchGroup, and ResearchLine.
 """
+
 import factory
 from factory.django import DjangoModelFactory
 
 from apps.institutions.models import (
-    Institution,
-    Sede,
     Facultad,
+    Institution,
     ResearchCenter,
     ResearchGroup,
     ResearchLine,
+    Sede,
 )
 
 

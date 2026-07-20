@@ -6,6 +6,7 @@ Django Groups via Celery beat (every 5 minutes).
 
 Design reference: openspec/changes/auth/design.md — Role Sync Flow
 """
+
 import logging
 
 from celery import shared_task
@@ -144,9 +145,7 @@ def sync_keycloak_roles() -> dict:
                         kc_uuid,
                     )
                 except Exception as exc:
-                    logger.error(
-                        "Error syncing user %s: %s", kc_uuid, exc
-                    )
+                    logger.error("Error syncing user %s: %s", kc_uuid, exc)
                     error_count += 1
 
             page += 1

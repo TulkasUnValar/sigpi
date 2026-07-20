@@ -10,20 +10,25 @@ Covers:
 Strict TDD: this file is written BEFORE permissions.py exists.
 Expected failure: ModuleNotFoundError.
 """
+
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-
-from rest_framework.permissions import SAFE_METHODS
 from rest_framework.request import Request
-
 
 # ──────────────────────────────────────────────────────────
 # Test Helpers
 # ──────────────────────────────────────────────────────────
 
 
-def _make_request(method="GET", authenticated=True, is_superuser=False,
-                  institution_id=None, role_level=None, center_ids=None):
+def _make_request(
+    method="GET",
+    authenticated=True,
+    is_superuser=False,
+    institution_id=None,
+    role_level=None,
+    center_ids=None,
+):
     """Build a mock DRF Request with the given attributes."""
     user = MagicMock()
     user.is_authenticated = authenticated

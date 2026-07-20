@@ -10,16 +10,11 @@ Tests define the expected behavior of:
 Spec references: FR-007
 Design reference: openspec/changes/auth/design.md — AuditEventEmitter
 """
-import uuid
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+
+from unittest.mock import MagicMock
 
 import pytest
-from django.http import HttpRequest
 from django.utils import timezone
-
-from apps.accounts.models import InstitutionMembership, Role, User
-from apps.institutions.models import Institution
 
 # ── RED: These imports WILL fail until audit.py is created ──
 from apps.accounts.audit import (
@@ -27,7 +22,8 @@ from apps.accounts.audit import (
     AuditEventEmitter,
     AuditEventType,
 )
-
+from apps.accounts.models import User
+from apps.institutions.models import Institution
 
 # ──────────────────────────────────────────────────────────
 # Fixtures
@@ -139,11 +135,15 @@ class TestAuditEventModel:
     def test_audit_event_ordering(self, db):
         """Events are ordered by timestamp descending (newest first)."""
         user = User.objects.create_user(email="u@test.com", auth_source="local", password="pass")
-        e1 = AuditEvent.objects.create(
-            user=user, event_type=AuditEventType.LOGIN, ip_address="10.0.0.1",
+        _e1 = AuditEvent.objects.create(
+            user=user,
+            event_type=AuditEventType.LOGIN,
+            ip_address="10.0.0.1",
         )
-        e2 = AuditEvent.objects.create(
-            user=user, event_type=AuditEventType.LOGOUT, ip_address="10.0.0.1",
+        _e2 = AuditEvent.objects.create(
+            user=user,
+            event_type=AuditEventType.LOGOUT,
+            ip_address="10.0.0.1",
         )
         events = list(AuditEvent.objects.all())
         assert events[0].timestamp >= events[1].timestamp
@@ -153,7 +153,9 @@ class TestAuditEventModel:
         user = User.objects.create_user(email="u@test.com", auth_source="local", password="pass")
         AuditEvent.objects.create(user=user, event_type=AuditEventType.LOGIN, ip_address="10.0.0.1")
         AuditEvent.objects.create(user=user, event_type=AuditEventType.LOGIN, ip_address="10.0.0.2")
-        AuditEvent.objects.create(user=user, event_type=AuditEventType.LOGOUT, ip_address="10.0.0.1")
+        AuditEvent.objects.create(
+            user=user, event_type=AuditEventType.LOGOUT, ip_address="10.0.0.1"
+        )
 
         assert AuditEvent.objects.filter(event_type="LOGIN").count() == 2
         assert AuditEvent.objects.filter(event_type="LOGOUT").count() == 1

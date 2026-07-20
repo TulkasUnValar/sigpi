@@ -8,7 +8,6 @@ Note: URL resolution (resolve()/reverse()) requires viewsets to exist,
 so those tests will be written in Phase 4 alongside view creation.
 This file validates the URL configuration shape.
 """
-import pytest
 
 
 # ──────────────────────────────────────────────────────────
@@ -105,8 +104,9 @@ class TestURLNameCoverage:
 
     def test_all_expected_names_present(self):
         """All spec-defined URL names must exist in urlpatterns."""
-        from apps.institutions import urls
         from django.urls.resolvers import URLPattern, URLResolver
+
+        from apps.institutions import urls
 
         def _collect_names(patterns, prefix=""):
             names = set()
@@ -124,8 +124,9 @@ class TestURLNameCoverage:
 
     def test_lifecycle_endpoints_count(self):
         """Must have exactly 18 lifecycle endpoints (6 entities × 3 transitions)."""
-        from apps.institutions import urls
         from django.urls.resolvers import URLPattern, URLResolver
+
+        from apps.institutions import urls
 
         def _count_lifecycle(patterns):
             count = 0
@@ -133,8 +134,9 @@ class TestURLNameCoverage:
                 if isinstance(p, URLResolver):
                     count += _count_lifecycle(p.url_patterns)
                 elif isinstance(p, URLPattern) and p.name:
-                    if any(suffix in (p.name or "") for suffix in
-                           ("activate", "deactivate", "archive")):
+                    if any(
+                        suffix in (p.name or "") for suffix in ("activate", "deactivate", "archive")
+                    ):
                         count += 1
             return count
 
@@ -152,8 +154,9 @@ class TestPathStructure:
 
     def test_institution_patterns_exist(self):
         """Base Institution patterns must be in urlpatterns."""
-        from apps.institutions import urls
         from django.urls.resolvers import URLPattern, URLResolver
+
+        from apps.institutions import urls
 
         def _find_path(pattern_str, patterns):
             for p in patterns:

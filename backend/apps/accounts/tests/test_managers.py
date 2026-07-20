@@ -8,19 +8,17 @@ Tests define the expected behavior of:
 
 Design reference: openspec/changes/auth/design.md — TenantScopedQuerySet
 """
-import uuid
+
 from unittest.mock import MagicMock
 
 import pytest
 from django.http import HttpRequest
 from rest_framework.request import Request
 
-from apps.accounts.models import Role, User, InstitutionMembership
-from apps.institutions.models import Institution
-
 # ── RED: These imports WILL fail until managers.py is created ──
 from apps.accounts.managers import TenantScopedQuerySet
-
+from apps.accounts.models import InstitutionMembership, Role, User
+from apps.institutions.models import Institution
 
 # ──────────────────────────────────────────────────────────
 # Fixtures
@@ -68,10 +66,14 @@ class TestTenantScopedQuerySet:
         # Create users in each institution
         user_a = User.objects.create_user(email="a@test.com", auth_source="local", password="pass")
         role = Role.objects.get(name="Investigador")
-        InstitutionMembership.objects.create(user=user_a, institution=institution, role=role, is_active=True)
+        InstitutionMembership.objects.create(
+            user=user_a, institution=institution, role=role, is_active=True
+        )
 
         user_b = User.objects.create_user(email="b@test.com", auth_source="local", password="pass")
-        InstitutionMembership.objects.create(user=user_b, institution=other_inst, role=role, is_active=True)
+        InstitutionMembership.objects.create(
+            user=user_b, institution=other_inst, role=role, is_active=True
+        )
 
         request = make_request(institution_id=str(institution.id))
         qs = TenantScopedQuerySet(model=InstitutionMembership)
@@ -87,10 +89,14 @@ class TestTenantScopedQuerySet:
 
         user_a = User.objects.create_user(email="a@test.com", auth_source="local", password="pass")
         role = Role.objects.get(name="Investigador")
-        InstitutionMembership.objects.create(user=user_a, institution=institution, role=role, is_active=True)
+        InstitutionMembership.objects.create(
+            user=user_a, institution=institution, role=role, is_active=True
+        )
 
         user_b = User.objects.create_user(email="b@test.com", auth_source="local", password="pass")
-        InstitutionMembership.objects.create(user=user_b, institution=other_inst, role=role, is_active=True)
+        InstitutionMembership.objects.create(
+            user=user_b, institution=other_inst, role=role, is_active=True
+        )
 
         superuser = User.objects.create_superuser(email="super@test.com", password="pass")
         request = make_request(
@@ -131,14 +137,22 @@ class TestTenantScopedQuerySet:
 
     def test_works_with_user_model(self, db, institution):
         """for_tenant works with models that have institution_id FK."""
-        user_in = User.objects.create_user(email="in@test.com", auth_source="local", password="pass")
+        user_in = User.objects.create_user(
+            email="in@test.com", auth_source="local", password="pass"
+        )
         role = Role.objects.get(name="Investigador")
-        InstitutionMembership.objects.create(user=user_in, institution=institution, role=role, is_active=True)
+        InstitutionMembership.objects.create(
+            user=user_in, institution=institution, role=role, is_active=True
+        )
 
         # Create another user with no membership in this institution
         other_inst = Institution.objects.create(name="Other", code="OTH")
-        user_out = User.objects.create_user(email="out@test.com", auth_source="local", password="pass")
-        InstitutionMembership.objects.create(user=user_out, institution=other_inst, role=role, is_active=True)
+        user_out = User.objects.create_user(
+            email="out@test.com", auth_source="local", password="pass"
+        )
+        InstitutionMembership.objects.create(
+            user=user_out, institution=other_inst, role=role, is_active=True
+        )
 
         request = make_request(institution_id=str(institution.id))
         qs = TenantScopedQuerySet(model=InstitutionMembership)

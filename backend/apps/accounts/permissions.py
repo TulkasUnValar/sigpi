@@ -9,9 +9,9 @@ Implements the authorization layer defined in design.md:
 Spec references: FR-005
 Design reference: openspec/changes/auth/design.md — Custom DRF Permission Classes
 """
+
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.request import Request
-
 
 # ──────────────────────────────────────────────────────────
 # Role Hierarchy Utility
@@ -118,9 +118,7 @@ class IsCenterDirector(BasePermission):
         if obj_center_id is None:
             return False
 
-        user_center_ids = set(
-            membership.centers.values_list("id", flat=True)
-        )
+        user_center_ids = set(membership.centers.values_list("id", flat=True))
         return obj_center_id in user_center_ids
 
 
@@ -188,6 +186,3 @@ class IsSameInstitution(BasePermission):
             return False
 
         return str(institution_id) == str(obj_inst_id)
-
-
-

@@ -7,23 +7,15 @@ per spec FR-002 (local fallback) and FR-003 (account linking).
 Spec reference: openspec/changes/auth/spec.md
 Design reference: openspec/changes/auth/design.md
 """
-import uuid
-from unittest.mock import patch
 
 import pytest
 from django.test import Client
 from django.urls import reverse
 
-from apps.accounts.models import Role, User
-from apps.institutions.models import Institution
+from apps.accounts.models import User
 
 # The views module does not exist yet — these imports WILL fail.
 # That is the point of RED: the test references code that must be built.
-from apps.accounts.views import (
-    account_linking_view,
-    keycloak_health_view,
-    local_login_view,
-)
 
 # ──────────────────────────────────────────────────────────
 # Fixtures

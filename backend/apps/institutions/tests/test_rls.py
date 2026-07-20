@@ -19,10 +19,8 @@ RED PHASE: Tests fail because 0003_rls_policies.py does not exist.
 import importlib
 import inspect
 
-import pytest
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
-
 
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
@@ -92,8 +90,7 @@ class TestRLSMigrationExists:
         assert migration is not None
         deps = [(app, name) for (app, name) in migration.dependencies]
         assert ("institutions", "0002_expand_hierarchy") in deps, (
-            f"Expected dependency on institutions.0002_expand_hierarchy, "
-            f"got: {deps}"
+            f"Expected dependency on institutions.0002_expand_hierarchy, got: {deps}"
         )
 
     def test_has_run_python_operation(self, db):
@@ -101,10 +98,8 @@ class TestRLSMigrationExists:
         migration = _get_migration()
         assert migration is not None
         from django.db.migrations import RunPython
-        run_python_ops = [
-            op for op in migration.operations
-            if isinstance(op, RunPython)
-        ]
+
+        run_python_ops = [op for op in migration.operations if isinstance(op, RunPython)]
         assert len(run_python_ops) > 0, (
             "Migration 0003 must contain at least one RunPython operation"
         )
@@ -113,6 +108,7 @@ class TestRLSMigrationExists:
         """RunPython must have a reverse_code for rollback."""
         migration = _get_migration()
         from django.db.migrations import RunPython
+
         for op in migration.operations:
             if isinstance(op, RunPython):
                 assert op.reverse_code is not None, (
@@ -173,9 +169,7 @@ class TestRLSPolicySQL:
         sql = self._get_all_sql()
         for table in EXPECTED_RLS_TABLES:
             pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, (
-                f"tenant_isolation policy missing for '{table}'"
-            )
+            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
 
     def test_superadmin_bypass_policy_per_table(self, db):
         """Each table must have a superadmin_bypass policy."""
@@ -184,9 +178,7 @@ class TestRLSPolicySQL:
         sql = self._get_all_sql()
         for table in EXPECTED_RLS_TABLES:
             pattern = f"CREATE POLICY superadmin_bypass ON {table}"
-            assert pattern in sql, (
-                f"superadmin_bypass policy missing for '{table}'"
-            )
+            assert pattern in sql, f"superadmin_bypass policy missing for '{table}'"
 
     def test_each_table_has_enable_rls(self, db):
         """Each table must have ENABLE ROW LEVEL SECURITY."""
@@ -255,6 +247,5 @@ class TestRLSInstitutionExcluded:
         if hasattr(mod, "TENANT_SCOPED_TABLES"):
             tables = mod.TENANT_SCOPED_TABLES
             assert "institutions_institution" not in tables, (
-                "Institution must not be in TENANT_SCOPED_TABLES — "
-                "it has no institution_id column."
+                "Institution must not be in TENANT_SCOPED_TABLES — it has no institution_id column."
             )

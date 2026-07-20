@@ -6,6 +6,7 @@ Institution → Sede → Facultad → ResearchCenter → ResearchGroup → Resea
 Each admin exposes list_display, search_fields, list_filter, and raw_id_fields
 suitable for multi-tenant management with FK-heavy models.
 """
+
 from django.contrib import admin
 
 from .models import (
@@ -44,7 +45,12 @@ class FacultadAdmin(admin.ModelAdmin):
 @admin.register(ResearchCenter)
 class ResearchCenterAdmin(admin.ModelAdmin):
     list_display = [
-        "name", "institution", "code", "status", "description", "is_active",
+        "name",
+        "institution",
+        "code",
+        "status",
+        "description",
+        "is_active",
     ]
     search_fields = ["name", "code", "institution__name"]
     list_filter = ["is_active", "institution"]

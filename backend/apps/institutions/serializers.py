@@ -12,17 +12,17 @@ Design decisions (from design.md):
 Spec reference: openspec/changes/institutions/spec.md — API Contract
 Design reference: openspec/changes/institutions/design.md — File Changes / Contracts
 """
+
 from rest_framework import serializers
 
 from apps.institutions.models import (
-    Institution,
-    Sede,
     Facultad,
+    Institution,
     ResearchCenter,
     ResearchGroup,
     ResearchLine,
+    Sede,
 )
-
 
 # ──────────────────────────────────────────────────────────
 # InstitutionSerializer
@@ -127,9 +127,7 @@ class FacultadSerializer(serializers.ModelSerializer):
         if value is not None:
             institution = self.context.get("institution")
             if institution is not None and value.institution_id != institution.pk:
-                raise serializers.ValidationError(
-                    "Sede belongs to a different institution."
-                )
+                raise serializers.ValidationError("Sede belongs to a different institution.")
         return value
 
 
@@ -174,9 +172,7 @@ class ResearchCenterSerializer(serializers.ModelSerializer):
         if value is not None:
             institution = self.context.get("institution")
             if institution is not None and value.institution_id != institution.pk:
-                raise serializers.ValidationError(
-                    "Sede belongs to a different institution."
-                )
+                raise serializers.ValidationError("Sede belongs to a different institution.")
         return value
 
     def validate_facultad(self, value):
@@ -184,9 +180,7 @@ class ResearchCenterSerializer(serializers.ModelSerializer):
         if value is not None:
             institution = self.context.get("institution")
             if institution is not None and value.institution_id != institution.pk:
-                raise serializers.ValidationError(
-                    "Facultad belongs to a different institution."
-                )
+                raise serializers.ValidationError("Facultad belongs to a different institution.")
         return value
 
 

@@ -8,6 +8,7 @@ RED PHASE: Tests will fail because admin.py only registers Institution
 and ResearchCenter (missing Sede, Facultad, ResearchGroup, ResearchLine)
 and doesn't yet include status/description in existing admins.
 """
+
 import pytest
 from django.contrib.admin.sites import site as admin_site
 
@@ -34,9 +35,7 @@ class TestAdminRegistration:
     )
     def test_model_is_registered(self, db, model):
         """Each model is registered in admin site."""
-        assert model in admin_site._registry, (
-            f"{model.__name__} is not registered in admin site"
-        )
+        assert model in admin_site._registry, f"{model.__name__} is not registered in admin site"
 
 
 # ──────────────────────────────────────────────

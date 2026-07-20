@@ -10,18 +10,16 @@ Tests define the expected behavior of:
 Spec references: FR-008
 Design reference: openspec/changes/auth/design.md — Role Sync Flow
 """
-import uuid
-from unittest.mock import MagicMock, patch
 
-import pytest
+import uuid
+from unittest.mock import patch
+
 from django.contrib.auth.models import Group
 
-from apps.accounts.models import Role, User
-from apps.institutions.models import Institution
+from apps.accounts.models import User
 
 # ── RED: These imports WILL fail until tasks.py is created ──
 from apps.accounts.tasks import sync_keycloak_roles
-
 
 # ──────────────────────────────────────────────────────────
 # Helpers
@@ -109,16 +107,17 @@ class TestSyncKeycloakRoles:
 
     @patch("apps.accounts.tasks._fetch_keycloak_users")
     @patch("apps.accounts.tasks._sync_user_groups")
-    def test_sync_task_continues_after_individual_user_error(
-        self, mock_sync, mock_fetch, db
-    ):
+    def test_sync_task_continues_after_individual_user_error(self, mock_sync, mock_fetch, db):
         """If one user fails, the task continues with the next user."""
         u1 = _make_kc_user(str(uuid.uuid4()), ["sigpi_researcher"])
         u2 = _make_kc_user(str(uuid.uuid4()), ["sigpi_admin"])
         _ensure_django_user(u1)
         _ensure_django_user(u2)
         mock_fetch.side_effect = [[u1, u2], []]
-        mock_sync.side_effect = [Exception("User not found"), {"added": [], "removed": [], "changed": False}]
+        mock_sync.side_effect = [
+            Exception("User not found"),
+            {"added": [], "removed": [], "changed": False},
+        ]
 
         result = sync_keycloak_roles()
 

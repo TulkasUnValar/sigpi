@@ -7,210 +7,281 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('institutions', '0001_initial'),
+        ("institutions", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Facultad',
+            name="Facultad",
             fields=[
-                ('code', models.CharField(max_length=20)),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('status', django_fsm.FSMField(default='active', max_length=50, protected=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("code", models.CharField(max_length=20)),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                ("status", django_fsm.FSMField(default="active", max_length=50, protected=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Facultad',
-                'verbose_name_plural': 'Facultades',
-                'db_table': 'institutions_facultad',
-                'ordering': ['institution', 'name'],
+                "verbose_name": "Facultad",
+                "verbose_name_plural": "Facultades",
+                "db_table": "institutions_facultad",
+                "ordering": ["institution", "name"],
             },
         ),
         migrations.CreateModel(
-            name='ResearchGroup',
+            name="ResearchGroup",
             fields=[
-                ('code', models.CharField(max_length=20)),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('status', django_fsm.FSMField(default='active', max_length=50, protected=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("code", models.CharField(max_length=20)),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                ("status", django_fsm.FSMField(default="active", max_length=50, protected=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Research Group',
-                'verbose_name_plural': 'Research Groups',
-                'db_table': 'institutions_researchgroup',
-                'ordering': ['institution', 'center', 'name'],
+                "verbose_name": "Research Group",
+                "verbose_name_plural": "Research Groups",
+                "db_table": "institutions_researchgroup",
+                "ordering": ["institution", "center", "name"],
             },
         ),
         migrations.CreateModel(
-            name='ResearchLine',
+            name="ResearchLine",
             fields=[
-                ('code', models.CharField(max_length=20)),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('status', django_fsm.FSMField(default='active', max_length=50, protected=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("code", models.CharField(max_length=20)),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                ("status", django_fsm.FSMField(default="active", max_length=50, protected=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Research Line',
-                'verbose_name_plural': 'Research Lines',
-                'db_table': 'institutions_researchline',
-                'ordering': ['institution', 'group', 'name'],
+                "verbose_name": "Research Line",
+                "verbose_name_plural": "Research Lines",
+                "db_table": "institutions_researchline",
+                "ordering": ["institution", "group", "name"],
             },
         ),
         migrations.CreateModel(
-            name='Sede',
+            name="Sede",
             fields=[
-                ('code', models.CharField(max_length=20)),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('status', django_fsm.FSMField(default='active', max_length=50, protected=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("code", models.CharField(max_length=20)),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                ("status", django_fsm.FSMField(default="active", max_length=50, protected=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Sede',
-                'verbose_name_plural': 'Sedes',
-                'db_table': 'institutions_sede',
-                'ordering': ['institution', 'name'],
+                "verbose_name": "Sede",
+                "verbose_name_plural": "Sedes",
+                "db_table": "institutions_sede",
+                "ordering": ["institution", "name"],
             },
         ),
         migrations.RemoveConstraint(
-            model_name='researchcenter',
-            name='unique_center_name_per_institution',
+            model_name="researchcenter",
+            name="unique_center_name_per_institution",
         ),
         migrations.AddField(
-            model_name='institution',
-            name='address',
+            model_name="institution",
+            name="address",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='institution',
-            name='contact_email',
+            model_name="institution",
+            name="contact_email",
             field=models.EmailField(blank=True, max_length=254),
         ),
         migrations.AddField(
-            model_name='institution',
-            name='contact_phone',
+            model_name="institution",
+            name="contact_phone",
             field=models.CharField(blank=True, max_length=30),
         ),
         migrations.AddField(
-            model_name='institution',
-            name='description',
+            model_name="institution",
+            name="description",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='institution',
-            name='logo_url',
+            model_name="institution",
+            name="logo_url",
             field=models.URLField(blank=True, max_length=500),
         ),
         migrations.AddField(
-            model_name='institution',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50, protected=True),
+            model_name="institution",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50, protected=True),
         ),
         migrations.AddField(
-            model_name='researchcenter',
-            name='contact_email',
+            model_name="researchcenter",
+            name="contact_email",
             field=models.EmailField(blank=True, max_length=254),
         ),
         migrations.AddField(
-            model_name='researchcenter',
-            name='contact_phone',
+            model_name="researchcenter",
+            name="contact_phone",
             field=models.CharField(blank=True, max_length=30),
         ),
         migrations.AddField(
-            model_name='researchcenter',
-            name='description',
+            model_name="researchcenter",
+            name="description",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='researchcenter',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50, protected=True),
+            model_name="researchcenter",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50, protected=True),
         ),
         migrations.AlterField(
-            model_name='researchcenter',
-            name='code',
+            model_name="researchcenter",
+            name="code",
             field=models.CharField(max_length=20),
         ),
         migrations.AddField(
-            model_name='facultad',
-            name='institution',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='%(class)s_set', to='institutions.institution'),
+            model_name="facultad",
+            name="institution",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="%(class)s_set",
+                to="institutions.institution",
+            ),
         ),
         migrations.AddField(
-            model_name='researchcenter',
-            name='facultad',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='centers', to='institutions.facultad'),
+            model_name="researchcenter",
+            name="facultad",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="centers",
+                to="institutions.facultad",
+            ),
         ),
         migrations.AddField(
-            model_name='researchgroup',
-            name='center',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='groups', to='institutions.researchcenter'),
+            model_name="researchgroup",
+            name="center",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="groups",
+                to="institutions.researchcenter",
+            ),
         ),
         migrations.AddField(
-            model_name='researchgroup',
-            name='institution',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='%(class)s_set', to='institutions.institution'),
+            model_name="researchgroup",
+            name="institution",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="%(class)s_set",
+                to="institutions.institution",
+            ),
         ),
         migrations.AddField(
-            model_name='researchline',
-            name='group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lines', to='institutions.researchgroup'),
+            model_name="researchline",
+            name="group",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="lines",
+                to="institutions.researchgroup",
+            ),
         ),
         migrations.AddField(
-            model_name='researchline',
-            name='institution',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='%(class)s_set', to='institutions.institution'),
+            model_name="researchline",
+            name="institution",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="%(class)s_set",
+                to="institutions.institution",
+            ),
         ),
         migrations.AddField(
-            model_name='sede',
-            name='institution',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='%(class)s_set', to='institutions.institution'),
+            model_name="sede",
+            name="institution",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="%(class)s_set",
+                to="institutions.institution",
+            ),
         ),
         migrations.AddField(
-            model_name='facultad',
-            name='sede',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='facultades', to='institutions.sede'),
+            model_name="facultad",
+            name="sede",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="facultades",
+                to="institutions.sede",
+            ),
         ),
         migrations.AddField(
-            model_name='researchcenter',
-            name='sede',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='centers', to='institutions.sede'),
+            model_name="researchcenter",
+            name="sede",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="centers",
+                to="institutions.sede",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='researchcenter',
-            constraint=models.UniqueConstraint(fields=('institution', 'code'), name='unique_center_code_per_institution'),
+            model_name="researchcenter",
+            constraint=models.UniqueConstraint(
+                fields=("institution", "code"), name="unique_center_code_per_institution"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='researchgroup',
-            constraint=models.UniqueConstraint(fields=('institution', 'code'), name='unique_group_code_per_institution'),
+            model_name="researchgroup",
+            constraint=models.UniqueConstraint(
+                fields=("institution", "code"), name="unique_group_code_per_institution"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='researchline',
-            constraint=models.UniqueConstraint(fields=('institution', 'code'), name='unique_line_code_per_institution'),
+            model_name="researchline",
+            constraint=models.UniqueConstraint(
+                fields=("institution", "code"), name="unique_line_code_per_institution"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='sede',
-            constraint=models.UniqueConstraint(fields=('institution', 'code'), name='unique_sede_code_per_institution'),
+            model_name="sede",
+            constraint=models.UniqueConstraint(
+                fields=("institution", "code"), name="unique_sede_code_per_institution"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='facultad',
-            constraint=models.UniqueConstraint(fields=('institution', 'code'), name='unique_facultad_code_per_institution'),
+            model_name="facultad",
+            constraint=models.UniqueConstraint(
+                fields=("institution", "code"), name="unique_facultad_code_per_institution"
+            ),
         ),
     ]

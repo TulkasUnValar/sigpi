@@ -8,6 +8,7 @@ Implements the tenant isolation query filtering defined in design.md:
 
 Design reference: openspec/changes/auth/design.md — TenantScopedQuerySet
 """
+
 from django.db import models
 
 

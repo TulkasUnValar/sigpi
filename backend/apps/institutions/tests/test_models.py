@@ -9,20 +9,20 @@ Design reference: openspec/changes/institutions/design.md
 
 RED PHASE: All tests will fail because models don't have new fields/transitions yet.
 """
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django_fsm import TransitionNotAllowed
 
 from apps.institutions.models import (
-    Institution,
-    Sede,
     Facultad,
+    Institution,
     ResearchCenter,
     ResearchGroup,
     ResearchLine,
+    Sede,
 )
-
 
 # ──────────────────────────────────────────────
 # Helpers
@@ -35,13 +35,17 @@ def _make_institution(name="Test University", code="TU"):
 
 def _make_sede(institution, name="Main Campus", code="MC"):
     return Sede.objects.create(
-        institution=institution, name=name, code=code,
+        institution=institution,
+        name=name,
+        code=code,
     )
 
 
 def _make_center(institution, name="Research Center", code="RC"):
     return ResearchCenter.objects.create(
-        institution=institution, name=name, code=code,
+        institution=institution,
+        name=name,
+        code=code,
     )
 
 
@@ -169,7 +173,7 @@ class TestSedeFields:
         """Sede __str__ includes name and institution code."""
         inst = _make_institution(code="TU")
         sede = _make_sede(inst, name="Main Campus", code="MC")
-        expected = f"Main Campus (TU)"
+        expected = "Main Campus (TU)"
         assert str(sede) == expected
 
     def test_institution_code_unique(self, db):
@@ -242,7 +246,9 @@ class TestFacultadFields:
         """A Facultad can be created without a Sede."""
         inst = _make_institution()
         facultad = Facultad.objects.create(
-            institution=inst, name="Engineering", code="ENG",
+            institution=inst,
+            name="Engineering",
+            code="ENG",
         )
         assert facultad.sede is None
         assert facultad.institution == inst
@@ -253,7 +259,10 @@ class TestFacultadFields:
         inst = _make_institution()
         sede = _make_sede(inst, name="North", code="N")
         facultad = Facultad.objects.create(
-            institution=inst, sede=sede, name="Engineering", code="ENG",
+            institution=inst,
+            sede=sede,
+            name="Engineering",
+            code="ENG",
         )
         assert facultad.sede == sede
 
@@ -261,7 +270,9 @@ class TestFacultadFields:
         """Facultad __str__ includes name and institution code."""
         inst = _make_institution(code="TU")
         facultad = Facultad.objects.create(
-            institution=inst, name="Engineering", code="ENG",
+            institution=inst,
+            name="Engineering",
+            code="ENG",
         )
         assert str(facultad) == "Engineering (TU)"
 
@@ -269,12 +280,16 @@ class TestFacultadFields:
         """(institution, code) unique per Facultad."""
         inst = _make_institution()
         Facultad.objects.create(
-            institution=inst, name="A", code="F1",
+            institution=inst,
+            name="A",
+            code="F1",
         )
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 Facultad.objects.create(
-                    institution=inst, name="B", code="F1",
+                    institution=inst,
+                    name="B",
+                    code="F1",
                 )
 
     def test_sede_must_belong_to_same_institution(self, db):
@@ -283,7 +298,10 @@ class TestFacultadFields:
         inst_b = _make_institution(name="B", code="B")
         sede_b = _make_sede(inst_b, name="B Sede", code="BS")
         facultad = Facultad(
-            institution=inst_a, sede=sede_b, name="Bad", code="BAD",
+            institution=inst_a,
+            sede=sede_b,
+            name="Bad",
+            code="BAD",
         )
         with pytest.raises(ValidationError, match="different institution"):
             facultad.full_clean()
@@ -334,7 +352,10 @@ class TestResearchCenterExpandedFields:
         inst = _make_institution()
         sede = _make_sede(inst, name="Campus", code="C1")
         center = ResearchCenter.objects.create(
-            institution=inst, name="Lab", code="L1", sede=sede,
+            institution=inst,
+            name="Lab",
+            code="L1",
+            sede=sede,
         )
         assert center.sede == sede
         assert center.facultad is None
@@ -343,10 +364,14 @@ class TestResearchCenterExpandedFields:
         """ResearchCenter can link to a Facultad (optional FK)."""
         inst = _make_institution()
         facultad = Facultad.objects.create(
-            institution=inst, name="Science", code="SCI",
+            institution=inst,
+            name="Science",
+            code="SCI",
         )
         center = ResearchCenter.objects.create(
-            institution=inst, name="Bio Lab", code="BIO",
+            institution=inst,
+            name="Bio Lab",
+            code="BIO",
             facultad=facultad,
         )
         assert center.facultad == facultad
@@ -366,7 +391,10 @@ class TestResearchCenterExpandedFields:
         inst_b = _make_institution(name="B", code="B")
         sede_b = _make_sede(inst_b, name="B Sede", code="BS")
         center = ResearchCenter(
-            institution=inst_a, name="Bad", code="BAD", sede=sede_b,
+            institution=inst_a,
+            name="Bad",
+            code="BAD",
+            sede=sede_b,
         )
         with pytest.raises(ValidationError, match="different institution"):
             center.full_clean()
@@ -442,7 +470,10 @@ class TestResearchGroupFields:
         inst = _make_institution(code="TU")
         center = _make_center(inst, name="AI Lab", code="AI")
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="NLP", code="NLP",
+            institution=inst,
+            center=center,
+            name="NLP",
+            code="NLP",
         )
         assert str(group) == "NLP (TU)"
 
@@ -451,12 +482,18 @@ class TestResearchGroupFields:
         inst = _make_institution()
         center = _make_center(inst, name="C", code="C")
         ResearchGroup.objects.create(
-            institution=inst, center=center, name="G1", code="GX",
+            institution=inst,
+            center=center,
+            name="G1",
+            code="GX",
         )
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 ResearchGroup.objects.create(
-                    institution=inst, center=center, name="G2", code="GX",
+                    institution=inst,
+                    center=center,
+                    name="G2",
+                    code="GX",
                 )
 
     def test_center_must_match_institution(self, db):
@@ -465,7 +502,10 @@ class TestResearchGroupFields:
         inst_b = _make_institution(name="B", code="B")
         center_b = _make_center(inst_b, name="B Center", code="BC")
         group = ResearchGroup(
-            institution=inst_a, center=center_b, name="Bad", code="BAD",
+            institution=inst_a,
+            center=center_b,
+            name="Bad",
+            code="BAD",
         )
         with pytest.raises(ValidationError, match="different institution"):
             group.full_clean()
@@ -478,7 +518,10 @@ class TestResearchGroupFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         assert group.status == "active"
 
@@ -486,7 +529,10 @@ class TestResearchGroupFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         group.deactivate()
         assert group.status == "deactivated"
@@ -495,7 +541,10 @@ class TestResearchGroupFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         group.archive()
         assert group.status == "archived"
@@ -504,7 +553,10 @@ class TestResearchGroupFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         group.archive()
         with pytest.raises(TransitionNotAllowed):
@@ -524,7 +576,10 @@ class TestResearchLineFields:
         inst = _make_institution()
         center = _make_center(inst, name="AI Lab", code="AI")
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="NLP", code="NLP",
+            institution=inst,
+            center=center,
+            name="NLP",
+            code="NLP",
         )
         line = ResearchLine.objects.create(
             institution=inst,
@@ -543,10 +598,16 @@ class TestResearchLineFields:
         inst = _make_institution(code="TU")
         center = _make_center(inst, name="AI Lab", code="AI")
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="NLP", code="NLP",
+            institution=inst,
+            center=center,
+            name="NLP",
+            code="NLP",
         )
         line = ResearchLine.objects.create(
-            institution=inst, group=group, name="Sentiment", code="SA",
+            institution=inst,
+            group=group,
+            name="Sentiment",
+            code="SA",
         )
         assert str(line) == "Sentiment (TU)"
 
@@ -555,15 +616,24 @@ class TestResearchLineFields:
         inst = _make_institution()
         center = _make_center(inst, name="C", code="C")
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         ResearchLine.objects.create(
-            institution=inst, group=group, name="L1", code="LX",
+            institution=inst,
+            group=group,
+            name="L1",
+            code="LX",
         )
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 ResearchLine.objects.create(
-                    institution=inst, group=group, name="L2", code="LX",
+                    institution=inst,
+                    group=group,
+                    name="L2",
+                    code="LX",
                 )
 
     def test_group_must_match_institution(self, db):
@@ -572,10 +642,16 @@ class TestResearchLineFields:
         inst_b = _make_institution(name="B", code="B")
         center_b = _make_center(inst_b, name="BC", code="BC")
         group_b = ResearchGroup.objects.create(
-            institution=inst_b, center=center_b, name="B Group", code="BG",
+            institution=inst_b,
+            center=center_b,
+            name="B Group",
+            code="BG",
         )
         line = ResearchLine(
-            institution=inst_a, group=group_b, name="Bad", code="BAD",
+            institution=inst_a,
+            group=group_b,
+            name="Bad",
+            code="BAD",
         )
         with pytest.raises(ValidationError, match="different institution"):
             line.full_clean()
@@ -588,10 +664,16 @@ class TestResearchLineFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         line = ResearchLine.objects.create(
-            institution=inst, group=group, name="L", code="L",
+            institution=inst,
+            group=group,
+            name="L",
+            code="L",
         )
         assert line.status == "active"
 
@@ -599,10 +681,16 @@ class TestResearchLineFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         line = ResearchLine.objects.create(
-            institution=inst, group=group, name="L", code="L",
+            institution=inst,
+            group=group,
+            name="L",
+            code="L",
         )
         line.deactivate()
         assert line.status == "deactivated"
@@ -611,10 +699,16 @@ class TestResearchLineFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         line = ResearchLine.objects.create(
-            institution=inst, group=group, name="L", code="L",
+            institution=inst,
+            group=group,
+            name="L",
+            code="L",
         )
         line.archive()
         assert line.status == "archived"
@@ -623,10 +717,16 @@ class TestResearchLineFSM:
         inst = _make_institution()
         center = _make_center(inst)
         group = ResearchGroup.objects.create(
-            institution=inst, center=center, name="G", code="G",
+            institution=inst,
+            center=center,
+            name="G",
+            code="G",
         )
         line = ResearchLine.objects.create(
-            institution=inst, group=group, name="L", code="L",
+            institution=inst,
+            group=group,
+            name="L",
+            code="L",
         )
         line.archive()
         with pytest.raises(TransitionNotAllowed):

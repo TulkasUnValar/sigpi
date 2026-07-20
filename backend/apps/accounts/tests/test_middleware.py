@@ -8,13 +8,13 @@ Tests define the expected behavior of:
 Spec references: FR-004, FR-006
 Design reference: openspec/changes/auth/design.md — TenantMiddleware, PostgreSQL RLS Design
 """
+
 import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.contrib.auth.middleware import AuthenticationMiddleware
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.test import RequestFactory
 
 from apps.accounts.models import InstitutionMembership, Role, User
@@ -27,16 +27,12 @@ from apps.institutions.models import Institution
 
 @pytest.fixture
 def institution(db) -> Institution:
-    return Institution.objects.create(
-        name="Universidad Test", code="UTEST"
-    )
+    return Institution.objects.create(name="Universidad Test", code="UTEST")
 
 
 @pytest.fixture
 def other_institution(db) -> Institution:
-    return Institution.objects.create(
-        name="Otra Universidad", code="OTRA"
-    )
+    return Institution.objects.create(name="Otra Universidad", code="OTRA")
 
 
 @pytest.fixture
@@ -98,6 +94,7 @@ def user_multi_institution(db, institution, other_institution, researcher_role) 
 # TenantMiddleware Tests
 # ──────────────────────────────────────────────────────────
 
+
 # Dummy get_response for middleware testing
 def dummy_get_response(request):
     return HttpResponse("OK")
@@ -117,8 +114,7 @@ class TestTenantMiddleware:
             request.user = user
         return request
 
-    def test_injects_institution_id_from_session(self, db, institution,
-                                                  user_with_membership):
+    def test_injects_institution_id_from_session(self, db, institution, user_with_membership):
         """Session's institution_id is injected into request.institution_id."""
         from config.middleware.tenant import TenantMiddleware
 
@@ -150,8 +146,7 @@ class TestTenantMiddleware:
 
         assert request.institution_id is None
 
-    def test_loads_active_membership(self, db, institution, user_with_membership,
-                                      researcher_role):
+    def test_loads_active_membership(self, db, institution, user_with_membership, researcher_role):
         """Active membership is loaded from DB when institution_id matches."""
         from config.middleware.tenant import TenantMiddleware
 
@@ -169,9 +164,9 @@ class TestTenantMiddleware:
         assert request.active_membership.user == user_with_membership
         assert request.active_membership.institution == institution
 
-    def test_active_membership_selects_related_role(self, db, institution,
-                                                     user_with_membership,
-                                                     researcher_role):
+    def test_active_membership_selects_related_role(
+        self, db, institution, user_with_membership, researcher_role
+    ):
         """Active membership includes the role via select_related."""
         from config.middleware.tenant import TenantMiddleware
 
@@ -188,8 +183,9 @@ class TestTenantMiddleware:
         assert request.active_membership.role == researcher_role
         assert request.active_membership.role.name == "Investigador"
 
-    def test_active_membership_none_for_wrong_institution(self, db, institution,
-                                                           user_with_membership):
+    def test_active_membership_none_for_wrong_institution(
+        self, db, institution, user_with_membership
+    ):
         """active_membership is None when institution_id doesn't match a membership."""
         from config.middleware.tenant import TenantMiddleware
 
@@ -206,9 +202,7 @@ class TestTenantMiddleware:
 
         assert request.active_membership is None
 
-    def test_active_membership_none_for_inactive_membership(
-        self, db, institution, researcher_role
-    ):
+    def test_active_membership_none_for_inactive_membership(self, db, institution, researcher_role):
         """active_membership is None when membership is not active."""
         from config.middleware.tenant import TenantMiddleware
 
@@ -234,8 +228,7 @@ class TestTenantMiddleware:
 
         assert request.active_membership is None
 
-    def test_middleware_passes_through_to_view(self, db, user_with_membership,
-                                                institution):
+    def test_middleware_passes_through_to_view(self, db, user_with_membership, institution):
         """Middleware calls get_response and returns its result."""
         from config.middleware.tenant import TenantMiddleware
 
@@ -253,9 +246,7 @@ class TestTenantMiddleware:
         assert result.status_code == 200
         assert result.content == b"View Response"
 
-    def test_returns_400_when_tenant_required_but_no_institution(
-        self, db, user_with_membership
-    ):
+    def test_returns_400_when_tenant_required_but_no_institution(self, db, user_with_membership):
         """Tenant-required endpoint with no institution returns 400."""
         from config.middleware.tenant import TenantMiddleware
 
@@ -273,7 +264,6 @@ class TestTenantMiddleware:
         response = middleware(request)
 
         assert response.status_code == 400
-        data = response.json() if hasattr(response, 'json') else {}
         assert "institution" in response.content.decode().lower()
 
     def test_anonymous_user_bypasses_tenant_check(self, db):
@@ -281,9 +271,7 @@ class TestTenantMiddleware:
         from config.middleware.tenant import TenantMiddleware
 
         factory = RequestFactory()
-        request = self._build_middleware_request(
-            factory, user=None, session_data={}
-        )
+        request = self._build_middleware_request(factory, user=None, session_data={})
         request.user = MagicMock()
         request.user.is_authenticated = False
         request.path = "/api/projects/"
@@ -330,8 +318,9 @@ class TestTenantRLSMiddleware:
         return request
 
     @patch("config.middleware.tenant.connection")
-    def test_sets_institution_id_when_present(self, mock_connection, db, institution,
-                                                user_with_membership):
+    def test_sets_institution_id_when_present(
+        self, mock_connection, db, institution, user_with_membership
+    ):
         """When institution_id is set, RLS context is set via SET LOCAL."""
         from config.middleware.tenant import TenantRLSMiddleware
 
@@ -354,8 +343,7 @@ class TestTenantRLSMiddleware:
         )
 
     @patch("config.middleware.tenant.connection")
-    def test_no_set_when_no_institution(self, mock_connection, db,
-                                         user_with_membership):
+    def test_no_set_when_no_institution(self, mock_connection, db, user_with_membership):
         """When institution_id is None, no RLS context is set."""
         from config.middleware.tenant import TenantRLSMiddleware
 
@@ -377,9 +365,7 @@ class TestTenantRLSMiddleware:
         """Superuser gets bypass_rls set."""
         from config.middleware.tenant import TenantRLSMiddleware
 
-        user = User.objects.create_superuser(
-            email="super@example.com", password="superpass123"
-        )
+        user = User.objects.create_superuser(email="super@example.com", password="superpass123")
 
         factory = RequestFactory()
         request = self._build_request(
@@ -400,8 +386,9 @@ class TestTenantRLSMiddleware:
         assert any("sigpi.bypass_rls" in c for c in calls)
 
     @patch("config.middleware.tenant.connection")
-    def test_no_bypass_for_non_superuser(self, mock_connection, db, institution,
-                                           user_with_membership):
+    def test_no_bypass_for_non_superuser(
+        self, mock_connection, db, institution, user_with_membership
+    ):
         """Non-superuser does not get bypass_rls."""
         from config.middleware.tenant import TenantRLSMiddleware
 
@@ -425,8 +412,7 @@ class TestTenantRLSMiddleware:
         assert "bypass" not in call.lower()
 
     @patch("config.middleware.tenant.connection")
-    def test_passes_through_to_view(self, mock_connection, db, institution,
-                                      user_with_membership):
+    def test_passes_through_to_view(self, mock_connection, db, institution, user_with_membership):
         """RLS middleware calls get_response and returns its result."""
         from config.middleware.tenant import TenantRLSMiddleware
 

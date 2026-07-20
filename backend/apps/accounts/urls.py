@@ -1,6 +1,6 @@
 """Auth URL routing for SIGPI accounts app."""
-from django.urls import path
 
+from django.urls import path
 from mozilla_django_oidc.views import OIDCAuthenticationCallbackView
 
 from . import views

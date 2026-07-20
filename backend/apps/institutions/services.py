@@ -20,12 +20,12 @@ Child Resolution Map:
 from django.core.exceptions import ValidationError
 
 from apps.institutions.models import (
-    Institution,
-    Sede,
     Facultad,
+    Institution,
     ResearchCenter,
     ResearchGroup,
     ResearchLine,
+    Sede,
 )
 
 
@@ -106,9 +106,7 @@ class InstitutionLifecycleService:
         Raises ValidationError with 409-style message if blocked.
         """
         if InstitutionLifecycleService._has_active_children(instance):
-            raise ValidationError(
-                "Deactivate or archive children first."
-            )
+            raise ValidationError("Deactivate or archive children first.")
         instance.deactivate()
         instance.is_active = False
         instance.save()
@@ -122,9 +120,7 @@ class InstitutionLifecycleService:
         Raises ValidationError with 409-style message if blocked.
         """
         if InstitutionLifecycleService._has_active_children(instance):
-            raise ValidationError(
-                "Deactivate or archive children first."
-            )
+            raise ValidationError("Deactivate or archive children first.")
         instance.archive()
         instance.is_active = False
         instance.save()

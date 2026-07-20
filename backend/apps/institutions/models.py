@@ -10,12 +10,12 @@ Implementa el modelo de datos definido en design.md y spec.md:
 Design reference: openspec/changes/institutions/design.md
 Spec reference: openspec/changes/institutions/spec.md
 """
+
 import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_fsm import FSMField, transition
-
 
 # ──────────────────────────────────────────────
 # Abstract base for institution-scoped entities
@@ -177,9 +177,7 @@ class Facultad(InstitutionScopedModel):
     def clean(self):
         super().clean()
         if self.sede and self.sede.institution_id != self.institution_id:
-            raise ValidationError(
-                {"sede": "Sede belongs to a different institution."}
-            )
+            raise ValidationError({"sede": "Sede belongs to a different institution."})
 
     def __str__(self) -> str:
         return f"{self.name} ({self.institution.code})"
@@ -287,9 +285,7 @@ class ResearchGroup(InstitutionScopedModel):
     def clean(self):
         super().clean()
         if self.center.institution_id != self.institution_id:
-            raise ValidationError(
-                {"center": "Center belongs to a different institution."}
-            )
+            raise ValidationError({"center": "Center belongs to a different institution."})
 
     def __str__(self) -> str:
         return f"{self.name} ({self.institution.code})"
@@ -330,9 +326,7 @@ class ResearchLine(InstitutionScopedModel):
     def clean(self):
         super().clean()
         if self.group.institution_id != self.institution_id:
-            raise ValidationError(
-                {"group": "Group belongs to a different institution."}
-            )
+            raise ValidationError({"group": "Group belongs to a different institution."})
 
     def __str__(self) -> str:
         return f"{self.name} ({self.institution.code})"

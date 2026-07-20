@@ -12,6 +12,7 @@ Tests that each auth endpoint emits the correct audit event:
 Spec references: FR-007
 Design reference: openspec/changes/auth/design.md — AuditEventEmitter
 """
+
 import uuid
 from unittest.mock import patch
 
@@ -22,11 +23,10 @@ from django.urls import reverse
 
 from apps.accounts.audit import AuditEvent, AuditEventType
 from apps.accounts.models import InstitutionMembership, Role, User
-from apps.institutions.models import Institution
 
 # Module-level import so mock paths resolve correctly
 from apps.accounts.tasks import sync_keycloak_roles  # noqa: F401
-
+from apps.institutions.models import Institution
 
 # ──────────────────────────────────────────────────────────
 # Fixtures
@@ -125,7 +125,7 @@ class TestLoginAudit:
 
     def test_failed_login_with_disabled_user_emits_event(self, api_client, db):
         """Login with a disabled (inactive) user emits FAILED_LOGIN."""
-        disabled = User.objects.create_user(
+        _disabled = User.objects.create_user(
             email="disabled@example.com",
             auth_source="local",
             password="testpass123",
@@ -232,7 +232,9 @@ class TestInstitutionSwitchAudit:
         assert "previous_institution_id" in event.details
         assert event.details["previous_institution_id"] == str(institution.id)
 
-    def test_switch_fails_no_membership_does_not_emit(self, api_client, local_user, other_institution):
+    def test_switch_fails_no_membership_does_not_emit(
+        self, api_client, local_user, other_institution
+    ):
         """Failed switch (no membership) does NOT emit an audit event."""
         api_client.login(username="localuser@example.com", password="testpass123")
 
@@ -329,8 +331,8 @@ class TestOIDCLoginAudit:
     def test_oidc_login_signal_emits_login_event(self, db):
         """When a keycloak user logs in, a LOGIN audit event is emitted."""
         from django.contrib.auth import login as auth_login
-        from django.test import RequestFactory
         from django.contrib.sessions.middleware import SessionMiddleware
+        from django.test import RequestFactory
 
         kc_uuid = uuid.uuid4()
         user = User.objects.create_user(

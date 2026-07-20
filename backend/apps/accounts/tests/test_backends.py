@@ -7,14 +7,10 @@ per spec FR-001, FR-003 (email-uniqueness & account linking).
 Spec reference: openspec/changes/auth/spec.md
 Design reference: openspec/changes/auth/design.md
 """
+
 import uuid
-from unittest.mock import MagicMock, patch
 
 import pytest
-from django.core.exceptions import ImproperlyConfigured
-
-from apps.accounts.models import Role, User
-from apps.institutions.models import Institution, ResearchCenter
 
 # The backend module does not exist yet — these imports WILL fail.
 # That is the point of RED: the test references code that must be built.
@@ -22,6 +18,8 @@ from apps.accounts.backends import (
     AccountLinkingError,
     SIGPIOIDCBackend,
 )
+from apps.accounts.models import Role, User
+from apps.institutions.models import Institution, ResearchCenter
 
 # ──────────────────────────────────────────────────────────
 # Test fixtures / helpers
@@ -161,10 +159,14 @@ class TestCreateUser:
             code="UNAL",
         )
         center_a = ResearchCenter.objects.create(
-            name="Centro A", code="CA", institution=institution,
+            name="Centro A",
+            code="CA",
+            institution=institution,
         )
         center_b = ResearchCenter.objects.create(
-            name="Centro B", code="CB", institution=institution,
+            name="Centro B",
+            code="CB",
+            institution=institution,
         )
         claims = _make_claims(
             sigpi_institution_id=str(institution.pk),
@@ -214,8 +216,11 @@ class TestUpdateUser:
             keycloak_uuid=kc_uuid,
         )
         from apps.accounts.models import InstitutionMembership
+
         InstitutionMembership.objects.create(
-            user=user, institution=institution, role=role,
+            user=user,
+            institution=institution,
+            role=role,
         )
         return user, kc_uuid, institution
 
@@ -288,9 +293,7 @@ class TestAccountLinkingVerified:
     def institution(self):
         return Institution.objects.create(name="UPB", code="UPB")
 
-    def test_auto_link_verified_email_sets_keycloak_uuid(
-        self, db, local_user, institution
-    ):
+    def test_auto_link_verified_email_sets_keycloak_uuid(self, db, local_user, institution):
         """When KC email is verified and matches a local user, accounts link."""
         claims = _make_claims(
             email="linktest@example.com",
@@ -306,9 +309,7 @@ class TestAccountLinkingVerified:
         assert user.keycloak_uuid is not None
         assert str(user.keycloak_uuid) == claims["sub"]
 
-    def test_auto_link_changes_auth_source_to_keycloak(
-        self, db, local_user, institution
-    ):
+    def test_auto_link_changes_auth_source_to_keycloak(self, db, local_user, institution):
         """Linked accounts get auth_source updated to 'keycloak'."""
         claims = _make_claims(
             email="linktest@example.com",
@@ -352,9 +353,7 @@ class TestAccountLinkingUnverified:
             keycloak_uuid=None,
         )
 
-    def test_unverified_email_raises_account_linking_error(
-        self, db, local_user
-    ):
+    def test_unverified_email_raises_account_linking_error(self, db, local_user):
         """If KC email is unverified, linking raises AccountLinkingError."""
         institution = Institution.objects.create(name="UPB", code="UPB")
         claims = _make_claims(
@@ -369,9 +368,7 @@ class TestAccountLinkingUnverified:
 
         assert "manual" in str(exc_info.value).lower() or "confirm" in str(exc_info.value).lower()
 
-    def test_unverified_email_does_not_modify_local_user(
-        self, db, local_user
-    ):
+    def test_unverified_email_does_not_modify_local_user(self, db, local_user):
         """Unverified email linking does not change the local user."""
         institution = Institution.objects.create(name="UPB", code="UPB")
         claims = _make_claims(

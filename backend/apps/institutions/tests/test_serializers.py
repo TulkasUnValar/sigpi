@@ -7,18 +7,17 @@ ResearchCenter, ResearchGroup, ResearchLine.
 Strict TDD: this file is written BEFORE serializers.py exists.
 Expected failure: ModuleNotFoundError (serializers.py not created yet).
 """
+
 import pytest
-from django.core.exceptions import ValidationError as DjangoValidationError
 
 from apps.institutions.tests.conftest import (
-    InstitutionFactory,
-    SedeFactory,
     FacultadFactory,
+    InstitutionFactory,
     ResearchCenterFactory,
     ResearchGroupFactory,
     ResearchLineFactory,
+    SedeFactory,
 )
-
 
 # ──────────────────────────────────────────────────────────
 # Helpers
@@ -151,7 +150,6 @@ class TestSedeSerializer:
         """status must be ignored on deserialization."""
         from apps.institutions.serializers import SedeSerializer
 
-        inst = InstitutionFactory()
         data = {"name": "X", "code": "X01", "status": "archived"}
         serializer = SedeSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
@@ -184,7 +182,6 @@ class TestFacultadSerializer:
         """Minimal valid data passes validation."""
         from apps.institutions.serializers import FacultadSerializer
 
-        inst = InstitutionFactory()
         data = {"name": "Engineering", "code": "ENG01"}
         serializer = FacultadSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
@@ -246,7 +243,8 @@ class TestResearchCenterSerializer:
 
         inst = InstitutionFactory.build(id=None)
         center = ResearchCenterFactory.build(
-            id=None, institution=inst,
+            id=None,
+            institution=inst,
             contact_email="test@uni.edu",
             contact_phone="555-0100",
         )
@@ -259,7 +257,6 @@ class TestResearchCenterSerializer:
         """Minimal valid data passes."""
         from apps.institutions.serializers import ResearchCenterSerializer
 
-        inst = InstitutionFactory()
         data = {"name": "AI Lab", "code": "AIL01"}
         serializer = ResearchCenterSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
@@ -404,14 +401,17 @@ class TestStatusAcrossSerializers:
     """All 6 serializers must treat status as read-only."""
 
     @pytest.mark.django_db
-    @pytest.mark.parametrize("serializer_cls_name,data", [
-        ("InstitutionSerializer", {"name": "T", "code": "T01", "status": "archived"}),
-        ("SedeSerializer", {"name": "T", "code": "T01", "status": "archived"}),
-        ("FacultadSerializer", {"name": "T", "code": "T01", "status": "archived"}),
-        ("ResearchCenterSerializer", {"name": "T", "code": "T01", "status": "archived"}),
-        ("ResearchGroupSerializer", {"name": "T", "code": "T01", "status": "archived"}),
-        ("ResearchLineSerializer", {"name": "T", "code": "T01", "status": "archived"}),
-    ])
+    @pytest.mark.parametrize(
+        "serializer_cls_name,data",
+        [
+            ("InstitutionSerializer", {"name": "T", "code": "T01", "status": "archived"}),
+            ("SedeSerializer", {"name": "T", "code": "T01", "status": "archived"}),
+            ("FacultadSerializer", {"name": "T", "code": "T01", "status": "archived"}),
+            ("ResearchCenterSerializer", {"name": "T", "code": "T01", "status": "archived"}),
+            ("ResearchGroupSerializer", {"name": "T", "code": "T01", "status": "archived"}),
+            ("ResearchLineSerializer", {"name": "T", "code": "T01", "status": "archived"}),
+        ],
+    )
     def test_status_read_only_ignored(self, serializer_cls_name, data):
         """Every serializer must ignore status on input."""
         import apps.institutions.serializers as mod

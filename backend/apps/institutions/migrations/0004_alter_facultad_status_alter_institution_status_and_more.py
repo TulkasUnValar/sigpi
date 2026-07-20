@@ -5,40 +5,39 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('institutions', '0003_rls_policies'),
+        ("institutions", "0003_rls_policies"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='facultad',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50),
+            model_name="facultad",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50),
         ),
         migrations.AlterField(
-            model_name='institution',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50),
+            model_name="institution",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50),
         ),
         migrations.AlterField(
-            model_name='researchcenter',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50),
+            model_name="researchcenter",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50),
         ),
         migrations.AlterField(
-            model_name='researchgroup',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50),
+            model_name="researchgroup",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50),
         ),
         migrations.AlterField(
-            model_name='researchline',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50),
+            model_name="researchline",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50),
         ),
         migrations.AlterField(
-            model_name='sede',
-            name='status',
-            field=django_fsm.FSMField(default='active', max_length=50),
+            model_name="sede",
+            name="status",
+            field=django_fsm.FSMField(default="active", max_length=50),
         ),
     ]

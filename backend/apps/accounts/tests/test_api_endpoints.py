@@ -10,7 +10,7 @@ Tests define the expected behavior of:
 Spec references: FR-004, FR-001
 Design reference: openspec/changes/auth/design.md — API Design (Expanded)
 """
-import json
+
 import uuid
 from unittest.mock import patch
 
@@ -20,7 +20,6 @@ from django.urls import reverse
 
 from apps.accounts.models import InstitutionMembership, Role, User
 from apps.institutions.models import Institution, ResearchCenter
-
 
 # ──────────────────────────────────────────────────────────
 # Fixtures
@@ -76,8 +75,9 @@ def user_with_membership(db, local_user, institution, researcher_role):
 
 
 @pytest.fixture
-def user_multi_institution(db, local_user, institution, other_institution,
-                            researcher_role, admin_role):
+def user_multi_institution(
+    db, local_user, institution, other_institution, researcher_role, admin_role
+):
     """User with memberships in two institutions."""
     # Remove existing memberships first
     InstitutionMembership.objects.filter(user=local_user).delete()
@@ -121,12 +121,11 @@ class TestSwitchInstitution:
         )
         assert response.status_code == 401
 
-    def test_switch_to_valid_institution(self, api_client, user_multi_institution,
-                                          other_institution):
+    def test_switch_to_valid_institution(
+        self, api_client, user_multi_institution, other_institution
+    ):
         """User can switch to an institution they belong to."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("switch_institution")
 
         response = api_client.post(
@@ -141,12 +140,9 @@ class TestSwitchInstitution:
         assert data["active_institution"]["name"] == other_institution.name
         assert "role" in data
 
-    def test_switch_updates_session(self, api_client, user_multi_institution,
-                                      other_institution):
+    def test_switch_updates_session(self, api_client, user_multi_institution, other_institution):
         """Switching updates the session institution_id."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("switch_institution")
 
         api_client.post(
@@ -163,9 +159,7 @@ class TestSwitchInstitution:
 
     def test_switch_to_invalid_institution(self, api_client, user_with_membership):
         """403 when user doesn't belong to target institution."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("switch_institution")
         fake_id = str(uuid.uuid4())
 
@@ -176,18 +170,17 @@ class TestSwitchInstitution:
         )
         assert response.status_code == 403
 
-    def test_switch_to_inactive_membership(self, api_client, db, local_user,
-                                             institution, researcher_role):
+    def test_switch_to_inactive_membership(
+        self, api_client, db, local_user, institution, researcher_role
+    ):
         """403 when membership is inactive."""
-        membership = InstitutionMembership.objects.create(
+        _membership = InstitutionMembership.objects.create(
             user=local_user,
             institution=institution,
             role=researcher_role,
             is_active=False,
         )
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("switch_institution")
 
         response = api_client.post(
@@ -199,18 +192,14 @@ class TestSwitchInstitution:
 
     def test_switch_requires_post(self, api_client, user_with_membership):
         """GET not allowed on switch endpoint."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("switch_institution")
         response = api_client.get(url)
         assert response.status_code == 405
 
     def test_switch_missing_institution_id(self, api_client, user_with_membership):
         """400 when institution_id is missing from request body."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("switch_institution")
 
         response = api_client.post(
@@ -220,8 +209,9 @@ class TestSwitchInstitution:
         )
         assert response.status_code == 400
 
-    def test_switch_with_centers_in_response(self, api_client, db, local_user,
-                                               institution, researcher_role, center):
+    def test_switch_with_centers_in_response(
+        self, api_client, db, local_user, institution, researcher_role, center
+    ):
         """Response includes centers when membership has centers assigned."""
         membership = InstitutionMembership.objects.create(
             user=local_user,
@@ -231,9 +221,7 @@ class TestSwitchInstitution:
         )
         membership.centers.add(center)
 
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("switch_institution")
 
         response = api_client.post(
@@ -256,12 +244,9 @@ class TestSwitchInstitution:
 class TestAuthMeUpdated:
     """GET /auth/me/ returns full user profile with serializer shape."""
 
-    def test_me_includes_active_institution(self, api_client, user_multi_institution,
-                                              institution):
+    def test_me_includes_active_institution(self, api_client, user_multi_institution, institution):
         """me response includes active_institution_id and active_role from session."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         # Simulate having switched to an institution
         session = api_client.session
         session["institution_id"] = str(institution.id)
@@ -275,9 +260,9 @@ class TestAuthMeUpdated:
         assert data["active_institution_id"] == str(institution.id)
         assert data["active_role"] == "Investigador"
 
-    def test_me_includes_centers_in_memberships(self, api_client, db, local_user,
-                                                  institution, researcher_role,
-                                                  center):
+    def test_me_includes_centers_in_memberships(
+        self, api_client, db, local_user, institution, researcher_role, center
+    ):
         """Memberships in me response include centers list."""
         membership = InstitutionMembership.objects.create(
             user=local_user,
@@ -287,9 +272,7 @@ class TestAuthMeUpdated:
         )
         membership.centers.add(center)
 
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("auth_me")
         response = api_client.get(url)
         assert response.status_code == 200
@@ -303,9 +286,7 @@ class TestAuthMeUpdated:
 
     def test_me_includes_is_superuser(self, api_client, user_with_membership):
         """me response includes is_superuser flag."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("auth_me")
         response = api_client.get(url)
         data = response.json()
@@ -314,9 +295,7 @@ class TestAuthMeUpdated:
 
     def test_me_includes_auth_source(self, api_client, user_with_membership):
         """me response includes auth_source field."""
-        api_client.login(
-            username="test@unal.edu.co", password="testpass123"
-        )
+        api_client.login(username="test@unal.edu.co", password="testpass123")
         url = reverse("auth_me")
         response = api_client.get(url)
         data = response.json()
@@ -345,6 +324,7 @@ class TestOIDCCallback:
     def test_callback_delegates_to_oidc_view(self, mock_get, api_client):
         """The callback URL routes to mozilla-django-oidc callback view."""
         from django.http import HttpResponseRedirect
+
         mock_get.return_value = HttpResponseRedirect("/dashboard/")
         url = reverse("oidc_callback")
         response = api_client.get(url)
@@ -372,9 +352,9 @@ class TestLoginResponseShape:
         assert "id" in data["user"]
         assert data["user"]["email"] == "test@unal.edu.co"
 
-    def test_login_sets_active_institution_from_primary(self, api_client, db,
-                                                          local_user, institution,
-                                                          researcher_role):
+    def test_login_sets_active_institution_from_primary(
+        self, api_client, db, local_user, institution, researcher_role
+    ):
         """Login sets institution_id in session from primary membership."""
         InstitutionMembership.objects.create(
             user=local_user,

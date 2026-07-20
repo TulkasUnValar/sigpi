@@ -10,7 +10,7 @@ Tests verify:
 Spec references: FR-004, Security Requirements
 Design reference: openspec/changes/auth/design.md — Cookie Configuration
 """
-import pytest
+
 from django.conf import settings
 
 
@@ -28,28 +28,16 @@ class TestMiddlewareRegistration:
     def test_tenant_middleware_after_auth_middleware(self):
         """TenantMiddleware must run AFTER AuthenticationMiddleware."""
         middleware_list = settings.MIDDLEWARE
-        auth_idx = middleware_list.index(
-            "django.contrib.auth.middleware.AuthenticationMiddleware"
-        )
-        tenant_idx = middleware_list.index(
-            "config.middleware.tenant.TenantMiddleware"
-        )
-        assert tenant_idx > auth_idx, (
-            "TenantMiddleware must run after AuthenticationMiddleware"
-        )
+        auth_idx = middleware_list.index("django.contrib.auth.middleware.AuthenticationMiddleware")
+        tenant_idx = middleware_list.index("config.middleware.tenant.TenantMiddleware")
+        assert tenant_idx > auth_idx, "TenantMiddleware must run after AuthenticationMiddleware"
 
     def test_rls_middleware_after_tenant_middleware(self):
         """TenantRLSMiddleware must run AFTER TenantMiddleware."""
         middleware_list = settings.MIDDLEWARE
-        tenant_idx = middleware_list.index(
-            "config.middleware.tenant.TenantMiddleware"
-        )
-        rls_idx = middleware_list.index(
-            "config.middleware.tenant.TenantRLSMiddleware"
-        )
-        assert rls_idx > tenant_idx, (
-            "TenantRLSMiddleware must run after TenantMiddleware"
-        )
+        tenant_idx = middleware_list.index("config.middleware.tenant.TenantMiddleware")
+        rls_idx = middleware_list.index("config.middleware.tenant.TenantRLSMiddleware")
+        assert rls_idx > tenant_idx, "TenantRLSMiddleware must run after TenantMiddleware"
 
 
 class TestSessionConfig:
@@ -86,15 +74,9 @@ class TestCORSConfig:
     def test_cors_middleware_before_common(self):
         """CorsMiddleware must be before CommonMiddleware."""
         middleware_list = settings.MIDDLEWARE
-        cors_idx = middleware_list.index(
-            "corsheaders.middleware.CorsMiddleware"
-        )
-        common_idx = middleware_list.index(
-            "django.middleware.common.CommonMiddleware"
-        )
-        assert cors_idx < common_idx, (
-            "CorsMiddleware must be before CommonMiddleware"
-        )
+        cors_idx = middleware_list.index("corsheaders.middleware.CorsMiddleware")
+        common_idx = middleware_list.index("django.middleware.common.CommonMiddleware")
+        assert cors_idx < common_idx, "CorsMiddleware must be before CommonMiddleware"
 
     def test_cors_allowed_origins(self):
         """Next.js frontend origin is in CORS allowed origins."""

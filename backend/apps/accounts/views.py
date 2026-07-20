@@ -12,27 +12,17 @@ Implements the authentication API endpoints defined in design.md:
 Spec references: FR-002, FR-003, FR-004
 Design reference: openspec/changes/auth/design.md — API Design
 """
+
 import json
 import logging
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.accounts.audit import AuditEventEmitter, AuditEventType
 from apps.accounts.models import InstitutionMembership
-from apps.accounts.backends import AccountLinkingError, SIGPIOIDCBackend
-from apps.accounts.serializers import (
-    CenterSerializer,
-    InstitutionSerializer,
-    InstitutionSwitchSerializer,
-    LoginSerializer,
-    MembershipSerializer,
-    RoleSerializer,
-    UserSerializer,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -298,8 +288,7 @@ def switch_institution_view(request: HttpRequest) -> JsonResponse:
 
     user = request.user
     membership = (
-        InstitutionMembership.objects
-        .select_related("institution", "role")
+        InstitutionMembership.objects.select_related("institution", "role")
         .prefetch_related("centers")
         .filter(
             user=user,
@@ -344,10 +333,7 @@ def switch_institution_view(request: HttpRequest) -> JsonResponse:
                 "name": membership.role.name,
                 "level": membership.role.level,
             },
-            "centers": [
-                {"id": str(c.id), "name": c.name}
-                for c in membership.centers.all()
-            ],
+            "centers": [{"id": str(c.id), "name": c.name} for c in membership.centers.all()],
         },
         status=200,
     )
@@ -361,9 +347,11 @@ def switch_institution_view(request: HttpRequest) -> JsonResponse:
 def _serialize_user(request: HttpRequest) -> dict:
     """Serialize the current user for API responses."""
     user = request.user
-    memberships = user.memberships.select_related(
-        "institution", "role"
-    ).prefetch_related("centers").filter(is_active=True)
+    memberships = (
+        user.memberships.select_related("institution", "role")
+        .prefetch_related("centers")
+        .filter(is_active=True)
+    )
 
     return {
         "id": str(user.id),
@@ -383,10 +371,7 @@ def _serialize_user(request: HttpRequest) -> dict:
                     "name": m.role.name,
                     "level": m.role.level,
                 },
-                "centers": [
-                    {"id": str(c.id), "name": c.name}
-                    for c in m.centers.all()
-                ],
+                "centers": [{"id": str(c.id), "name": c.name} for c in m.centers.all()],
                 "is_primary": m.is_primary,
                 "is_active": m.is_active,
             }
