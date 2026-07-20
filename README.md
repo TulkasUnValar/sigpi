@@ -50,7 +50,7 @@ backend/
   apps/
     accounts/       # Auth, users, roles, RLS
     institutions/   # Institutions, campuses, centers, groups, lines
-    researchers/    # (next module)
+    researchers/   # Researcher profiles, affiliations, external profiles, attachments
     ...
 frontend/
   app/              # Next.js App Router
@@ -74,6 +74,7 @@ See `openspec/` for artifact trail.
 |--------|--------|-------|----------|
 | accounts (auth) | Archived | — | — |
 | institutions (6.1) | Archived | 245/245 | 96.5% |
+| researchers (6.3) | Archived | 207/207 | ~85-90% |
 
 ## License
 
