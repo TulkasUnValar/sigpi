@@ -5,7 +5,6 @@ Implements the authorization layer defined in design.md:
 - Role-based permission classes for each of the 7 roles
 - Role hierarchy: higher roles inherit lower permissions
 - IsSameInstitution: tenant-scoping at the object level
-- IsProjectOwnerOrCoInvestigator: project-specific ownership
 
 Spec references: FR-005
 Design reference: openspec/changes/auth/design.md — Custom DRF Permission Classes
@@ -191,30 +190,4 @@ class IsSameInstitution(BasePermission):
         return str(institution_id) == str(obj_inst_id)
 
 
-class IsProjectOwnerOrCoInvestigator(BasePermission):
-    """User must be the project's lead researcher or an authorized co-investigator.
 
-    has_permission: always True (defer to object-level check).
-    has_object_permission: checks lead_researcher.user == request.user
-                          OR obj.members.filter(user=user, role='co_investigator').exists()
-    """
-
-    def has_permission(self, request: Request, view) -> bool:
-        return True
-
-    def has_object_permission(self, request: Request, view, obj) -> bool:
-        user = request.user
-        if not user.is_authenticated:
-            return False
-
-        # Check if user is the lead researcher
-        lead = getattr(obj, "lead_researcher", None)
-        if lead is not None and getattr(lead, "user", None) == user:
-            return True
-
-        # Check if user is a co-investigator via members
-        members = getattr(obj, "members", None)
-        if members is not None and hasattr(members, "filter"):
-            return members.filter(user=user, role="co_investigator").exists()
-
-        return False

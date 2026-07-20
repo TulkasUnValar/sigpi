@@ -50,7 +50,8 @@ backend/
   apps/
     accounts/       # Auth, users, roles, RLS
     institutions/   # Institutions, campuses, centers, groups, lines
-    researchers/   # Researcher profiles, affiliations, external profiles, attachments
+    researchers/    # Researcher profiles, affiliations, external profiles, attachments
+    projects/       # Research projects with 12-state FSM lifecycle
     ...
 frontend/
   app/              # Next.js App Router
@@ -75,6 +76,7 @@ See `openspec/` for artifact trail.
 | accounts (auth) | Archived | — | — |
 | institutions (6.1) | Archived | 245/245 | 96.5% |
 | researchers (6.3) | Archived | 207/207 | ~85-90% |
+| projects (6.4) | Active | 275+ | ≥80% |
 
 ## License
 

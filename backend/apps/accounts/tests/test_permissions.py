@@ -10,13 +10,11 @@ Tests define the expected behavior of:
 - IsAssistant: Assistant role (level <= 6)
 - IsAuditor: Auditor role (level <= 7), SAFE_METHODS only
 - IsSameInstitution: object's institution matches request's institution
-- IsProjectOwnerOrCoInvestigator: project-specific ownership check
 - Role hierarchy: higher roles include lower permissions
 
 Spec references: FR-005
 Design reference: openspec/changes/auth/design.md — DRF Permission Classes
 """
-import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -34,7 +32,6 @@ from apps.accounts.permissions import (
     IsCenterDirector,
     IsEvaluador,
     IsInstitutionAdmin,
-    IsProjectOwnerOrCoInvestigator,
     IsResearcher,
     IsSameInstitution,
     IsSuperAdmin,
@@ -689,68 +686,6 @@ class TestIsSameInstitution:
         user = User.objects.create_user(email="user@test.com", auth_source="local", password="pass")
         request = make_mock_request(user=user)
         assert IsSameInstitution().has_permission(request, None) is True
-
-
-# ──────────────────────────────────────────────────────────
-# Test IsProjectOwnerOrCoInvestigator
-# ──────────────────────────────────────────────────────────
-
-
-class TestIsProjectOwnerOrCoInvestigator:
-    """Tests for IsProjectOwnerOrCoInvestigator object-level permission."""
-
-    def test_project_owner_allowed(self, db):
-        """Project lead researcher (owner) has access."""
-        test_user = User.objects.create_user(email="owner@test.com", auth_source="local", password="pass")
-        request = make_mock_request(user=test_user)
-
-        # Mock project where user is lead_researcher
-        class MockLeadResearcher:
-            pass
-        lead = MockLeadResearcher()
-        lead.user = test_user
-        obj = MagicMock(lead_researcher=lead)
-        # Ensure members query returns no co-investigator
-        mock_members = MagicMock()
-        mock_members.filter.return_value.exists.return_value = False
-        obj.members = mock_members
-
-        assert IsProjectOwnerOrCoInvestigator().has_object_permission(request, None, obj) is True
-
-    def test_coinvestigator_allowed(self, db):
-        """Authorized co-investigator has access."""
-        test_user = User.objects.create_user(email="coinv@test.com", auth_source="local", password="pass")
-        request = make_mock_request(user=test_user)
-
-        # Mock project where user is NOT lead but IS co-investigator
-        other_lead = MagicMock()
-        other_lead.user = MagicMock()  # Different user
-        obj = MagicMock(lead_researcher=other_lead)
-        mock_members = MagicMock()
-        mock_members.filter.return_value.exists.return_value = True
-        obj.members = mock_members
-
-        assert IsProjectOwnerOrCoInvestigator().has_object_permission(request, None, obj) is True
-
-    def test_neither_denied(self, db):
-        """User who is neither owner nor co-investigator is denied."""
-        test_user = User.objects.create_user(email="rando@test.com", auth_source="local", password="pass")
-        request = make_mock_request(user=test_user)
-
-        other_lead = MagicMock()
-        other_lead.user = MagicMock()
-        obj = MagicMock(lead_researcher=other_lead)
-        mock_members = MagicMock()
-        mock_members.filter.return_value.exists.return_value = False
-        obj.members = mock_members
-
-        assert IsProjectOwnerOrCoInvestigator().has_object_permission(request, None, obj) is False
-
-    def test_has_permission_always_true(self, db):
-        """View-level permission always passes (object-level only)."""
-        user = User.objects.create_user(email="user@test.com", auth_source="local", password="pass")
-        request = make_mock_request(user=user)
-        assert IsProjectOwnerOrCoInvestigator().has_permission(request, None) is True
 
 
 # ──────────────────────────────────────────────────────────
