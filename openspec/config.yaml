@@ -1,8 +1,16 @@
+schema: spec-driven
+
 project: sigpi
 name: "Sistema de Información para la Gestión de Proyectos de Investigación"
 persistence: openspec
 strict_tdd: true
 spec_path: SPEC_sigpi.md
+
+context: |
+  Django 5.1 + DRF backend, Next.js 15 App Router frontend.
+  PostgreSQL 16, Celery + Redis, Keycloak OIDC/SAML auth.
+  pytest + ruff + mypy backend; Jest + ESLint + Prettier frontend.
+  Docker Compose, GitHub Actions, pre-commit.
 
 stack:
   backend:
@@ -35,35 +43,59 @@ stack:
 testing:
   backend:
     runner: pytest
+    command: "cd backend; python -m pytest"
     frameworks:
       - pytest-django
       - pytest-asyncio (Celery tasks)
+      - pytest-cov
     coverage: pytest-cov
     linting:
       - ruff (linter + formatter)
       - mypy (type checking)
       - pre-commit hooks
     layers:
-      - unit
-      - integration
-      - e2e
+      unit: true
+      integration: true
+      e2e: false
     notes: "Django TestCase available as alternative to pytest-django for simpler test cases. Strict TDD enforced: write tests before implementation."
   frontend:
     runner: Jest (via Next.js built-in)
+    command: "cd frontend; jest --passWithNoTests"
     frameworks:
       - React Testing Library
       - jest-dom
-    e2e: Playwright (recommended)
     coverage: jest --coverage
     linting:
       - ESLint
       - Prettier
       - TypeScript strict mode
     layers:
-      - unit
-      - component
-      - e2e
+      unit: true
+      component: true
+      e2e: false
     notes: "Next.js 15 provides built-in Jest support via next/jest. Playwright recommended for E2E per microservice architecture."
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    tdd: true
+    test_command: "cd backend; python -m pytest"
+  verify:
+    test_command: "cd backend; python -m pytest"
+    build_command: ""
+    coverage_threshold: 80
+  archive:
+    - Warn before merging destructive deltas
 
 tdd_policy:
   strict: true

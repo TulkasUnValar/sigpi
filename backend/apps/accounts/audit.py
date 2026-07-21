@@ -26,6 +26,7 @@ class AuditEventType(models.TextChoices):
     INSTITUTION_SWITCH = "INSTITUTION_SWITCH", "Institution Switch"
     ROLE_CHANGE = "ROLE_CHANGE", "Role Change"
     PERMISSION_DENIED = "PERMISSION_DENIED", "Permission Denied"
+    PROGRESS_STATE_CHANGE = "PROGRESS_STATE_CHANGE", "Progress State Change"
 
 
 # ──────────────────────────────────────────────────────────
