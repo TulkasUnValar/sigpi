@@ -63,10 +63,11 @@ class TestSyncKeycloakRoles:
         _ensure_django_user(u1)
         _ensure_django_user(u2)
         mock_fetch.side_effect = [[u1, u2], []]
+        mock_sync.return_value = {"added": [], "removed": [], "changed": False}
 
         result = sync_keycloak_roles()
 
-        mock_fetch.assert_called_once()
+        assert mock_fetch.call_count == 2
         assert mock_sync.call_count == 2
         assert result["synced"] == 2
 
@@ -86,13 +87,13 @@ class TestSyncKeycloakRoles:
         """Running sync twice doesn't create duplicate groups or errors."""
         u1 = _make_kc_user(str(uuid.uuid4()), ["sigpi_researcher"])
         _ensure_django_user(u1)
-        mock_fetch.side_effect = [[u1], []]
+        mock_fetch.side_effect = [[u1], [], [u1], []]
         mock_sync.return_value = {"added": [], "removed": [], "changed": False}
 
         sync_keycloak_roles()
         sync_keycloak_roles()
 
-        assert mock_fetch.call_count == 2
+        assert mock_fetch.call_count == 4
         assert mock_sync.call_count == 2
 
     @patch("apps.accounts.tasks._fetch_keycloak_users")
