@@ -131,6 +131,17 @@ class ProgressReport(models.Model):
     def __str__(self) -> str:
         return f"{self.project.title} — {self.period_start} / {self.period_end}"
 
+    @property
+    def center_id(self):
+        """Compatibility with IsCenterDirectorForProject.
+
+        ProgressReport has no direct center FK; the center is
+        accessed via project.center_id. This property enables
+        reusing IsCenterDirectorForProject from projects without
+        modification.
+        """
+        return self.project.center_id
+
     def clean(self):
         super().clean()
         errors = {}
