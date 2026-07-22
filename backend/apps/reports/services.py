@@ -3,8 +3,10 @@ Report Services — Renderer, Generator, and Approval logic (§6.6).
 
 Phase 2: ReportRenderer builds context dicts per report type and
 renders Django templates to HTML strings.
+Phase 3: ReportGenerator (WeasyPrint HTML→PDF, RF-057) and
+ReportApprovalService (RN-017 guard, audit, RN-018 metadata).
 
-Spec reference:   sdd/reports/spec — RF-050–RF-053, RF-056
+Spec reference:   sdd/reports/spec — RF-050–RF-053, RF-056, RF-057, RF-058
 Design reference: openspec/changes/reports/design.md
 """
 
@@ -13,6 +15,7 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
+from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
@@ -205,3 +208,141 @@ class ReportRenderer:
             "progress_reports": progress_reports,
             "generated_at": None,
         }
+
+
+# ──────────────────────────────────────────────
+# ReportGenerator (Phase 3)
+# ──────────────────────────────────────────────
+
+
+class ReportGenerator:
+    """Convert rendered HTML to PDF bytes via WeasyPrint (RF-057).
+
+    Usage:
+        generator = ReportGenerator()
+        pdf_bytes = generator.generate_pdf(html)
+        pdf_bytes, _ = generator.generate_report("project", uuid, user)
+    """
+
+    def generate_pdf(self, html: str) -> bytes:
+        """Convert an HTML string to PDF bytes using WeasyPrint.
+
+        Args:
+            html: Rendered Django template HTML string.
+
+        Returns:
+            PDF content as bytes.
+        """
+        import weasyprint
+
+        return weasyprint.HTML(string=html).write_pdf()
+
+    def generate_report(
+        self,
+        report_type: str,
+        entity_id: str | UUID,
+        user,
+    ) -> tuple[bytes, str]:
+        """Render a report to HTML and convert to PDF.
+
+        Args:
+            report_type: One of "project", "researcher", "center", "advances".
+            entity_id: UUID string or UUID object of the target entity.
+            user: Django User for context rendering.
+
+        Returns:
+            Tuple of (pdf_bytes, html_string).
+        """
+        renderer = ReportRenderer()
+        html = renderer.render_html(report_type, entity_id, user)
+        pdf = self.generate_pdf(html)
+        return pdf, html
+
+
+# ──────────────────────────────────────────────
+# ReportApprovalService (Phase 3)
+# ──────────────────────────────────────────────
+
+
+class ReportApprovalService:
+    """Manage report approvals with RN-017 guard, audit, and metadata (RN-018).
+
+    Usage:
+        service = ReportApprovalService()
+        approval = service.approve(report, user)
+    """
+
+    @staticmethod
+    def has_pending_progress_reports(project) -> bool:
+        """Check RN-017: project has pending (enviado/en_revision/observado) progress reports.
+
+        Delegates to ProjectService for the actual query.
+        """
+        from apps.projects.services import ProjectService
+
+        return ProjectService.has_pending_progress_reports(project)
+
+    def approve(self, report, user):
+        """Approve a report — guards, creates approval record, emits audit.
+
+        Args:
+            report: Report instance to approve.
+            user: Django User performing the approval.
+
+        Returns:
+            The created ReportApproval instance.
+
+        Raises:
+            ValidationError: If RN-017 guard blocks (pending progress reports).
+        """
+        from apps.accounts.audit import AuditEventEmitter, AuditEventType
+        from apps.reports.models import ReportApproval, ReportStatus, ReportType
+
+        # ── RN-017: pending progress guard (project type only) ──
+        if report.report_type == ReportType.PROJECT:
+            from apps.projects.models import Project
+
+            try:
+                project = Project.objects.only("pk").get(pk=report.entity_id)
+            except Project.DoesNotExist:
+                raise ValidationError(
+                    "Project not found for this report's entity_id."
+                )
+
+            if self.has_pending_progress_reports(project):
+                raise ValidationError("Pending progress reports must be reviewed")
+
+        # ── Create approval record (RN-018: metadata) ──
+        approval = ReportApproval.objects.create(
+            report=report,
+            approved_by=user,
+            report_version=report.version,
+        )
+
+        # ── Update report status ──
+        report.status = ReportStatus.APPROVED
+        report.save(update_fields=["status"])
+
+        # ── Audit: REPORT_APPROVED (FR-007, RF-058) ──
+        AuditEventEmitter().emit(
+            event_type=AuditEventType.REPORT_APPROVED,
+            user=user,
+            institution_id=report.institution_id,
+            details={
+                "report_type": report.report_type,
+                "entity_id": str(report.entity_id),
+                "report_id": str(report.pk),
+                "approval_id": str(approval.pk),
+                "version": report.version,
+            },
+        )
+
+        logger.info(
+            "Report %s (%s) approved by %s (version %d)",
+            report.pk,
+            report.report_type,
+            user.email,
+            report.version,
+        )
+
+        return approval

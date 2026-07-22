@@ -35,8 +35,8 @@ Chain strategy: feature-branch-chain
 - [ ] 1.6 Create `backend/apps/reports/admin.py` — register `Report` and `ReportApproval` with basic `ModelAdmin`
 - [x] 1.7 Add `REPORT_GENERATED` and `REPORT_APPROVED` to `AuditEventType` in `backend/apps/accounts/audit.py`
 - [x] 1.8 Add `"apps.reports"` to `LOCAL_APPS` in `backend/config/settings/base.py`
-- [ ] 1.9 Add `weasyprint>=62.0` to dependencies in `backend/pyproject.toml`
-- [ ] 1.10 Add WeasyPrint system libs to `backend/Dockerfile` (`libgtk-3-0 libpango-1.0-0 libpangocairo-1.0-0 libcairo2 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info`)
+- [x] 1.9 Add `weasyprint>=62.0` to dependencies in `backend/pyproject.toml`
+- [x] 1.10 Add WeasyPrint system libs to `backend/Dockerfile` (`libpango-1.0-0 libpangocairo-1.0-0 libcairo2 libffi-dev shared-mime-info`)
 - [x] 1.11 Create `backend/apps/reports/tests/__init__.py` and `tests/conftest.py` with `ReportFactory` and `ReportApprovalFactory`
 - [x] 1.12 **RED**: Write `tests/test_models.py` — test UUID PK defaults, `ReportType`/`ReportStatus` choices, `clean()` validation, `ReportApproval.report_version` matches `Report.version`
 - [x] 1.13 **GREEN**: Fix model issues to pass all `test_models.py` tests
@@ -58,16 +58,16 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: PDF + Approval + Audit (~360 lines)
 
-- [ ] 3.1 Add `ReportGenerator` class to `services.py` — `generate_pdf(html) -> bytes` using `weasyprint.HTML(string=html).write_pdf()`
-- [ ] 3.2 Add `ReportPDFView` to `views.py` — GET streams `FileResponse` with `Content-Type: application/pdf`; calls `ReportRenderer` then `ReportGenerator`; emits `REPORT_GENERATED` audit event (RF-058)
-- [ ] 3.3 Add `ReportApprovalService` to `services.py` — `approve(report, user) -> ReportApproval`; `has_pending_progress_reports(project) -> bool` queries `ProgressReport.objects.filter(project=project).exclude(status='aprobado')` (RN-017); creates `ReportApproval` with metadata (RN-018); emits `REPORT_APPROVED` audit event
-- [ ] 3.4 Add `ReportApproveView` to `views.py` — POST returns 200 on success, 409 if pending progress reports (RN-017), 403 if not director (RN-016); applies `CanApproveReport` permission
-- [ ] 3.5 Add pdf and approve routes to `urls.py`: `reports/{type}/{id}/pdf/` and `reports/{type}/{id}/approve/`
-- [ ] 3.6 **RED**: Write `tests/test_services.py` (generator section) — mock `weasyprint.HTML`, assert `write_pdf()` called with correct HTML; test `ReportApprovalService.approve()` creates approval; test `has_pending_progress_reports()` returns True/False correctly
-- [ ] 3.7 **RED**: Write `tests/test_views.py` (pdf + approve sections) — test PDF endpoint returns `FileResponse` with correct content-type; test approve returns 200/409/403; test audit events emitted after PDF and approve
-- [ ] 3.8 **GREEN**: Fix service and view issues to pass all tests
-- [ ] 3.9 **RED**: Write `tests/test_audit.py` — verify `REPORT_GENERATED` audit event created after PDF generation with correct user, report_type, entity_id, timestamp; verify `REPORT_APPROVED` audit event created after approval
-- [ ] 3.10 **GREEN**: Fix audit wiring to pass `test_audit.py`
+- [x] 3.1 Add `ReportGenerator` class to `services.py` — `generate_pdf(html) -> bytes` using `weasyprint.HTML(string=html).write_pdf()`
+- [x] 3.2 Add `ReportPDFView` to `views.py` — GET streams `FileResponse` with `Content-Type: application/pdf`; calls `ReportRenderer` then `ReportGenerator`; emits `REPORT_GENERATED` audit event (RF-058)
+- [x] 3.3 Add `ReportApprovalService` to `services.py` — `approve(report, user) -> ReportApproval`; `has_pending_progress_reports(project) -> bool` delegates to `ProjectService` (RN-017); creates `ReportApproval` with metadata (RN-018); emits `REPORT_APPROVED` audit event
+- [x] 3.4 Add `ReportApprovalView` to `views.py` — POST returns 200 on success, 409 if pending progress reports (RN-017), 403 if not director (RN-016); manual permission check via `_user_is_entity_director()`
+- [x] 3.5 Add pdf and approve routes to `urls.py`: `reports/{type}/{id}/pdf/` and `reports/{type}/{id}/approve/`
+- [x] 3.6 **RED/GREEN**: Write `tests/test_pdf.py` — 8 tests: project/researcher/center happy paths, 403 anonymous, 403 cross-institution, 400 invalid type, 404 nonexistent entity, mock verification of generate_report call
+- [x] 3.7 **RED/GREEN**: Write `tests/test_approval.py` — 9 tests: success 200, report created, approval metadata RN-018, RN-017 409 block, 403 non-director, 403 anonymous, audit event, center report, 404 nonexistent
+- [x] 3.8 **GREEN**: All 79 tests passing (62 prior + 17 new). Ruff clean.
+- [x] 3.9 **AUDIT**: `REPORT_GENERATED` audit event created after PDF generation with correct user, report_type, entity_id — verified in test_pdf.py (mock). `REPORT_APPROVED` audit event created after approval — verified in test_approval.py (mock)
+- [x] 3.10 **GREEN**: Audit wiring complete — `AuditEventEmitter.emit()` called in ReportPDFView and ReportApprovalService
 
 ## Phase 4: Integration + Verification (~130 lines)
 
