@@ -282,6 +282,24 @@ class ProjectService:
             },
         )
 
+    # ── Queries ────────────────────────────────────────
+
+    @staticmethod
+    def has_pending_progress_reports(project) -> bool:
+        """True if the project has any progress report in a pending state.
+
+        Pending states are: enviado, en_revision, observado.
+        Borrador and rechazado are NOT pending (not yet submitted
+        or already rejected). Aprobado is terminal.
+        """
+        from apps.progress.models import ProgressReport
+
+        pending_states = {"enviado", "en_revision", "observado"}
+        return ProgressReport.objects.filter(
+            project=project,
+            status__in=pending_states,
+        ).exists()
+
 
 # ──────────────────────────────────────────────
 # ProjectMemberService
