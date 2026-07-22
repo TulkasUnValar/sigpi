@@ -43,18 +43,18 @@ Chain strategy: feature-branch-chain
 
 ## Phase 2: Renderer + Templates + Preview (~420 lines)
 
-- [ ] 2.1 Create `backend/apps/reports/services.py` — `ReportRenderer` class with `render_html(report_type, entity_id, user) -> str`; per-type context builders: `_project_context()`, `_researcher_context()`, `_center_context()`, `_advances_context()`; template selection by type
-- [ ] 2.2 Create `backend/apps/reports/templates/reports/base.html` — print-optimized CSS base template (page size, margins, fonts, table styles)
-- [ ] 2.3 Create `backend/apps/reports/templates/reports/project_report.html` — extends base.html; sections: general data, objectives, team, budget summary, results, progress (RF-050)
-- [ ] 2.4 Create `backend/apps/reports/templates/reports/researcher_report.html` — extends base.html; sections: profile, projects, production summary (RF-051)
-- [ ] 2.5 Create `backend/apps/reports/templates/reports/center_report.html` — extends base.html; sections: center data, project list, aggregate statistics (RF-052)
-- [ ] 2.6 Create `backend/apps/reports/templates/reports/advances_report.html` — extends base.html; sections: activities, completion %, documents, reviews (RF-053)
-- [ ] 2.7 Add `ReportPreviewView` to `backend/apps/reports/views.py` — GET returns `{"html": "..."}` using `ReportRenderer.render_html()`; applies `CanGenerateReport` permission
-- [ ] 2.8 Create `backend/apps/reports/urls.py` with preview route: `reports/{type}/{id}/preview/`
-- [ ] 2.9 Add `path("api/", include("apps.reports.urls"))` to `backend/config/urls.py`
-- [ ] 2.10 **RED**: Write `tests/test_services.py` — test `ReportRenderer.render_html()` returns valid HTML for each report type; mock model queries, assert context dict shape
-- [ ] 2.11 **RED**: Write `tests/test_views.py` (preview section) — test GET preview returns 200 with `{"html": "..."}`, test 403 for unauthorized user, test 403 for cross-institution access (RN-015)
-- [ ] 2.12 **GREEN**: Fix renderer and view issues to pass all tests
+- [x] 2.1 Create `backend/apps/reports/services.py` — `ReportRenderer` class with `render_html(report_type, entity_id, user) -> str`; per-type context builders: `_project_context()`, `_researcher_context()`, `_center_context()`, `_advances_context()`; template selection by type
+- [x] 2.2 Create `backend/apps/reports/templates/reports/base.html` — print-optimized CSS base template (page size, margins, fonts, table styles)
+- [x] 2.3 Create `backend/apps/reports/templates/reports/project_report.html` — extends base.html; sections: general data, objectives, team, budget summary, results, progress (RF-050)
+- [x] 2.4 Create `backend/apps/reports/templates/reports/researcher_report.html` — extends base.html; sections: profile, projects, production summary (RF-051)
+- [x] 2.5 Create `backend/apps/reports/templates/reports/center_report.html` — extends base.html; sections: center data, project list, aggregate statistics (RF-052)
+- [x] 2.6 Create `backend/apps/reports/templates/reports/advances_report.html` — extends base.html; sections: activities, completion %, documents, reviews (RF-053)
+- [x] 2.7 Add `ReportPreviewView` to `backend/apps/reports/views.py` — GET returns `{"html": "..."}` using `ReportRenderer.render_html()`; applies `CanGenerateReport` permission
+- [x] 2.8 Create `backend/apps/reports/urls.py` with preview route: `reports/{type}/{id}/preview/`
+- [x] 2.9 Add `path("api/", include("apps.reports.urls"))` to `backend/config/urls.py`
+- [x] 2.10 **RED**: Write `tests/test_services.py` — test `ReportRenderer.render_html()` returns valid HTML for each report type; mock model queries, assert context dict shape
+- [x] 2.11 **RED**: Write `tests/test_views.py` (preview section) — test GET preview returns 200 with `{"html": "..."}`, test 403 for unauthorized user, test 403 for cross-institution access (RN-015)
+- [x] 2.12 **GREEN**: Fix renderer and view issues to pass all tests
 
 ## Phase 3: PDF + Approval + Audit (~360 lines)
 

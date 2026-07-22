@@ -1,0 +1,96 @@
+{% extends "reports/base.html" %}
+
+{% block report_content %}
+
+<h2>1. General Data</h2>
+
+<table>
+    <tr><td class="label">Title</td><td>{{ project.title }}</td></tr>
+    <tr><td class="label">Institution</td><td>{{ institution.name }}</td></tr>
+    <tr><td class="label">Center</td><td>{{ project.center.name | default:"—" }}</td></tr>
+    <tr><td class="label">Principal Investigator</td><td>{{ project.principal_investigator }}</td></tr>
+    <tr><td class="label">Status</td><td>{{ project.get_status_display }}</td></tr>
+    <tr><td class="label">Start Date</td><td>{{ project.start_date|date:"Y-m-d" }}</td></tr>
+    <tr><td class="label">Estimated End Date</td><td>{{ project.estimated_end_date|date:"Y-m-d" }}</td></tr>
+    {% if project.actual_end_date %}
+    <tr><td class="label">Actual End Date</td><td>{{ project.actual_end_date|date:"Y-m-d" }}</td></tr>
+    {% endif %}
+    <tr><td class="label">Keywords</td><td>{{ project.keywords|default:"—" }}</td></tr>
+    <tr><td class="label">Cumulative Progress</td><td>{{ project.cumulative_progress }}%</td></tr>
+</table>
+
+<h2>2. Abstract</h2>
+<div class="section">
+    <p>{{ project.abstract|linebreaksbr }}</p>
+</div>
+
+<h2>3. Objectives</h2>
+<div class="section">
+    <p>{{ project.objectives|linebreaksbr }}</p>
+</div>
+
+<h2>4. Team</h2>
+
+{% if members %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Role</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ project.principal_investigator }} (PI)</td>
+            <td>Principal Investigator</td>
+        </tr>
+        {% for member in members %}
+        <tr>
+            <td>{{ member.researcher }}</td>
+            <td>{{ member.get_role_display }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No team members registered.</div>
+{% endif %}
+
+<h2>5. Budget Summary</h2>
+<div class="section">
+    <div class="empty-state">Budget data not available in this version.</div>
+</div>
+
+<h2>6. Results / Expected Results</h2>
+<div class="section">
+    <p>{{ project.expected_results|linebreaksbr }}</p>
+</div>
+
+<h2>7. Progress</h2>
+
+{% if progress_reports %}
+<table>
+    <thead>
+        <tr>
+            <th>Period</th>
+            <th>Progress %</th>
+            <th>Status</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pr in progress_reports %}
+        <tr>
+            <td>{{ pr.period_start|date:"Y-m-d" }} &ndash; {{ pr.period_end|date:"Y-m-d" }}</td>
+            <td>{{ pr.cumulative_percentage }}%</td>
+            <td>{{ pr.get_status_display }}</td>
+            <td>{{ pr.description|truncatewords:30 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No progress reports registered.</div>
+{% endif %}
+
+{% endblock %}

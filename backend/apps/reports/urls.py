@@ -1,12 +1,23 @@
 """
 DRF URL routing for the reports (informes) module.
 
-Phase 1 stub — full routing implemented in Phase 2 (views + serializers).
+Phase 2: Preview endpoint — GET /api/reports/{type}/{id}/preview/
+Phase 3: PDF + Approve endpoints (coming next).
 
 Spec reference:   sdd/reports/spec
 Design reference: openspec/changes/reports/design.md
 """
 
+from django.urls import path
+
+from apps.reports.views import ReportPreviewView
+
 app_name = "reports"
 
-urlpatterns: list = []
+urlpatterns = [
+    path(
+        "reports/<str:report_type>/<uuid:entity_id>/preview/",
+        ReportPreviewView.as_view(),
+        name="preview",
+    ),
+]

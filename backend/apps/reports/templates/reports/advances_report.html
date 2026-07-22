@@ -1,0 +1,121 @@
+{% extends "reports/base.html" %}
+
+{% block report_content %}
+
+<h2>1. Project Information</h2>
+
+<table>
+    <tr><td class="label">Project Title</td><td>{{ project.title }}</td></tr>
+    <tr><td class="label">Institution</td><td>{{ institution.name }}</td></tr>
+    <tr><td class="label">Principal Investigator</td><td>{{ project.principal_investigator }}</td></tr>
+    <tr><td class="label">Overall Progress</td><td>{{ project.cumulative_progress }}%</td></tr>
+    <tr><td class="label">Status</td><td>{{ project.get_status_display }}</td></tr>
+</table>
+
+<h2>2. Progress Reports</h2>
+
+{% if progress_reports %}
+<table>
+    <thead>
+        <tr>
+            <th>Period</th>
+            <th>% Complete</th>
+            <th>Status</th>
+            <th>Activities</th>
+            <th>Difficulties</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pr in progress_reports %}
+        <tr>
+            <td>{{ pr.period_start|date:"Y-m-d" }} &ndash; {{ pr.period_end|date:"Y-m-d" }}</td>
+            <td>{{ pr.cumulative_percentage }}%</td>
+            <td>{{ pr.get_status_display }}</td>
+            <td>{{ pr.activities|truncatewords:20 }}</td>
+            <td>{{ pr.difficulties|default:"None"|truncatewords:10 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No progress reports registered for this project.</div>
+{% endif %}
+
+<h2>3. Completion Percentage Chart</h2>
+
+<div class="section">
+    <p>Overall cumulative progress: <strong>{{ project.cumulative_progress }}%</strong></p>
+    {% if progress_reports %}
+    <div style="background:#e0e0e0; border-radius:4px; height:20px; margin-top:10px;">
+        <div style="background:#1a5276; height:100%; width:{{ project.cumulative_progress }}%; border-radius:4px;"></div>
+    </div>
+    {% endif %}
+</div>
+
+<h2>4. Documents</h2>
+
+{% with has_docs=False %}
+{% for pr in progress_reports %}
+    {% if pr.documents.all %}
+        {% with has_docs=True %}{% endwith %}
+    {% endif %}
+{% endfor %}
+
+{% if progress_reports %}
+<table>
+    <thead>
+        <tr>
+            <th>File Name</th>
+            <th>Type</th>
+            <th>Report Period</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pr in progress_reports %}
+            {% for doc in pr.documents.all %}
+            <tr>
+                <td>{{ doc.name }}</td>
+                <td>{{ doc.get_doc_type_display }}</td>
+                <td>{{ pr.period_start|date:"Y-m-d" }} &ndash; {{ pr.period_end|date:"Y-m-d" }}</td>
+            </tr>
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+<div class="empty-state">No documents attached.</div>
+{% endif %}
+{% endwith %}
+
+<h2>5. Reviews</h2>
+
+{% if progress_reports %}
+<table>
+    <thead>
+        <tr>
+            <th>Report Period</th>
+            <th>Reviewer</th>
+            <th>Type</th>
+            <th>Comment</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pr in progress_reports %}
+            {% for review in pr.reviews.all %}
+            <tr>
+                <td>{{ pr.period_start|date:"Y-m-d" }} &ndash; {{ pr.period_end|date:"Y-m-d" }}</td>
+                <td>{{ review.reviewed_by.email|default:"—" }}</td>
+                <td>{{ review.get_review_type_display }}</td>
+                <td>{{ review.review_text|truncatewords:20 }}</td>
+            </tr>
+            {% empty %}
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No reviews registered.</div>
+{% endif %}
+
+{% endblock %}

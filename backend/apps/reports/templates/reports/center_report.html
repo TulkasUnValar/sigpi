@@ -1,0 +1,56 @@
+{% extends "reports/base.html" %}
+
+{% block report_content %}
+
+<h2>1. Center Data</h2>
+
+<table>
+    <tr><td class="label">Name</td><td>{{ center.name }}</td></tr>
+    <tr><td class="label">Code</td><td>{{ center.code }}</td></tr>
+    <tr><td class="label">Institution</td><td>{{ institution.name }}</td></tr>
+    <tr><td class="label">Description</td><td>{{ center.description|default:"—" }}</td></tr>
+    <tr><td class="label">Contact Email</td><td>{{ center.contact_email|default:"—" }}</td></tr>
+    <tr><td class="label">Contact Phone</td><td>{{ center.contact_phone|default:"—" }}</td></tr>
+    <tr><td class="label">Status</td><td>{{ center.get_status_display }}</td></tr>
+</table>
+
+<h2>2. Aggregate Statistics</h2>
+
+<table>
+    <tr><td class="label">Total Projects</td><td>{{ project_count }}</td></tr>
+    <tr><td class="label">Active Projects</td><td>{{ active_count }}</td></tr>
+    <tr><td class="label">Inactive / Completed</td><td>—</td></tr>
+</table>
+
+<h2>3. Project List</h2>
+
+{% if projects %}
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>PI</th>
+            <th>Status</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Progress</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proj in projects %}
+        <tr>
+            <td>{{ proj.title }}</td>
+            <td>{{ proj.principal_investigator }}</td>
+            <td>{{ proj.get_status_display }}</td>
+            <td>{{ proj.start_date|date:"Y-m-d" }}</td>
+            <td>{{ proj.estimated_end_date|date:"Y-m-d" }}</td>
+            <td>{{ proj.cumulative_progress }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No projects registered in this center.</div>
+{% endif %}
+
+{% endblock %}

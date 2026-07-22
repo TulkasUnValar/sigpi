@@ -1,0 +1,106 @@
+{% extends "reports/base.html" %}
+
+{% block report_content %}
+
+<h2>1. Researcher Profile</h2>
+
+<table>
+    <tr><td class="label">Full Name</td><td>{{ researcher.first_name }} {{ researcher.last_name }}</td></tr>
+    <tr><td class="label">Email</td><td>{{ researcher.primary_email }}</td></tr>
+    <tr><td class="label">Document</td><td>{{ researcher.get_document_type_display }} &mdash; {{ researcher.document_number }}</td></tr>
+    <tr><td class="label">Institution</td><td>{{ institution.name }}</td></tr>
+    <tr><td class="label">Phone</td><td>{{ researcher.phone|default:"—" }}</td></tr>
+    <tr><td class="label">Academic Formation</td><td>{{ researcher.academic_formation|default:"—" }}</td></tr>
+    <tr><td class="label">Active</td><td>{{ researcher.is_active|yesno:"Yes,No" }}</td></tr>
+</table>
+
+{% if researcher.bio %}
+<h2>2. Biography</h2>
+<div class="section">
+    <p>{{ researcher.bio|linebreaksbr }}</p>
+</div>
+{% endif %}
+
+<h2>3. Affiliations</h2>
+
+{% if affiliations %}
+<table>
+    <thead>
+        <tr>
+            <th>Center / Group / Line</th>
+            <th>Primary</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for aff in affiliations %}
+        <tr>
+            <td>
+                {% if aff.center %}{{ aff.center.name }}{% endif %}
+                {% if aff.group %} / {{ aff.group.name }}{% endif %}
+                {% if aff.line %} / {{ aff.line.name }}{% endif %}
+            </td>
+            <td>{{ aff.is_primary|yesno:"Yes,No" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No affiliations registered.</div>
+{% endif %}
+
+<h2>4. Led Projects</h2>
+
+{% if led_projects %}
+<table>
+    <thead>
+        <tr>
+            <th>Project Title</th>
+            <th>Status</th>
+            <th>Start</th>
+            <th>End</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proj in led_projects %}
+        <tr>
+            <td>{{ proj.title }}</td>
+            <td>{{ proj.get_status_display }}</td>
+            <td>{{ proj.start_date|date:"Y-m-d" }}</td>
+            <td>{{ proj.estimated_end_date|date:"Y-m-d" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No led projects.</div>
+{% endif %}
+
+<h2>5. Member Projects</h2>
+
+{% if member_projects %}
+<table>
+    <thead>
+        <tr>
+            <th>Project Title</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proj in member_projects %}
+        <tr>
+            <td>{{ proj.title }}</td>
+            <td>{{ proj.get_status_display }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No member projects.</div>
+{% endif %}
+
+<h2>6. Production Summary</h2>
+<div class="section">
+    <div class="empty-state">Production data not available in this version.</div>
+</div>
+
+{% endblock %}
