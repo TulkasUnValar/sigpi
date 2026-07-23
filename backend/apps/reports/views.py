@@ -148,6 +148,12 @@ class ReportPreviewView(APIView):
             html = renderer.render_html(report_type, entity_id, request.user)
         except ValueError as exc:
             raise Http404(str(exc)) from exc
+        except Exception as exc:
+            logger.exception("Preview rendering failed for %s/%s", report_type, entity_id)
+            return Response(
+                {"error": f"Preview rendering failed: {exc}"},
+                status=500,
+            )
 
         serializer = PreviewSerializer({"html": html})
         return Response(serializer.data)
@@ -199,6 +205,12 @@ class ReportPDFView(APIView):
             )
         except ValueError as exc:
             raise Http404(str(exc)) from exc
+        except Exception as exc:
+            logger.exception("PDF generation failed for %s/%s", report_type, entity_id)
+            return Response(
+                {"error": f"PDF generation failed: {exc}"},
+                status=500,
+            )
 
         # Create Report record for audit trail (RF-058)
         report = Report.objects.create(

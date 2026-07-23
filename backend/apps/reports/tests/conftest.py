@@ -66,6 +66,7 @@ class UserFactory(DjangoModelFactory):
 class ReportFactory(DjangoModelFactory):
     """Factory for Report - generic report with type + entity_id."""
 
+    title = factory.Sequence(lambda n: f"Report {n}")
     report_type = "project"
     entity_id = factory.Faker("uuid4")
     institution = factory.SubFactory("apps.institutions.tests.conftest.InstitutionFactory")
@@ -82,7 +83,20 @@ class ReportApprovalFactory(DjangoModelFactory):
 
     report = factory.SubFactory(ReportFactory)
     approved_by = factory.SubFactory(UserFactory)
+    status = "approved"
     report_version = 1
 
     class Meta:
         model = "reports.ReportApproval"
+
+
+class ReportTemplateFactory(DjangoModelFactory):
+    """Factory for ReportTemplate - template for report generation."""
+
+    name = factory.Sequence(lambda n: f"Template {n}")
+    report_type = "project"
+    institution = factory.SubFactory("apps.institutions.tests.conftest.InstitutionFactory")
+    is_active = True
+
+    class Meta:
+        model = "reports.ReportTemplate"

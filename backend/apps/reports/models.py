@@ -51,6 +51,7 @@ class Report(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255, blank=True, default="")
     report_type = models.CharField(
         max_length=20,
         choices=ReportType.choices,
@@ -73,6 +74,7 @@ class Report(models.Model):
         related_name="generated_reports",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "reports_report"
@@ -148,6 +150,11 @@ class ReportApproval(models.Model):
         blank=True,
         related_name="report_approvals",
     )
+    status = models.CharField(
+        max_length=20,
+        choices=ReportStatus.choices,
+        default=ReportStatus.APPROVED,
+    )
     approved_at = models.DateTimeField(auto_now_add=True)
     report_version = models.PositiveIntegerField()
 
@@ -176,3 +183,42 @@ class ReportApproval(models.Model):
     def __str__(self) -> str:
         report_type = self.report.get_report_type_display() if self.report else "Report"
         return f"{report_type} approved by {self.approved_by or 'unknown'}"
+
+
+# ──────────────────────────────────────────────
+# ReportTemplate
+# ──────────────────────────────────────────────
+
+
+class ReportTemplate(models.Model):
+    """Template for generating reports — defines layout and metadata per type."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    report_type = models.CharField(
+        max_length=20,
+        choices=ReportType.choices,
+    )
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="report_templates",
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "reports_reporttemplate"
+        verbose_name = "Report Template"
+        verbose_name_plural = "Report Templates"
+        ordering = ["name"]
+        indexes = [
+            models.Index(
+                fields=["institution", "report_type", "is_active"],
+                name="idx_template_inst_type_active",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.get_report_type_display()})"
