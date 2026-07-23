@@ -393,6 +393,10 @@ class TestProductAuthorViewSet:
             institution=institution, project=project, title="Paper",
             description="D", type="articulo", publication_year=2025,
         )
+        # First author must be principal
+        ProductAuthor.objects.create(
+            product=product, researcher=researcher_pi, is_principal=True, order=1
+        )
         r2 = _make_researcher(institution, document_number="R2001")
         r = api_client.post(
             reverse("products:author-list", kwargs={"product_pk": str(product.id)}),
@@ -432,6 +436,11 @@ class TestProductAuthorViewSet:
             institution=institution, project=project, title="Paper",
             description="D", type="articulo", publication_year=2025,
         )
+        # Create a co-author first (requires a principal to exist)
+        principal = _make_researcher(institution, document_number="PRIN1")
+        ProductAuthor.objects.create(
+            product=product, researcher=principal, is_principal=True, order=1
+        )
         author = ProductAuthor.objects.create(
             product=product, researcher=researcher_pi, is_principal=False, order=2
         )
@@ -462,10 +471,28 @@ class TestProductAuthorViewSet:
             reverse(
                 "products:author-detail",
                 kwargs={"product_pk": str(product.id), "pk": str(author.id)},
-            )
+            ),
         )
         assert r.status_code == 204
         assert not ProductAuthor.objects.filter(id=author.id).exists()
+
+    def test_reject_missing_principal(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
+        """RF-082: first author must be principal; reject if is_principal=False."""
+        _login(api_client, admin_user, institution)
+        project = _make_project(institution, center, researcher_pi)
+        product = ResearchProduct.objects.create(
+            institution=institution, project=project, title="Paper",
+            description="D", type="articulo", publication_year=2025,
+        )
+        r = api_client.post(
+            reverse("products:author-list", kwargs={"product_pk": str(product.id)}),
+            {"researcher": str(researcher_pi.id), "is_principal": False, "order": 1},
+            content_type="application/json",
+        )
+        assert r.status_code == 400
+        assert "principal" in str(r.json()).lower()
 
 
 # ════════════════════════════════════════════════════════

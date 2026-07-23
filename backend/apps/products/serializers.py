@@ -111,27 +111,47 @@ class ProductAuthorSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        """Reject duplicate researcher for the same product."""
+        """Reject duplicate researcher and enforce exactly one principal."""
         researcher = attrs.get("researcher")
-        if researcher is None:
-            return attrs
+        is_principal = attrs.get("is_principal", False)
 
         product_id = None
         if self.instance is not None:
             product_id = self.instance.product_id
         else:
-            # product may come from initial data (serializer tests)
-            # or be absent (view posts without product in body)
             product_id = self.initial_data.get("product")
+            # Fallback: view passes product_pk in URL via serializer context
+            if product_id is None:
+                view = self.context.get("view")
+                if view is not None:
+                    product_id = view.kwargs.get("product_pk")
 
-        if product_id is not None:
+        if product_id is not None and researcher is not None:
             from apps.products.models import ProductAuthor
+            # Reject duplicate researcher
             qs = ProductAuthor.objects.filter(product_id=product_id, researcher=researcher)
             if self.instance is not None:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
                 raise serializers.ValidationError(
                     {"researcher": "Researcher already associated with this product."}
+                )
+
+            # RF-082: enforce exactly one principal
+            existing_principal = ProductAuthor.objects.filter(
+                product_id=product_id, is_principal=True
+            )
+            if self.instance is not None:
+                existing_principal = existing_principal.exclude(pk=self.instance.pk)
+
+            if is_principal and existing_principal.exists():
+                raise serializers.ValidationError(
+                    {"is_principal": "Product already has a principal author."}
+                )
+
+            if not is_principal and not existing_principal.exists():
+                raise serializers.ValidationError(
+                    {"is_principal": "Product must have exactly one principal author."}
                 )
 
         return attrs

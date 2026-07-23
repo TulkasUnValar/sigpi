@@ -171,6 +171,20 @@ class ProductAuthor(models.Model):
             ),
         ]
 
+    def clean(self):
+        super().clean()
+        # RF-082: prevent duplicate principal authors on the same product
+        if self.is_principal:
+            qs = ProductAuthor.objects.filter(
+                product=self.product, is_principal=True
+            )
+            if self.pk is not None:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError(
+                    {"is_principal": "Product already has a principal author."}
+                )
+
     def __str__(self) -> str:
         principal = " (principal)" if self.is_principal else ""
         return f"{self.researcher} — {self.product}{principal}"
