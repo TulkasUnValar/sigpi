@@ -159,7 +159,9 @@ def foreign_project(db, another_institution):
 class TestResearchProductViewSet:
     """CRUD operations on /products/ — institution-scoped."""
 
-    def test_list_as_authenticated(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_list_as_authenticated(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         ResearchProduct.objects.create(
@@ -178,7 +180,9 @@ class TestResearchProductViewSet:
         r = api_client.get(reverse("products:product-list"))
         assert r.status_code in (401, 403)
 
-    def test_create_product_linked_to_project(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_create_product_linked_to_project(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         r = api_client.post(
@@ -211,7 +215,9 @@ class TestResearchProductViewSet:
         )
         assert r.status_code == 400
 
-    def test_reject_foreign_project_link(self, api_client, institution, admin_user, foreign_project):
+    def test_reject_foreign_project_link(
+        self, api_client, institution, admin_user, foreign_project
+    ):
         _login(api_client, admin_user, institution)
         r = api_client.post(
             reverse("products:product-list"),
@@ -308,7 +314,9 @@ class TestResearchProductViewSet:
         assert r.status_code == 204
         assert not ResearchProduct.objects.filter(id=product.id).exists()
 
-    def test_empty_list_for_foreign_institution(self, api_client, another_institution, admin_user, center, researcher_pi):
+    def test_empty_list_for_foreign_institution(
+        self, api_client, another_institution, admin_user, center, researcher_pi
+    ):
         # admin_user belongs to institution, not another_institution
         _login(api_client, admin_user, another_institution)
         project = _make_project(another_institution, center, researcher_pi)
@@ -324,7 +332,9 @@ class TestResearchProductViewSet:
         assert r.status_code == 200
         assert r.json()["results"] == []
 
-    def test_filter_by_year_gte_and_type(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_filter_by_year_gte_and_type(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         ResearchProduct.objects.create(
@@ -356,21 +366,27 @@ class TestResearchProductViewSet:
 class TestProductAuthorViewSet:
     """Nested CRUD for ProductAuthor under /products/{id}/authors/."""
 
-    def test_list_authors(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_list_authors(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
             institution=institution, project=project, title="Paper",
             description="D", type="articulo", publication_year=2025,
         )
-        ProductAuthor.objects.create(product=product, researcher=researcher_pi, is_principal=True, order=1)
+        ProductAuthor.objects.create(
+            product=product, researcher=researcher_pi, is_principal=True, order=1
+        )
         r = api_client.get(
             reverse("products:author-list", kwargs={"product_pk": str(product.id)})
         )
         assert r.status_code == 200
         assert len(r.json()["results"]) == 1
 
-    def test_create_author(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_create_author(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
@@ -388,14 +404,18 @@ class TestProductAuthorViewSet:
         assert data["researcher"] == str(r2.id)
         assert data["is_principal"] is False
 
-    def test_reject_duplicate_researcher(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_reject_duplicate_researcher(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
             institution=institution, project=project, title="Paper",
             description="D", type="articulo", publication_year=2025,
         )
-        ProductAuthor.objects.create(product=product, researcher=researcher_pi, is_principal=True)
+        ProductAuthor.objects.create(
+            product=product, researcher=researcher_pi, is_principal=True
+        )
         r = api_client.post(
             reverse("products:author-list", kwargs={"product_pk": str(product.id)}),
             {"researcher": str(researcher_pi.id), "is_principal": False, "order": 2},
@@ -403,32 +423,46 @@ class TestProductAuthorViewSet:
         )
         assert r.status_code == 400
 
-    def test_update_author(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_update_author(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
             institution=institution, project=project, title="Paper",
             description="D", type="articulo", publication_year=2025,
         )
-        author = ProductAuthor.objects.create(product=product, researcher=researcher_pi, is_principal=False, order=2)
+        author = ProductAuthor.objects.create(
+            product=product, researcher=researcher_pi, is_principal=False, order=2
+        )
         r = api_client.patch(
-            reverse("products:author-detail", kwargs={"product_pk": str(product.id), "pk": str(author.id)}),
+            reverse(
+                "products:author-detail",
+                kwargs={"product_pk": str(product.id), "pk": str(author.id)},
+            ),
             {"is_principal": True, "order": 1},
             content_type="application/json",
         )
         assert r.status_code == 200
         assert r.json()["is_principal"] is True
 
-    def test_delete_author(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_delete_author(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
             institution=institution, project=project, title="Paper",
             description="D", type="articulo", publication_year=2025,
         )
-        author = ProductAuthor.objects.create(product=product, researcher=researcher_pi, is_principal=True)
+        author = ProductAuthor.objects.create(
+            product=product, researcher=researcher_pi, is_principal=True
+        )
         r = api_client.delete(
-            reverse("products:author-detail", kwargs={"product_pk": str(product.id), "pk": str(author.id)})
+            reverse(
+                "products:author-detail",
+                kwargs={"product_pk": str(product.id), "pk": str(author.id)},
+            )
         )
         assert r.status_code == 204
         assert not ProductAuthor.objects.filter(id=author.id).exists()
@@ -442,7 +476,9 @@ class TestProductAuthorViewSet:
 class TestProductAttachmentViewSet:
     """Nested CRUD for ProductAttachment under /products/{id}/attachments/."""
 
-    def test_list_attachments(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_list_attachments(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
@@ -459,7 +495,9 @@ class TestProductAttachmentViewSet:
         assert r.status_code == 200
         assert len(r.json()["results"]) == 1
 
-    def test_create_attachment(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_create_attachment(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
@@ -468,7 +506,11 @@ class TestProductAttachmentViewSet:
         )
         r = api_client.post(
             reverse("products:attachment-list", kwargs={"product_pk": str(product.id)}),
-            {"name": "Evidence.pdf", "doc_type": "article", "external_url": "https://example.com/evidence.pdf"},
+            {
+                "name": "Evidence.pdf",
+                "doc_type": "article",
+                "external_url": "https://example.com/evidence.pdf",
+            },
             content_type="application/json",
         )
         assert r.status_code == 201
@@ -476,7 +518,9 @@ class TestProductAttachmentViewSet:
         assert data["name"] == "Evidence.pdf"
         assert data["external_url"] == "https://example.com/evidence.pdf"
 
-    def test_reject_empty_external_url(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_reject_empty_external_url(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
@@ -490,7 +534,9 @@ class TestProductAttachmentViewSet:
         )
         assert r.status_code == 400
 
-    def test_update_attachment(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_update_attachment(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
@@ -502,14 +548,19 @@ class TestProductAttachmentViewSet:
             external_url="https://example.com/old.pdf",
         )
         r = api_client.patch(
-            reverse("products:attachment-detail", kwargs={"product_pk": str(product.id), "pk": str(attachment.id)}),
+            reverse(
+                "products:attachment-detail",
+                kwargs={"product_pk": str(product.id), "pk": str(attachment.id)},
+            ),
             {"name": "New.pdf"},
             content_type="application/json",
         )
         assert r.status_code == 200
         assert r.json()["name"] == "New.pdf"
 
-    def test_delete_attachment(self, api_client, institution, admin_user, center, researcher_pi):
+    def test_delete_attachment(
+        self, api_client, institution, admin_user, center, researcher_pi
+    ):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
@@ -521,7 +572,10 @@ class TestProductAttachmentViewSet:
             external_url="https://example.com/del.pdf",
         )
         r = api_client.delete(
-            reverse("products:attachment-detail", kwargs={"product_pk": str(product.id), "pk": str(attachment.id)})
+            reverse(
+                "products:attachment-detail",
+                kwargs={"product_pk": str(product.id), "pk": str(attachment.id)},
+            )
         )
         assert r.status_code == 204
         assert not ProductAttachment.objects.filter(id=attachment.id).exists()

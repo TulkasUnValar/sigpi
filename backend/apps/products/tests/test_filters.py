@@ -11,10 +11,8 @@ Design reference: openspec/changes/products/design.md
 import datetime
 import uuid
 
-import pytest
-
 from apps.institutions.models import Institution, ResearchCenter, ResearchGroup, ResearchLine
-from apps.products.models import ProductAuthor, ProductType, ResearchProduct
+from apps.products.models import ProductAuthor, ResearchProduct
 from apps.projects.models import Project
 from apps.researchers.models import Researcher
 
@@ -30,7 +28,9 @@ def _make_center(institution, name="AI Lab", code="AI"):
 
 
 def _make_group(center, institution, name="NLP Group", code="NLP"):
-    return ResearchGroup.objects.create(center=center, institution=institution, name=name, code=code)
+    return ResearchGroup.objects.create(
+        center=center, institution=institution, name=name, code=code
+    )
 
 
 def _make_line(group, institution, name="Deep Learning Line", code="DL"):

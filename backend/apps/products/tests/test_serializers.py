@@ -12,11 +12,8 @@ Design reference: openspec/changes/products/design.md
 import datetime
 import uuid
 
-import pytest
-from rest_framework.exceptions import ValidationError as DRFValidationError
-
 from apps.institutions.models import Institution, ResearchCenter
-from apps.products.models import ProductAttachment, ProductAuthor, ProductType, ResearchProduct
+from apps.products.models import ProductAttachment, ProductAuthor, ResearchProduct
 from apps.projects.models import Project
 from apps.researchers.models import Researcher
 

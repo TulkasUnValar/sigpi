@@ -31,7 +31,6 @@ from apps.products.serializers import (
     ProductAuthorSerializer,
     ResearchProductSerializer,
 )
-from apps.projects.models import Project
 
 # ──────────────────────────────────────────────────────────
 # ResearchProductViewSet

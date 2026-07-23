@@ -25,7 +25,6 @@ from apps.products.models import (
     ResearchProduct,
 )
 
-
 # ──────────────────────────────────────────────────────────
 # ResearchProductSerializer
 # ──────────────────────────────────────────────────────────
