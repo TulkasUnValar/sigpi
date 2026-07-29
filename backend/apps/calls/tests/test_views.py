@@ -195,9 +195,30 @@ class TestCallViewSetCRUD:
         titles = [c["title"] for c in data["results"]]
         assert call_borrador.title in titles
 
+    def test_list_as_superadmin_sees_all_calls(self, api_client, institution, superadmin_user):
+        """Superadmin bypasses institution scoping in get_queryset (line 119)."""
+        # Ensure Django superuser flag is set (get_queryset checks is_superuser, not role)
+        superadmin_user.is_superuser = True
+        superadmin_user.save(update_fields=["is_superuser"])
+        other_inst = Institution.objects.create(name="Other", code="OT003")
+        Call.objects.create(
+            institution=other_inst,
+            title="Other Call",
+            description="Desc",
+            call_type="internal",
+            status="borrador",
+        )
+        _login(api_client, superadmin_user, institution)
+        r = api_client.get(reverse("calls:call-list"))
+        assert r.status_code == 200
+        data = r.json()
+        assert len(data["results"]) >= 1
+        titles = [c["title"] for c in data["results"]]
+        assert "Other Call" in titles
+
     def test_list_unauthenticated(self, api_client):
         r = api_client.get(reverse("calls:call-list"))
-        assert r.status_code in (401, 403)
+        assert r.status_code == 403
 
     def test_create_as_director(self, api_client, institution, director_user):
         _login(api_client, director_user, institution)
@@ -255,7 +276,7 @@ class TestCallViewSetCRUD:
             },
             content_type="application/json",
         )
-        assert r.status_code in (403, 401)
+        assert r.status_code == 403
 
     def test_retrieve_as_researcher(self, api_client, institution, researcher_user, call_borrador):
         _login(api_client, researcher_user, institution)
@@ -285,7 +306,7 @@ class TestCallViewSetCRUD:
             {"title": "Hacked"},
             content_type="application/json",
         )
-        assert r.status_code in (403, 401)
+        assert r.status_code == 403
 
     def test_delete_borrador_as_director(
         self, api_client, institution, director_user, call_borrador
@@ -298,7 +319,7 @@ class TestCallViewSetCRUD:
     def test_delete_non_borrador_denied(self, api_client, institution, director_user, call_abierta):
         _login(api_client, director_user, institution)
         r = api_client.delete(reverse("calls:call-detail", kwargs={"pk": str(call_abierta.pk)}))
-        assert r.status_code in (403, 400)
+        assert r.status_code == 400
 
     def test_retrieve_cross_institution_not_found(
         self, api_client, institution, researcher_user, call_borrador
@@ -337,7 +358,7 @@ class TestCallFSMActions:
     ):
         _login(api_client, researcher_user, institution)
         r = api_client.post(reverse("calls:call-open-call", kwargs={"pk": str(call_borrador.pk)}))
-        assert r.status_code in (403, 401)
+        assert r.status_code == 403
 
     def test_close_call_as_director(self, api_client, institution, director_user, call_abierta):
         _login(api_client, director_user, institution)
@@ -394,7 +415,7 @@ class TestCallFSMActions:
         call_cerrada.refresh_from_db()
         assert call_cerrada.status == "archivada"
 
-    def test_invalid_transition_returns_409(
+    def test_invalid_transition_returns_400(
         self, api_client, institution, director_user, call_borrador
     ):
         _login(api_client, director_user, institution)
@@ -404,12 +425,60 @@ class TestCallFSMActions:
                 kwargs={"pk": str(call_borrador.pk)},
             )
         )
-        assert r.status_code in (400, 409)
+        assert r.status_code == 400
 
     def test_fsm_creates_state_log(self, api_client, institution, director_user, call_borrador):
         _login(api_client, director_user, institution)
         api_client.post(reverse("calls:call-open-call", kwargs={"pk": str(call_borrador.pk)}))
         assert CallStateLog.objects.filter(call=call_borrador).exists()
+
+    def test_fsm_validation_error_handler(
+        self, api_client, institution, director_user, call_borrador
+    ):
+        """FSM action raising ValidationError (not TransitionNotAllowed) hits _extract_error."""
+        from unittest.mock import patch
+
+        from django.core.exceptions import ValidationError
+
+        _login(api_client, director_user, institution)
+        with patch("apps.calls.views.CallService.open_call") as mock_open:
+            mock_open.side_effect = ValidationError({"status": ["Custom validation error."]})
+            r = api_client.post(
+                reverse("calls:call-open-call", kwargs={"pk": str(call_borrador.pk)})
+            )
+        assert r.status_code == 400
+        assert "status" in r.json()
+
+
+class TestExtractError:
+    """Direct unit tests for CallViewSet._extract_error (lines 206-211)."""
+
+    def test_extract_error_with_message_dict(self):
+        from django.core.exceptions import ValidationError
+
+        from apps.calls.views import CallViewSet
+
+        e = ValidationError({"field": ["error message"]})
+        result = CallViewSet._extract_error(e)
+        assert result == {"field": ["error message"]}
+
+    def test_extract_error_with_messages_list(self):
+        from django.core.exceptions import ValidationError
+
+        from apps.calls.views import CallViewSet
+
+        e = ValidationError(["first error", "second error"])
+        result = CallViewSet._extract_error(e)
+        assert result == "first error"
+
+    def test_extract_error_with_plain_string(self):
+        from django.core.exceptions import ValidationError
+
+        from apps.calls.views import CallViewSet
+
+        e = ValidationError("plain error")
+        result = CallViewSet._extract_error(e)
+        assert result == "plain error"
 
 
 # ════════════════════════════════════════════════════════
@@ -473,7 +542,7 @@ class TestCallDocumentViewSet:
             },
             content_type="application/json",
         )
-        assert r.status_code in (403, 401)
+        assert r.status_code == 403
 
     def test_update_document_as_director(
         self, api_client, institution, director_user, call_borrador
@@ -563,9 +632,9 @@ class TestCallProjectViewSet:
             {"project": str(project_not_linked.pk)},
             content_type="application/json",
         )
-        assert r.status_code in (403, 400, 409)
+        assert r.status_code == 400
 
-    def test_link_duplicate_project_returns_409(
+    def test_link_duplicate_project_returns_400(
         self, api_client, institution, director_user, call_abierta, project_not_linked
     ):
         CallProject.objects.create(call=call_abierta, project=project_not_linked)
@@ -578,7 +647,7 @@ class TestCallProjectViewSet:
             {"project": str(project_not_linked.pk)},
             content_type="application/json",
         )
-        assert r.status_code in (409, 400)
+        assert r.status_code == 400
 
     def test_unlink_project_as_director(
         self, api_client, institution, director_user, call_abierta, project_not_linked
@@ -627,7 +696,7 @@ class TestCallStateLogViewSet:
             {"from_state": "borrador", "to_state": "abierta"},
             content_type="application/json",
         )
-        assert r.status_code in (403, 405)
+        assert r.status_code == 405
 
 
 # ════════════════════════════════════════════════════════
@@ -713,10 +782,10 @@ class TestCallErrorResponses:
         assert r.status_code == 400
         assert "submission_end" in r.json()
 
-    def test_403_delete_non_borrador(self, api_client, institution, director_user, call_abierta):
+    def test_400_delete_non_borrador(self, api_client, institution, director_user, call_abierta):
         _login(api_client, director_user, institution)
         r = api_client.delete(reverse("calls:call-detail", kwargs={"pk": str(call_abierta.pk)}))
-        assert r.status_code in (403, 400)
+        assert r.status_code == 400
 
     def test_404_cross_institution_detail(self, api_client, institution, researcher_user):
         other = Institution.objects.create(name="Other", code="OT002")
@@ -731,7 +800,7 @@ class TestCallErrorResponses:
         r = api_client.get(reverse("calls:call-detail", kwargs={"pk": str(other_call.pk)}))
         assert r.status_code == 404
 
-    def test_409_invalid_fsm_transition(
+    def test_400_invalid_fsm_transition(
         self, api_client, institution, director_user, call_borrador
     ):
         _login(api_client, director_user, institution)
@@ -741,9 +810,9 @@ class TestCallErrorResponses:
                 kwargs={"pk": str(call_borrador.pk)},
             )
         )
-        assert r.status_code in (400, 409)
+        assert r.status_code == 400
 
-    def test_409_duplicate_project_link(
+    def test_400_duplicate_project_link(
         self, api_client, institution, director_user, call_abierta, project_not_linked
     ):
         CallProject.objects.create(call=call_abierta, project=project_not_linked)
@@ -756,4 +825,166 @@ class TestCallErrorResponses:
             {"project": str(project_not_linked.pk)},
             content_type="application/json",
         )
-        assert r.status_code in (409, 400)
+        assert r.status_code == 400
+
+    def test_400_create_document_terminal_call(self, api_client, institution, director_user):
+        """Adding a document to a terminal call triggers perform_create handler."""
+        call_archivada = Call.objects.create(
+            institution=institution,
+            title="Terminal Call",
+            description="Desc",
+            call_type="internal",
+            status="archivada",
+        )
+        _login(api_client, director_user, institution)
+        r = api_client.post(
+            reverse(
+                "calls:call-document-list",
+                kwargs={"call_pk": str(call_archivada.pk)},
+            ),
+            {
+                "name": "Doc",
+                "doc_type": "anexo",
+                "external_url": "https://example.com/doc",
+            },
+            content_type="application/json",
+        )
+        assert r.status_code == 400
+
+    def test_400_update_document_terminal_call(self, api_client, institution, director_user):
+        """Updating a document under a terminal call triggers perform_update handler."""
+        call_archivada = Call.objects.create(
+            institution=institution,
+            title="Terminal Call",
+            description="Desc",
+            call_type="internal",
+            status="archivada",
+        )
+        doc = CallDocument.objects.create(
+            call=call_archivada,
+            name="Old",
+            doc_type="convocatoria",
+            external_url="https://a.com",
+        )
+        _login(api_client, director_user, institution)
+        r = api_client.patch(
+            reverse(
+                "calls:call-document-detail",
+                kwargs={"call_pk": str(call_archivada.pk), "pk": str(doc.pk)},
+            ),
+            {"name": "Updated"},
+            content_type="application/json",
+        )
+        assert r.status_code == 400
+
+    def test_400_delete_document_terminal_call(self, api_client, institution, director_user):
+        """Deleting a document under a terminal call triggers perform_destroy handler."""
+        call_archivada = Call.objects.create(
+            institution=institution,
+            title="Terminal Call",
+            description="Desc",
+            call_type="internal",
+            status="archivada",
+        )
+        doc = CallDocument.objects.create(
+            call=call_archivada,
+            name="ToDelete",
+            doc_type="convocatoria",
+            external_url="https://a.com",
+        )
+        _login(api_client, director_user, institution)
+        r = api_client.delete(
+            reverse(
+                "calls:call-document-detail",
+                kwargs={"call_pk": str(call_archivada.pk), "pk": str(doc.pk)},
+            )
+        )
+        assert r.status_code == 400
+
+    def test_404_documents_nonexistent_call(self, api_client, institution, director_user):
+        """Creating a document for a non-existent call triggers Http404 in _get_parent_call."""
+        fake_pk = "00000000-0000-0000-0000-000000000000"
+        _login(api_client, director_user, institution)
+        r = api_client.post(
+            reverse("calls:call-document-list", kwargs={"call_pk": fake_pk}),
+            {"name": "Doc", "doc_type": "anexo", "external_url": "https://example.com/doc"},
+            content_type="application/json",
+        )
+        assert r.status_code == 404
+
+    def test_404_projects_nonexistent_call(
+        self, api_client, institution, director_user, project_not_linked
+    ):
+        """Linking a project to a non-existent call triggers Http404 in _get_parent_call."""
+        fake_pk = "00000000-0000-0000-0000-000000000000"
+        _login(api_client, director_user, institution)
+        r = api_client.post(
+            reverse("calls:call-project-list", kwargs={"call_pk": fake_pk}),
+            {"project": str(project_not_linked.pk)},
+            content_type="application/json",
+        )
+        assert r.status_code == 404
+
+    def test_404_state_logs_nonexistent_call(self, api_client, institution, researcher_user):
+        """State logs for a non-existent call return empty queryset (200, not 404)."""
+        fake_pk = "00000000-0000-0000-0000-000000000000"
+        _login(api_client, researcher_user, institution)
+        r = api_client.get(reverse("calls:call-state-log-list", kwargs={"call_pk": fake_pk}))
+        assert r.status_code == 200
+        assert len(r.json()["results"]) == 0
+
+    def test_403_cross_institution_document_update(
+        self, api_client, institution, director_user, call_borrador
+    ):
+        """Cross-institution document access triggers check_object_permissions redirect → 403."""
+        other_inst = Institution.objects.create(name="Other", code="OT002")
+        other_call = Call.objects.create(
+            institution=other_inst,
+            title="Other Call",
+            description="Desc",
+            call_type="internal",
+            status="borrador",
+        )
+        doc = CallDocument.objects.create(
+            call=other_call,
+            name="Doc",
+            doc_type="convocatoria",
+            external_url="https://a.com",
+        )
+        _login(api_client, director_user, institution)
+        r = api_client.patch(
+            reverse(
+                "calls:call-document-detail",
+                kwargs={"call_pk": str(other_call.pk), "pk": str(doc.pk)},
+            ),
+            {"name": "Hacked"},
+            content_type="application/json",
+        )
+        assert r.status_code == 403
+
+    def test_400_malformed_create_call(self, api_client, institution, director_user):
+        """Missing required fields trigger serializer validation → 400."""
+        _login(api_client, director_user, institution)
+        r = api_client.post(
+            reverse("calls:call-list"),
+            {"description": "Missing title", "call_type": "internal"},
+            content_type="application/json",
+        )
+        assert r.status_code == 400
+        assert "title" in r.json()
+
+    def test_400_malformed_create_document(
+        self, api_client, institution, director_user, call_borrador
+    ):
+        """Missing required fields in document serializer trigger validation → 400."""
+        _login(api_client, director_user, institution)
+        r = api_client.post(
+            reverse(
+                "calls:call-document-list",
+                kwargs={"call_pk": str(call_borrador.pk)},
+            ),
+            {"doc_type": "anexo"},
+            content_type="application/json",
+        )
+        assert r.status_code == 400
+        assert "name" in r.json()
