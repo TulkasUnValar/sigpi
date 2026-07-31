@@ -51,16 +51,16 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: API Layer + Integration Tests
 
-- [ ] 3.1 Create `apps/project_workflow/serializers.py` with 6 serializers: WorkflowTemplateListSerializer, WorkflowTemplateSerializer (nested steps read/write), WorkflowStepSerializer, WorkflowInstanceSerializer (nested actions, is_overdue), WorkflowInstanceListSerializer, WorkflowActionSerializer (create-only, RO instance/step/acted_by)
+- [x] 3.1 Create `apps/project_workflow/serializers.py` with 6 serializers: WorkflowTemplateListSerializer, WorkflowTemplateSerializer (nested steps read/write), WorkflowStepSerializer, WorkflowInstanceSerializer (nested actions, is_overdue), WorkflowInstanceListSerializer, WorkflowActionSerializer (create-only, RO instance/step/acted_by)
 - [x] 3.2 Create `apps/project_workflow/permissions.py` with `IsWorkflowStepApprover` — reuses IsCenterDirectorForProject logic, admin+ bypass (completed in Phase 2)
-- [ ] 3.3 Create `apps/project_workflow/filters.py` with `WorkflowInstanceFilter` (project, status, center, overdue boolean method filter)
-- [ ] 3.4 Create `apps/project_workflow/views.py` with WorkflowTemplateViewSet (ModelViewSet, admin+ only), WorkflowInstanceViewSet (list/retrieve + @action approve/observe/reject), WorkflowActionViewSet (create+list only, no update/delete → 405)
-- [ ] 3.5 Create `apps/project_workflow/urls.py` with DefaultRouter + action paths
-- [ ] 3.6 Create `apps/project_workflow/admin.py` with model registration
-- [ ] 3.7 Write `apps/project_workflow/tests/test_services.py`: all WorkflowService methods, idempotency (WR-001), minimum-data guard (WR-004), select_for_update, annotate_overdue with freezegun (RED→GREEN)
-- [ ] 3.8 Write `apps/project_workflow/tests/test_signals.py`: signal flow submit→create, resubmit→reset, terminal→cancel, atomicity rollback (WR-007)
-- [ ] 3.9 Write `apps/project_workflow/tests/test_views.py`: endpoint CRUD + actions + filtering + permission matrix + 405 on action update/delete (WF-006)
-- [ ] 3.10 Write `apps/project_workflow/tests/test_serializers.py`, `test_permissions.py`, `test_filters.py`, `test_rls.py`
+- [x] 3.3 Create `apps/project_workflow/filters.py` with `WorkflowInstanceFilter` (project, status, center, overdue boolean method filter)
+- [x] 3.4 Create `apps/project_workflow/views.py` with WorkflowTemplateViewSet (ModelViewSet, admin+ only), WorkflowInstanceViewSet (list/retrieve + @action approve/observe/reject), WorkflowActionViewSet (create+list only, no update/delete → 405)
+- [x] 3.5 Create `apps/project_workflow/urls.py` with DefaultRouter + action paths
+- [x] 3.6 Create `apps/project_workflow/admin.py` with model registration
+- [x] 3.7 Write `apps/project_workflow/tests/test_services.py`: all WorkflowService methods, idempotency (WR-001), minimum-data guard (WR-004), select_for_update, annotate_overdue with freezegun (RED→GREEN)
+- [x] 3.8 Write `apps/project_workflow/tests/test_signals.py`: signal flow submit→create, resubmit→reset, terminal→cancel, atomicity rollback (WR-007)
+- [x] 3.9 Write `apps/project_workflow/tests/test_views.py`: endpoint CRUD + actions + filtering + permission matrix + 405 on action update/delete (WF-006)
+- [x] 3.10 Write `apps/project_workflow/tests/test_serializers.py`, `test_permissions.py`, `test_filters.py`, `test_rls.py`
 
 ## Implementation Order
 

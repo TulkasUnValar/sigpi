@@ -164,7 +164,7 @@ class TestIsWorkflowStepApprover:
             institution_id=str(inst.id),
             center_ids=[str(center.id)],
         )
-        request.active_membership.centers.values_list.return_value = [str(center.id)]
+        request.active_membership.centers.values_list.return_value = [center.id]
         assert perm.has_object_permission(request, _mock_view(), instance) is True
 
     def test_director_of_other_center_fails(self, db):

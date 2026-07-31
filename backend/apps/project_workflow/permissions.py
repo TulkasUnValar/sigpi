@@ -69,6 +69,6 @@ class IsWorkflowStepApprover(BasePermission):
 
         try:
             project = Project.objects.only("center_id").get(pk=project_id)
-            return str(project.center_id)
+            return project.center_id
         except Project.DoesNotExist:
             return None
