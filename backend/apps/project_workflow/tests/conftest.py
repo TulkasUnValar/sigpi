@@ -13,12 +13,12 @@ import factory
 from factory.django import DjangoModelFactory
 
 from apps.project_workflow.models import (
+    StepRole,
     WorkflowAction,
     WorkflowActionType,
     WorkflowInstance,
     WorkflowInstanceStatus,
     WorkflowStep,
-    StepRole,
     WorkflowTemplate,
 )
 

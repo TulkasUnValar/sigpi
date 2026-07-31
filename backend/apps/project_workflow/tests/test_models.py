@@ -9,7 +9,6 @@ Design reference: openspec/changes/project_workflow/design.md
 
 RED PHASE: All tests fail because models are empty stubs.
 """
-import datetime
 import uuid
 
 import pytest
@@ -17,12 +16,12 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
 from apps.project_workflow.models import (
+    StepRole,
     WorkflowAction,
     WorkflowActionType,
     WorkflowInstance,
     WorkflowInstanceStatus,
     WorkflowStep,
-    StepRole,
     WorkflowTemplate,
 )
 

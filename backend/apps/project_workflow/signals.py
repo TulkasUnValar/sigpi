@@ -10,20 +10,19 @@ and creates/resets/cancels WorkflowInstance rows accordingly.
 Provides: project, from_state, to_state, triggered_by
 """
 
+import django.dispatch
 from django.db import transaction
 from django.dispatch import receiver
-
-import django.dispatch
-
-# NOTE: Keep this object stable — existing tests and the projects module
-# hold references to it. Do NOT reassign this name.
-project_state_changed = django.dispatch.Signal()
 
 from apps.project_workflow.models import (
     WorkflowInstance,
     WorkflowInstanceStatus,
 )
 from apps.project_workflow.services import WorkflowService, WorkflowTemplateService
+
+# NOTE: Keep this object stable — existing tests and the projects module
+# hold references to it. Do NOT reassign this name.
+project_state_changed = django.dispatch.Signal()
 
 
 @receiver(project_state_changed)

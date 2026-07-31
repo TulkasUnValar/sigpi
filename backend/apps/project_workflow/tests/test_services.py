@@ -13,23 +13,18 @@ RED PHASE: Tests fail because services.py does not exist yet.
 """
 import datetime
 import uuid
-from unittest.mock import MagicMock, patch
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.project_workflow.models import (
-    WorkflowAction,
     WorkflowActionType,
     WorkflowInstance,
     WorkflowInstanceStatus,
     WorkflowStep,
-    StepRole,
     WorkflowTemplate,
 )
-
 
 # ──────────────────────────────────────────────
 # Helpers
@@ -303,11 +298,15 @@ class TestWorkflowServiceAdvanceStep:
         inst = _make_institution("TU")
         center = _make_center(inst)
         user = _make_user("dir@test.edu")
+        from apps.researchers.models import Researcher
+
+        pi = Researcher.objects.create(user=user, institution=inst)
+        project = _make_project(inst, center, pi)
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
         step2 = WorkflowStep.objects.create(template=template, order=2, name="S2", deadline_days=5)
         instance = WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(),
+            project_id=project.id,
             institution=inst,
             template=template,
             current_step=step1,
@@ -330,10 +329,14 @@ class TestWorkflowServiceAdvanceStep:
         inst = _make_institution("TU")
         center = _make_center(inst)
         user = _make_user("dir@test.edu")
+        from apps.researchers.models import Researcher
+
+        pi = Researcher.objects.create(user=user, institution=inst)
+        project = _make_project(inst, center, pi)
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
         instance = WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(),
+            project_id=project.id,
             institution=inst,
             template=template,
             current_step=step1,
@@ -353,10 +356,14 @@ class TestWorkflowServiceAdvanceStep:
         inst = _make_institution("TU")
         center = _make_center(inst)
         user = _make_user("dir@test.edu")
+        from apps.researchers.models import Researcher
+
+        pi = Researcher.objects.create(user=user, institution=inst)
+        project = _make_project(inst, center, pi)
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
         instance = WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(),
+            project_id=project.id,
             institution=inst,
             template=template,
             current_step=None,
@@ -364,6 +371,32 @@ class TestWorkflowServiceAdvanceStep:
         )
 
         with pytest.raises(ValidationError, match="current step"):
+            WorkflowService.advance_step(instance.id, triggered_by=user)
+
+    def test_advance_step_raises_when_minimum_data_missing(self, db):
+        """WR-004: advance_step must block if project lacks required fields."""
+        from apps.project_workflow.services import WorkflowService
+        from apps.projects.models import Project
+
+        inst = _make_institution("TU")
+        center = _make_center(inst)
+        user = _make_user("dir@test.edu")
+        from apps.researchers.models import Researcher
+
+        pi = Researcher.objects.create(user=user, institution=inst)
+        project = _make_project(inst, center, pi)
+        Project.objects.filter(pk=project.pk).update(title="")
+        template = WorkflowTemplate.objects.create(institution=inst, name="T1")
+        step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
+        instance = WorkflowInstance.objects.create(
+            project_id=project.id,
+            institution=inst,
+            template=template,
+            current_step=step1,
+            status=WorkflowInstanceStatus.PENDING,
+        )
+
+        with pytest.raises(ValidationError, match="(?i)minimum data"):
             WorkflowService.advance_step(instance.id, triggered_by=user)
 
 
@@ -381,10 +414,14 @@ class TestWorkflowServiceCompleteWorkflow:
         inst = _make_institution("TU")
         center = _make_center(inst)
         user = _make_user("dir@test.edu")
+        from apps.researchers.models import Researcher
+
+        pi = Researcher.objects.create(user=user, institution=inst)
+        project = _make_project(inst, center, pi)
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
         instance = WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(),
+            project_id=project.id,
             institution=inst,
             template=template,
             current_step=step1,
@@ -401,6 +438,61 @@ class TestWorkflowServiceCompleteWorkflow:
         assert actions[0].acted_by == user
         assert actions[0].step == step1
 
+    def test_complete_workflow_raises_when_minimum_data_missing(self, db):
+        """WR-004: complete_workflow must block if project lacks required fields."""
+        from apps.project_workflow.services import WorkflowService
+        from apps.projects.models import Project
+
+        inst = _make_institution("TU")
+        center = _make_center(inst)
+        user = _make_user("dir@test.edu")
+        from apps.researchers.models import Researcher
+
+        pi = Researcher.objects.create(user=user, institution=inst)
+        project = _make_project(inst, center, pi)
+        Project.objects.filter(pk=project.pk).update(title="")
+        template = WorkflowTemplate.objects.create(institution=inst, name="T1")
+        step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
+        instance = WorkflowInstance.objects.create(
+            project_id=project.id,
+            institution=inst,
+            template=template,
+            current_step=step1,
+            status=WorkflowInstanceStatus.PENDING,
+        )
+
+        with pytest.raises(ValidationError, match="(?i)minimum data"):
+            WorkflowService.complete_workflow(instance.id, triggered_by=user)
+
+    def test_complete_workflow_succeeds_when_minimum_data_present(self, db):
+        """WR-004: complete_workflow succeeds when all required fields are present."""
+        from apps.project_workflow.services import WorkflowService
+
+        inst = _make_institution("TU")
+        center = _make_center(inst)
+        user = _make_user("dir@test.edu")
+        from apps.researchers.models import Researcher
+
+        pi = Researcher.objects.create(user=user, institution=inst)
+        project = _make_project(inst, center, pi)
+        template = WorkflowTemplate.objects.create(institution=inst, name="T1")
+        step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
+        instance = WorkflowInstance.objects.create(
+            project_id=project.id,
+            institution=inst,
+            template=template,
+            current_step=step1,
+            status=WorkflowInstanceStatus.PENDING,
+        )
+
+        result = WorkflowService.complete_workflow(instance.id, triggered_by=user)
+
+        assert result.status == WorkflowInstanceStatus.COMPLETED
+        assert result.completed_at is not None
+        actions = list(result.actions.all())
+        assert len(actions) == 1
+        assert actions[0].action == WorkflowActionType.APPROVE
+
 
 # ──────────────────────────────────────────────
 # WorkflowService.record_action
@@ -414,7 +506,6 @@ class TestWorkflowServiceRecordAction:
         from apps.project_workflow.services import WorkflowService
 
         inst = _make_institution("TU")
-        center = _make_center(inst)
         user = _make_user("dir@test.edu")
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)

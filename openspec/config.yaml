@@ -70,3 +70,24 @@ tdd_policy:
   rationale: "RNF-025 mandates automated tests for backend and frontend. Greenfield project — strict TDD is feasible and enforced."
   red_green_refactor: true
   coverage_floor: 80%
+
+rules:
+  proposal:
+    review_budget_lines: 400
+    interactive: true
+  specs:
+    strict_tdd: true
+  design:
+    clean_architecture_layers: 4
+  tasks:
+    max_tasks_per_phase: 10
+    ask_on_risk: true
+  apply:
+    test_first: true
+    red_green_refactor: true
+    coverage_floor: 80
+  verify:
+    line_by_line: true
+    warn_on_uncovered_branches: true
+  archive:
+    sync_specs: true

@@ -12,12 +12,9 @@ Design reference: openspec/changes/project_workflow/design.md
 RED PHASE: Tests fail because permissions.py does not exist yet.
 """
 import datetime
-import uuid
 from unittest.mock import MagicMock
 
-import pytest
 from rest_framework.request import Request
-
 
 # ──────────────────────────────────────────────────────────
 # Helpers (matching researchers/projects permission test pattern)
@@ -100,7 +97,7 @@ def _make_project(institution, center, pi, **overrides):
 
 
 def _make_instance_for_project(project):
-    from apps.project_workflow.models import WorkflowInstance, WorkflowTemplate, WorkflowStep
+    from apps.project_workflow.models import WorkflowInstance, WorkflowStep, WorkflowTemplate
 
     template = WorkflowTemplate.objects.create(institution=project.institution, name="T1")
     step = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)

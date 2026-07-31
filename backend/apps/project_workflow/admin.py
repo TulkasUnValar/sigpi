@@ -35,7 +35,14 @@ class WorkflowStepAdmin(admin.ModelAdmin):
 
 @admin.register(WorkflowInstance)
 class WorkflowInstanceAdmin(admin.ModelAdmin):
-    list_display = ["project_id", "institution", "template", "status", "deadline_date", "created_at"]
+    list_display = [
+        "project_id",
+        "institution",
+        "template",
+        "status",
+        "deadline_date",
+        "created_at",
+    ]
     search_fields = ["project_id"]
     list_filter = ["status", "institution"]
     raw_id_fields = ["institution", "template", "current_step"]

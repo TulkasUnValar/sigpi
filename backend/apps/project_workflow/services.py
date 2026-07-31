@@ -135,6 +135,8 @@ class WorkflowService:
                 .get(pk=instance_id)
             )
 
+            WorkflowService.check_minimum_data(instance.project_id)
+
             if instance.current_step is None:
                 raise ValidationError("Instance has no current step to advance from.")
 
@@ -179,6 +181,8 @@ class WorkflowService:
                     .select_related("current_step")
                     .get(pk=instance_id_or_obj)
                 )
+
+            WorkflowService.check_minimum_data(instance.project_id)
 
             WorkflowAction.objects.create(
                 instance=instance,

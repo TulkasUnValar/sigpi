@@ -13,7 +13,6 @@ from rest_framework.request import Request
 
 from apps.accounts.permissions import HasRoleLevelOrHigher
 
-
 __all__ = ["IsWorkflowStepApprover"]
 
 

@@ -10,12 +10,10 @@ Spec reference:  openspec/changes/project_workflow/spec.md
 Design reference: openspec/changes/project_workflow/design.md
 """
 import datetime
-import uuid
 from unittest.mock import patch
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import transaction
 
 from apps.project_workflow.models import (
     WorkflowAction,
@@ -26,7 +24,6 @@ from apps.project_workflow.models import (
     WorkflowTemplate,
 )
 from apps.project_workflow.signals import project_state_changed
-
 
 # ──────────────────────────────────────────────
 # Helpers
@@ -412,7 +409,6 @@ class TestProjectServiceSignalEmission:
     def test_submit_is_atomic(self, db):
         """If signal receiver raises, Project state transition rolls back."""
         from apps.projects.services import ProjectService
-        from apps.projects.models import Project
 
         inst = _make_institution("TU")
         center = _make_center(inst)
@@ -449,7 +445,6 @@ class TestSignalReceiverAtomicity:
 
     def test_receiver_rollback_on_create_failure(self, db):
         """If create_instance fails mid-transaction, no partial state left."""
-        from apps.project_workflow.services import WorkflowService
         from apps.project_workflow.signals import on_project_state_change
 
         inst = _make_institution("TU")
@@ -459,7 +454,7 @@ class TestSignalReceiverAtomicity:
 
         pi = Researcher.objects.create(user=user, institution=inst)
         project = _make_project(inst, center, pi)
-        template = WorkflowTemplate.objects.create(institution=inst, name="NoSteps")
+        WorkflowTemplate.objects.create(institution=inst, name="NoSteps")
         # intentionally no steps — will raise ValidationError
 
         with pytest.raises(ValidationError):
