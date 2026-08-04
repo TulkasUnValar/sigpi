@@ -12,9 +12,10 @@ Design reference: openspec/changes/projects/design.md — Service Layer
 Spec reference:   openspec/changes/projects/spec.md — RF-027 through RF-039
 """
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 from apps.accounts.audit import AuditEventEmitter
+from apps.project_workflow.signals import project_state_changed
 from apps.projects.models import (
     TERMINAL_STATES,
     Project,
@@ -119,124 +120,137 @@ class ProjectService:
     @staticmethod
     def submit(project, user):
         """borrador → enviado."""
-        from_state = project.status
-        project.submit()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.submit()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def accept_review(project, user):
         """enviado → en_revision."""
-        from_state = project.status
-        project.accept_review()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.accept_review()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def approve(project, user):
         """en_revision → aprobado."""
-        from_state = project.status
-        project.approve()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.approve()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def observe(project, user, observation_text):
         """en_revision → observado + create ProjectObservation."""
-        from_state = project.status
-        project.observe()
-        project.save()
-        ProjectObservation.objects.create(
-            project=project,
-            observed_by=user,
-            observation_text=observation_text,
-        )
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.observe()
+            project.save()
+            ProjectObservation.objects.create(
+                project=project,
+                observed_by=user,
+                observation_text=observation_text,
+            )
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def return_to_draft(project, user):
         """en_revision | observado → borrador WITHOUT observation."""
-        from_state = project.status
-        project.return_to_draft()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.return_to_draft()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def reject(project, user):
         """en_revision → rechazado (terminal)."""
-        from_state = project.status
-        project.reject()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.reject()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def resubmit(project, user):
         """observado → enviado."""
-        from_state = project.status
-        project.resubmit()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.resubmit()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def start_execution(project, user):
         """aprobado → en_ejecucion."""
-        from_state = project.status
-        project.start_execution()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.start_execution()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def suspend(project, user, reason=""):
         """en_ejecucion → suspendido."""
-        from_state = project.status
-        project.suspend()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user, reason=reason)
+        with transaction.atomic():
+            from_state = project.status
+            project.suspend()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user, reason=reason)
         return project
 
     @staticmethod
     def resume(project, user):
         """suspendido → en_ejecucion."""
-        from_state = project.status
-        project.resume()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.resume()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def finalize(project, user, actual_end_date):
         """en_ejecucion → finalizado with actual_end_date."""
-        from_state = project.status
-        project.finalize()
-        project.actual_end_date = actual_end_date
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.finalize()
+            project.actual_end_date = actual_end_date
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def initiate_closure(project, user):
         """finalizado → en_cierre."""
-        from_state = project.status
-        project.initiate_closure()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.initiate_closure()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
     def close(project, user):
         """en_cierre → cerrado (terminal)."""
-        from_state = project.status
-        project.close()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user)
+        with transaction.atomic():
+            from_state = project.status
+            project.close()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user)
         return project
 
     @staticmethod
@@ -246,10 +260,11 @@ class ProjectService:
         Rejects if the project is already in a terminal state.
         """
         _validate_not_terminal(project)
-        from_state = project.status
-        project.cancel()
-        project.save()
-        ProjectService._log_transition(project, from_state, project.status, user, reason=reason)
+        with transaction.atomic():
+            from_state = project.status
+            project.cancel()
+            project.save()
+            ProjectService._log_transition(project, from_state, project.status, user, reason=reason)
         return project
 
     # ── Audit / Logging ────────────────────────────────
@@ -280,6 +295,13 @@ class ProjectService:
                 "to_state": to_state,
                 "triggered_by": user.email if user else None,
             },
+        )
+        project_state_changed.send(
+            sender=Project,
+            project=project,
+            from_state=from_state,
+            to_state=to_state,
+            triggered_by=user,
         )
 
     # ── Queries ────────────────────────────────────────
