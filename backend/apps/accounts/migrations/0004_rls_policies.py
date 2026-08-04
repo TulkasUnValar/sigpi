@@ -27,6 +27,9 @@ def _is_postgresql(schema_editor):
 TENANT_SCOPED_TABLES = [
     "institutions_researchcenter",  # FK to institution
     "accounts_institutionmembership",  # FK to institution
+    "products_researchproduct",  # institution-scoped
+    "products_productauthor",  # via product → institution
+    "products_productattachment",  # via product → institution
 ]
 
 # Tables planned for future phases (included as comments for documentation):
