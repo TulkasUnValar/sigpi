@@ -7,9 +7,11 @@ ENV DJANGO_SETTINGS_MODULE=config.settings.base
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (includes WeasyPrint libs for PDF generation §6.6)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc && \
+    libpq-dev gcc \
+    libpango-1.0-0 libpangocairo-1.0-0 libcairo2 libffi-dev \
+    shared-mime-info && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
