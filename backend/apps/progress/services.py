@@ -22,15 +22,20 @@ from apps.progress.models import (
     ProgressStateLog,
     ProgressStatus,
 )
-from apps.projects.models import TERMINAL_STATES as PROJECT_TERMINAL_STATES
 
 # ── Guard helpers ───────────────────────────────────────
 
+PROGRESS_ALLOWED_PROJECT_STATES = frozenset({
+    "en_ejecucion", "suspendido", "finalizado", "en_cierre", "cerrado",
+})
 
-def _validate_project_not_terminal(project):
-    """Reject if the project is in a terminal state (RN-P09)."""
-    if project.status in PROJECT_TERMINAL_STATES:
-        raise ValidationError("Cannot create advances for a closed project.")
+
+def _validate_project_state_for_progress(project):
+    """Reject if the project is not in an execution-or-later state (FR-002)."""
+    if project.status not in PROGRESS_ALLOWED_PROJECT_STATES:
+        raise ValidationError(
+            "Progress reports require the project to be in execution or later states."
+        )
 
 
 def _validate_borrador(report):
@@ -61,7 +66,7 @@ class ProgressService:
         - RN-P09: project not in a terminal state.
         - Injects institution from project.
         """
-        _validate_project_not_terminal(project)
+        _validate_project_state_for_progress(project)
 
         report = ProgressReport(
             institution=project.institution,

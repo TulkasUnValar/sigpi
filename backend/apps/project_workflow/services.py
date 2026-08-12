@@ -190,6 +190,15 @@ class WorkflowService:
             instance.status = WorkflowInstanceStatus.COMPLETED
             instance.completed_at = timezone.now()
             instance.save(update_fields=["status", "completed_at", "updated_at"])
+            # Lazy import to avoid circular dependency with signals module
+            from apps.project_workflow.signals import workflow_completed
+
+            workflow_completed.send(
+                sender=WorkflowService,
+                project_id=instance.project_id,
+                instance_id=instance.pk,
+                triggered_by=triggered_by,
+            )
             return instance
 
     @staticmethod

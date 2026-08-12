@@ -49,6 +49,7 @@ class ProgressReportFactory(DjangoModelFactory):
     project = factory.SubFactory(
         "apps.projects.tests.conftest.ProjectFactory",
         institution=factory.SelfAttribute("..institution"),
+        status="en_ejecucion",
     )
     created_by = factory.SubFactory(UserFactory)
     period_start = factory.Faker(

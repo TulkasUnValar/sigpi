@@ -132,19 +132,13 @@ class ReportPreviewView(APIView):
             )
 
         # RN-015: verify entity belongs to user's institution
-        institution_id = _get_entity_institution_id(report_type, entity_id)
-        if institution_id is None:
-            raise Http404("Entity not found.")
-
-        if not _check_institution_access(request, institution_id):
-            return Response(
-                {"error": "You do not have access to this entity."},
-                status=403,
-            )
+        renderer = ReportRenderer()
+        renderer.validate_entity(
+            report_type, entity_id, getattr(request, "institution_id", None), request.user
+        )
 
         # Render
         try:
-            renderer = ReportRenderer()
             html = renderer.render_html(report_type, entity_id, request.user)
         except ValueError as exc:
             raise Http404(str(exc)) from exc
@@ -187,15 +181,10 @@ class ReportPDFView(APIView):
             )
 
         # RN-015: verify entity belongs to user's institution
-        institution_id = _get_entity_institution_id(report_type, entity_id)
-        if institution_id is None:
-            raise Http404("Entity not found.")
-
-        if not _check_institution_access(request, institution_id):
-            return Response(
-                {"error": "You do not have access to this entity."},
-                status=403,
-            )
+        renderer = ReportRenderer()
+        institution_id = renderer.validate_entity(
+            report_type, entity_id, getattr(request, "institution_id", None), request.user
+        )
 
         # Generate PDF
         try:

@@ -17,6 +17,7 @@ from django.db.models import QuerySet
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
@@ -32,6 +33,13 @@ from apps.products.serializers import (
     ProductAuthorSerializer,
     ResearchProductSerializer,
 )
+
+# ── Guard constants ──────────────────────────────────────
+
+PRODUCT_ALLOWED_PROJECT_STATES = frozenset({
+    "aprobado", "en_ejecucion", "suspendido", "finalizado", "en_cierre", "cerrado",
+})
+
 
 # ──────────────────────────────────────────────────────────
 # ResearchProductViewSet
@@ -77,6 +85,10 @@ class ResearchProductViewSet(viewsets.ModelViewSet):
         # RF-080: validate project belongs to the same institution (404 if foreign)
         if project is not None and project.institution_id != institution.id:
             raise Http404("Project not found.")
+
+        # FR-003: validate project is in an approved or active state
+        if project is not None and project.status not in PRODUCT_ALLOWED_PROJECT_STATES:
+            raise PermissionDenied("Products can only be linked to approved or active projects.")
 
         serializer.save(
             institution=institution,

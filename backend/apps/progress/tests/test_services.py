@@ -69,16 +69,27 @@ class TestProgressServiceCreate:
         assert report.project is not None
         assert report.created_by is not None
 
-    def test_create_rejects_terminal_project(self, db, progress_borrador):
-        """RN-P09: Cannot create advances for a terminal project."""
+    def test_create_rejects_blocked_state_project(self, db, progress_borrador):
+        """FR-002: Cannot create advances for a project in a blocked state."""
         from apps.progress.services import ProgressService
 
-        project = _make_terminal_project(
-            institution=progress_borrador.institution,
-            center=progress_borrador.project.center,
-            pi=progress_borrador.project.principal_investigator,
+        institution = progress_borrador.institution
+        center = progress_borrador.project.center
+        pi = progress_borrador.project.principal_investigator
+        project = Project.objects.create(
+            institution=institution,
+            center=center,
+            principal_investigator=pi,
+            title="Blocked Project",
+            abstract="Test",
+            objectives="Test",
+            methodology="Test",
+            expected_results="Test",
+            start_date="2026-01-01",
+            estimated_end_date="2026-12-31",
+            status="rechazado",
         )
-        with pytest.raises(ValidationError, match="closed project"):
+        with pytest.raises(ValidationError, match="execution or later states"):
             ProgressService.create(
                 project=project,
                 user=progress_borrador.created_by,

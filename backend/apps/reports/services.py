@@ -15,7 +15,8 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import Http404
 from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,74 @@ class ReportRenderer:
     """
 
     # ── Public API ──────────────────────────────────────────────
+
+    def validate_entity(
+        self,
+        report_type: str,
+        entity_id: str | UUID,
+        user_institution_id: UUID | str | None,
+        user=None,
+    ) -> UUID:
+        """Resolve entity_id to an existing entity and verify institution ownership.
+
+        Args:
+            report_type: One of "project", "researcher", "center", "advances".
+            entity_id: UUID string or UUID object of the target entity.
+            user_institution_id: Institution ID of the requesting user.
+            user: Django User (superusers bypass institution check).
+
+        Returns:
+            The entity's institution_id.
+
+        Raises:
+            Http404: Entity does not exist.
+            PermissionDenied: Entity belongs to a different institution.
+        """
+        if isinstance(entity_id, UUID):
+            entity_uuid = entity_id
+        else:
+            try:
+                entity_uuid = UUID(entity_id)
+            except (ValueError, AttributeError):
+                raise Http404("Entity not found.")
+
+        institution_id = None
+
+        if report_type in ("project", "advances"):
+            from apps.projects.models import Project
+
+            try:
+                project = Project.objects.only("institution_id").get(pk=entity_uuid)
+                institution_id = project.institution_id
+            except Project.DoesNotExist:
+                raise Http404("Entity not found.") from None
+        elif report_type == "researcher":
+            from apps.researchers.models import Researcher
+
+            try:
+                researcher = Researcher.objects.only("institution_id").get(pk=entity_uuid)
+                institution_id = researcher.institution_id
+            except Researcher.DoesNotExist:
+                raise Http404("Entity not found.") from None
+        elif report_type == "center":
+            from apps.institutions.models import ResearchCenter
+
+            try:
+                center = ResearchCenter.objects.only("institution_id").get(pk=entity_uuid)
+                institution_id = center.institution_id
+            except ResearchCenter.DoesNotExist:
+                raise Http404("Entity not found.") from None
+        else:
+            raise Http404("Entity not found.")
+
+        # Institution scoping (RN-015): superusers bypass
+        if user is not None and getattr(user, "is_superuser", False):
+            return institution_id
+
+        if user_institution_id is not None and str(user_institution_id) != str(institution_id):
+            raise PermissionDenied("Entity does not belong to your institution.")
+
+        return institution_id
 
     def render_html(
         self,

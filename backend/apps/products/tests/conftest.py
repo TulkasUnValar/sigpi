@@ -17,7 +17,10 @@ class ProductFactory(DjangoModelFactory):
     """Factory for ResearchProduct — institution-scoped, linked to a project."""
 
     institution = factory.SelfAttribute("project.institution")
-    project = factory.SubFactory("apps.projects.tests.conftest.ProjectFactory")
+    project = factory.SubFactory(
+        "apps.projects.tests.conftest.ProjectFactory",
+        status="aprobado",
+    )
     title = factory.Faker("sentence", nb_words=6)
     description = factory.Faker("paragraph", nb_sentences=2)
     type = factory.Iterator([choice[0] for choice in ProductType.choices])

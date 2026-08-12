@@ -23,6 +23,7 @@ from apps.calls.models import (
     CallProject,
     CallStateLog,
 )
+from apps.calls.signals import call_state_changed
 
 # ── Terminal-state validation helper ───────────────────────
 
@@ -164,6 +165,13 @@ class CallService:
             to_state=to_state,
             triggered_by=user,
             reason=reason,
+        )
+        call_state_changed.send(
+            sender=CallService,
+            call=call,
+            from_state=from_state,
+            to_state=to_state,
+            triggered_by=user,
         )
         AuditEventEmitter().emit(
             event_type="CALL_STATE_CHANGE",

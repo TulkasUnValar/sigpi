@@ -66,7 +66,7 @@ def _make_project(institution, center, pi, group=None, line=None, **kwargs):
         "keywords": "test, project",
         "start_date": today,
         "estimated_end_date": today + datetime.timedelta(days=365),
-        "status": "borrador",
+        "status": "aprobado",
     }
     defaults.update(kwargs)
     return Project.objects.create(**defaults)

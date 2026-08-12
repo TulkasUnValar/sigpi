@@ -24,6 +24,10 @@ from apps.project_workflow.services import WorkflowService, WorkflowTemplateServ
 # hold references to it. Do NOT reassign this name.
 project_state_changed = django.dispatch.Signal()
 
+# Emitted when a WorkflowInstance reaches completed status.
+# Provides: project_id, instance_id, triggered_by
+workflow_completed = django.dispatch.Signal()
+
 
 @receiver(project_state_changed)
 def on_project_state_change(sender, project, from_state, to_state, triggered_by, **kwargs):
