@@ -19,6 +19,7 @@ Design decisions (from design.md):
 Spec reference: openspec/changes/projects/spec.md — API Contract
 Design reference: openspec/changes/projects/design.md — Serializer Mapping
 """
+
 from rest_framework import serializers
 
 from apps.projects.models import (

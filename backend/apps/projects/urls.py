@@ -34,6 +34,7 @@ API contract (from spec.md):
 Spec reference: openspec/changes/projects/spec.md — API Contract
 Design reference: openspec/changes/projects/design.md — URL Routing
 """
+
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_title }}</title>
+    <style>
+        /* ── Print-optimized CSS (RF-056: WYSIWYG preview matches PDF) ── */
+        @media print {
+            @page {
+                size: A4;
+                margin: 2cm 2.5cm;
+            }
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #222;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .report-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #1a5276;
+        }
+
+        .report-header .institution {
+            font-size: 10pt;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .report-header h1 {
+            font-size: 20pt;
+            color: #1a5276;
+            margin: 5px 0;
+        }
+
+        .report-header .meta {
+            font-size: 9pt;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        h2 {
+            font-size: 14pt;
+            color: #1a5276;
+            border-bottom: 1px solid #d5dbdb;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+
+        h3 {
+            font-size: 12pt;
+            color: #2c3e50;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0 20px;
+            font-size: 10pt;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #d5dbdb;
+            padding: 6px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table th {
+            background-color: #eaf2f8;
+            font-weight: 600;
+            color: #1a5276;
+        }
+
+        table tr:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            color: #999;
+            font-style: italic;
+            padding: 10px 0;
+        }
+
+        .report-footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #d5dbdb;
+            font-size: 9pt;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="report-header">
+        <div class="institution">{{ institution.name | default:"SIGPI" }}</div>
+        <h1>{{ report_title }}</h1>
+        {% if generated_at %}
+        <div class="meta">Generated: {{ generated_at|date:"Y-m-d H:i" }}</div>
+        {% endif %}
+    </div>
+
+    {% block report_content %}{% endblock %}
+
+    <div class="report-footer">
+        SIGPI &mdash; Sistema de Gestión de Proyectos de Investigación
+    </div>
+
+</body>
+</html>

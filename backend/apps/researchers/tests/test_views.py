@@ -91,9 +91,7 @@ def authenticated_role(db):
 
 @pytest.fixture
 def superadmin_user(db, institution, superadmin_role):
-    user = User.objects.create_user(
-        email="sa@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="sa@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=superadmin_role, is_active=True
     )
@@ -102,9 +100,7 @@ def superadmin_user(db, institution, superadmin_role):
 
 @pytest.fixture
 def admin_user(db, institution, admin_role):
-    user = User.objects.create_user(
-        email="admin@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="admin@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=admin_role, is_active=True
     )
@@ -113,9 +109,7 @@ def admin_user(db, institution, admin_role):
 
 @pytest.fixture
 def director_user(db, institution, director_role):
-    user = User.objects.create_user(
-        email="dir@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="dir@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=director_role, is_active=True
     )
@@ -124,9 +118,7 @@ def director_user(db, institution, director_role):
 
 @pytest.fixture
 def researcher_user(db, institution, researcher_role):
-    user = User.objects.create_user(
-        email="res@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="res@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=researcher_role, is_active=True
     )
@@ -135,9 +127,7 @@ def researcher_user(db, institution, researcher_role):
 
 @pytest.fixture
 def authenticated_user(db, institution, authenticated_role):
-    user = User.objects.create_user(
-        email="auth@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="auth@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=authenticated_role, is_active=True
     )
@@ -147,9 +137,7 @@ def authenticated_user(db, institution, authenticated_role):
 @pytest.fixture
 def researcher_owner(db, institution, researcher_role):
     """A researcher user who owns a researcher profile (for self-edit tests)."""
-    user = User.objects.create_user(
-        email="owner@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="owner@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=researcher_role, is_active=True
     )
@@ -159,9 +147,7 @@ def researcher_owner(db, institution, researcher_role):
 
 @pytest.fixture
 def center(db, institution):
-    return ResearchCenter.objects.create(
-        institution=institution, name="AI Lab", code="AI"
-    )
+    return ResearchCenter.objects.create(institution=institution, name="AI Lab", code="AI")
 
 
 # ════════════════════════════════════════════════════════
@@ -219,9 +205,7 @@ class TestResearcherViewSet:
     def test_retrieve_as_researcher(self, api_client, institution, researcher_user):
         res = _make_researcher(institution, document_number="R001")
         _login(api_client, researcher_user, institution)
-        r = api_client.get(
-            reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)})
-        )
+        r = api_client.get(reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)}))
         assert r.status_code == 200
         data = r.json()
         assert data["first_name"] == "Alice"
@@ -252,18 +236,14 @@ class TestResearcherViewSet:
     def test_delete_as_superadmin(self, api_client, institution, superadmin_user):
         res = _make_researcher(institution, document_number="D001")
         _login(api_client, superadmin_user, institution)
-        r = api_client.delete(
-            reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)})
-        )
+        r = api_client.delete(reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)}))
         assert r.status_code == 204
         assert not Researcher.objects.filter(pk=res.pk).exists()
 
     def test_delete_denied_for_admin(self, api_client, institution, admin_user):
         res = _make_researcher(institution, document_number="D002")
         _login(api_client, admin_user, institution)
-        r = api_client.delete(
-            reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)})
-        )
+        r = api_client.delete(reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)}))
         assert r.status_code in (403, 401)
 
     def test_deactivate_as_admin(self, api_client, institution, admin_user):
@@ -294,9 +274,7 @@ class TestResearcherViewSet:
     def test_deactivate_not_found(self, api_client, institution, admin_user):
         _login(api_client, admin_user, institution)
         fake_id = "00000000-0000-0000-0000-000000000000"
-        r = api_client.post(
-            reverse("researchers:researcher-deactivate", kwargs={"pk": fake_id})
-        )
+        r = api_client.post(reverse("researchers:researcher-deactivate", kwargs={"pk": fake_id}))
         assert r.status_code in (404, 403)
 
     def test_self_update_allowed(self, api_client, institution, researcher_owner):
@@ -374,9 +352,7 @@ class TestResearcherAffiliationViewSet:
         self, api_client, institution, researcher, center, admin_user
     ):
         # First affiliation exists and is primary
-        ResearcherAffiliation.objects.create(
-            researcher=researcher, center=center, is_primary=True
-        )
+        ResearcherAffiliation.objects.create(researcher=researcher, center=center, is_primary=True)
         _login(api_client, admin_user, institution)
         r = api_client.post(
             reverse(
@@ -505,9 +481,7 @@ class TestExternalProfileViewSet:
         )
         assert r.status_code == 204
 
-    def test_self_profile_create_allowed(
-        self, api_client, institution, researcher_owner
-    ):
+    def test_self_profile_create_allowed(self, api_client, institution, researcher_owner):
         user, profile = researcher_owner
         _login(api_client, user, institution)
         r = api_client.post(
@@ -579,9 +553,7 @@ class TestResearcherAttachmentViewSet:
         )
         assert r.status_code == 204
 
-    def test_self_attachment_create_allowed(
-        self, api_client, institution, researcher_owner
-    ):
+    def test_self_attachment_create_allowed(self, api_client, institution, researcher_owner):
         user, profile = researcher_owner
         _login(api_client, user, institution)
         r = api_client.post(
@@ -607,9 +579,7 @@ class TestResearcherAttachmentViewSet:
 class TestResearcherErrorResponses:
     """Verify error codes for business rule violations."""
 
-    def test_duplicate_document_same_institution(
-        self, api_client, institution, admin_user
-    ):
+    def test_duplicate_document_same_institution(self, api_client, institution, admin_user):
         _make_researcher(institution, document_number="DUP001")
         _login(api_client, admin_user, institution)
         r = api_client.post(
@@ -629,9 +599,7 @@ class TestResearcherErrorResponses:
         self, api_client, institution, another_institution, researcher_user
     ):
         # Create researcher in another institution
-        other_res = _make_researcher(
-            another_institution, document_number="CROSS01"
-        )
+        other_res = _make_researcher(another_institution, document_number="CROSS01")
         _login(api_client, researcher_user, institution)
         r = api_client.get(
             reverse(
@@ -646,9 +614,7 @@ class TestResearcherErrorResponses:
     ):
         """Creating a second primary affiliation should be rejected."""
         res = _make_researcher(institution, document_number="MP001")
-        ResearcherAffiliation.objects.create(
-            researcher=res, center=center, is_primary=True
-        )
+        ResearcherAffiliation.objects.create(researcher=res, center=center, is_primary=True)
         _login(api_client, admin_user, institution)
         r = api_client.post(
             reverse(
@@ -727,9 +693,7 @@ class TestResearcherPermissions:
         r = api_client.get(reverse("researchers:researcher-list"))
         assert r.status_code == 200
 
-    def test_authenticated_cannot_create(
-        self, api_client, institution, authenticated_user
-    ):
+    def test_authenticated_cannot_create(self, api_client, institution, authenticated_user):
         _login(api_client, authenticated_user, institution)
         r = api_client.post(
             reverse("researchers:researcher-list"),
@@ -744,9 +708,7 @@ class TestResearcherPermissions:
         )
         assert r.status_code in (403, 401)
 
-    def test_researcher_cannot_create(
-        self, api_client, institution, researcher_user
-    ):
+    def test_researcher_cannot_create(self, api_client, institution, researcher_user):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse("researchers:researcher-list"),
@@ -778,27 +740,17 @@ class TestCompletenessScore:
         for item in r.json()["results"]:
             assert "completeness_score" in item
 
-    def test_detail_includes_completeness(
-        self, api_client, institution, researcher_user
-    ):
+    def test_detail_includes_completeness(self, api_client, institution, researcher_user):
         res = _make_researcher(institution, document_number="CC002")
         _login(api_client, researcher_user, institution)
-        r = api_client.get(
-            reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)})
-        )
+        r = api_client.get(reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)}))
         assert r.status_code == 200
         assert "completeness_score" in r.json()
 
-    def test_completeness_below_100_without_profile(
-        self, api_client, institution, researcher_user
-    ):
+    def test_completeness_below_100_without_profile(self, api_client, institution, researcher_user):
         # Create researcher with no external profile
-        res = _make_researcher(
-            institution, document_number="CC003", bio="", academic_formation=""
-        )
+        res = _make_researcher(institution, document_number="CC003", bio="", academic_formation="")
         _login(api_client, researcher_user, institution)
-        r = api_client.get(
-            reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)})
-        )
+        r = api_client.get(reverse("researchers:researcher-detail", kwargs={"pk": str(res.pk)}))
         assert r.status_code == 200
         assert r.json()["completeness_score"] < 100

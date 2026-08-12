@@ -10,6 +10,7 @@ Design reference: openspec/changes/projects/design.md
 
 GREEN PHASE: Factories now create valid instances from full models.
 """
+
 import datetime
 
 import factory
@@ -46,9 +47,7 @@ class UserFactory(DjangoModelFactory):
 class ProjectFactory(DjangoModelFactory):
     """Factory for Project — institution-scoped with 12-state FSM."""
 
-    institution = factory.SubFactory(
-        "apps.institutions.tests.conftest.InstitutionFactory"
-    )
+    institution = factory.SubFactory("apps.institutions.tests.conftest.InstitutionFactory")
     center = factory.SubFactory(
         "apps.institutions.tests.conftest.ResearchCenterFactory",
         institution=factory.SelfAttribute("..institution"),

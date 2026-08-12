@@ -14,6 +14,7 @@ dependencies = [
     "django-ratelimit>=4.1",
     "django-fsm>=3.0",
     "django-filter>=24.0",
+    "weasyprint>=62.0",
 ]
 
 [project.optional-dependencies]
@@ -37,13 +38,16 @@ addopts = [
     "--tb=short",
 ]
 testpaths = ["backend"]
+filterwarnings = [
+    "ignore::UserWarning:django_fsm.*",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
 ]
-
-[tool.pytest_env]
-PYTEST_RUNNING = "true"
+env = [
+    "PYTEST_RUNNING=true",
+]
 
 [tool.ruff]
 line-length = 100
@@ -52,6 +56,7 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
 exclude = ["*/migrations/*"]
+per-file-ignores = { "*/tests/*" = ["E501"] }
 
 [tool.mypy]
 python_version = "3.12"

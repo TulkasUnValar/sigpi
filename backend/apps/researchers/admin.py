@@ -6,6 +6,7 @@ Researcher → ResearcherAffiliation → ExternalProfile → ResearcherAttachmen
 Each admin exposes list_display, search_fields, list_filter, and raw_id_fields
 suitable for multi-tenant management with FK-heavy models.
 """
+
 from django.contrib import admin
 
 from .models import (

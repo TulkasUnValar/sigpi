@@ -133,6 +133,7 @@ class TestResearcherProfileServiceDeactivate:
         """
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
         ResearcherAffiliation.objects.create(
             researcher=researcher,
@@ -196,11 +197,11 @@ class TestResearcherProfileServiceCompleteness:
     def test_missing_multiple_fields_calculates_correctly(self, db):
         """Multiple missing fields → score reflects fraction populated."""
         researcher = ResearcherFactory(
-            first_name="",           # missing
-            last_name="",            # missing
-            document_type="CC",      # populated
-            document_number="12345", # populated
-            primary_email="",        # missing
+            first_name="",  # missing
+            last_name="",  # missing
+            document_type="CC",  # populated
+            document_number="12345",  # populated
+            primary_email="",  # missing
         )
         # No external profile either → 2/6 mandatory = 33%
 
@@ -237,6 +238,7 @@ class TestResearcherAffiliationServiceAdd:
         """add() creates an affiliation linking researcher to a center."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
 
         affiliation = ResearcherAffiliationService.add(
@@ -254,6 +256,7 @@ class TestResearcherAffiliationServiceAdd:
         """add() creates an affiliation linking researcher to a group."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchGroupFactory
+
         group = ResearchGroupFactory(institution=researcher.institution)
 
         affiliation = ResearcherAffiliationService.add(
@@ -269,6 +272,7 @@ class TestResearcherAffiliationServiceAdd:
         """add() creates an affiliation linking researcher to a line."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchLineFactory
+
         line = ResearchLineFactory(institution=researcher.institution)
 
         affiliation = ResearcherAffiliationService.add(
@@ -282,6 +286,7 @@ class TestResearcherAffiliationServiceAdd:
         """add() with is_primary=True sets primary affiliation."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
 
         affiliation = ResearcherAffiliationService.add(
@@ -304,8 +309,10 @@ class TestResearcherAffiliationServiceAdd:
         researcher = ResearcherFactory()
         # Create a center in a DIFFERENT institution
         from apps.institutions.models import Institution
+
         other_inst = Institution.objects.create(name="Other", code="OTH")
         from apps.institutions.models import ResearchCenter
+
         other_center = ResearchCenter.objects.create(
             institution=other_inst, name="Other Center", code="OC"
         )
@@ -320,6 +327,7 @@ class TestResearcherAffiliationServiceAdd:
         """First affiliation for a researcher is auto-set as primary if no is_primary given."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
 
         # No existing affiliations — first one should get is_primary=True
@@ -339,9 +347,11 @@ class TestResearcherAffiliationServiceRemove:
         """remove() deletes the affiliation record."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
         affiliation = ResearcherAffiliationService.add(
-            researcher=researcher, center=center,
+            researcher=researcher,
+            center=center,
         )
 
         ResearcherAffiliationService.remove(affiliation)
@@ -352,9 +362,11 @@ class TestResearcherAffiliationServiceRemove:
         """remove() deletes only the affiliation, not the researcher."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
         affiliation = ResearcherAffiliationService.add(
-            researcher=researcher, center=center,
+            researcher=researcher,
+            center=center,
         )
 
         ResearcherAffiliationService.remove(affiliation)
@@ -369,9 +381,12 @@ class TestResearcherAffiliationServiceSetPrimary:
         """set_primary() sets is_primary=True on the target affiliation."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
         affiliation = ResearcherAffiliationService.add(
-            researcher=researcher, center=center, is_primary=False,
+            researcher=researcher,
+            center=center,
+            is_primary=False,
         )
 
         updated = ResearcherAffiliationService.set_primary(affiliation)
@@ -381,14 +396,19 @@ class TestResearcherAffiliationServiceSetPrimary:
         """set_primary() unsets the previous primary affiliation atomically."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center1 = ResearchCenterFactory(institution=researcher.institution)
         center2 = ResearchCenterFactory(institution=researcher.institution)
 
         primary = ResearcherAffiliationService.add(
-            researcher=researcher, center=center1, is_primary=True,
+            researcher=researcher,
+            center=center1,
+            is_primary=True,
         )
         secondary = ResearcherAffiliationService.add(
-            researcher=researcher, center=center2, is_primary=False,
+            researcher=researcher,
+            center=center2,
+            is_primary=False,
         )
 
         # Switch primary
@@ -405,14 +425,18 @@ class TestResearcherAffiliationServiceSetPrimary:
         """set_primary() on already-primary affiliation is a no-op."""
         researcher = ResearcherFactory()
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
         affiliation = ResearcherAffiliationService.add(
-            researcher=researcher, center=center, is_primary=True,
+            researcher=researcher,
+            center=center,
+            is_primary=True,
         )
 
         updated = ResearcherAffiliationService.set_primary(affiliation)
         assert updated.is_primary is True
         # Should still be the only primary
-        assert ResearcherAffiliation.objects.filter(
-            researcher=researcher, is_primary=True
-        ).count() == 1
+        assert (
+            ResearcherAffiliation.objects.filter(researcher=researcher, is_primary=True).count()
+            == 1
+        )

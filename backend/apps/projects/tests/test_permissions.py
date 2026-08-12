@@ -12,6 +12,7 @@ Includes full role × action matrix verification.
 Strict TDD: this file is written BEFORE permissions.py exists.
 Expected failure: ImportError (permissions.py not created yet).
 """
+
 from unittest.mock import MagicMock
 
 from rest_framework.request import Request
@@ -23,6 +24,7 @@ from rest_framework.request import Request
 
 class _FakeObj:
     """Minimal object without MagicMock auto-creation for attribute tests."""
+
     pass
 
 
@@ -368,8 +370,15 @@ class TestIsProjectEditable:
         request = _make_request(method="PATCH", role_level=4, institution_id="uuid-1")
 
         non_terminal = [
-            "borrador", "enviado", "en_revision", "observado",
-            "aprobado", "en_ejecucion", "suspendido", "finalizado", "en_cierre",
+            "borrador",
+            "enviado",
+            "en_revision",
+            "observado",
+            "aprobado",
+            "en_ejecucion",
+            "suspendido",
+            "finalizado",
+            "en_cierre",
         ]
         for state in non_terminal:
             obj = MagicMock()
@@ -410,6 +419,7 @@ class TestPermissionMatrix:
         from rest_framework.permissions import BasePermission
 
         from apps.projects.permissions import IsProjectOwnerOrCoInvestigator
+
         assert issubclass(IsProjectOwnerOrCoInvestigator, BasePermission)
 
     def test_director_permission_level_3(self):
@@ -417,6 +427,7 @@ class TestPermissionMatrix:
         from rest_framework.permissions import BasePermission
 
         from apps.projects.permissions import IsCenterDirectorForProject
+
         assert issubclass(IsCenterDirectorForProject, BasePermission)
 
     def test_create_permission_exists(self):
@@ -424,6 +435,7 @@ class TestPermissionMatrix:
         from rest_framework.permissions import BasePermission
 
         from apps.projects.permissions import CanCreateProjectInCenter
+
         assert issubclass(CanCreateProjectInCenter, BasePermission)
 
     def test_editable_permission_exists(self):
@@ -431,4 +443,5 @@ class TestPermissionMatrix:
         from rest_framework.permissions import BasePermission
 
         from apps.projects.permissions import IsProjectEditable
+
         assert issubclass(IsProjectEditable, BasePermission)

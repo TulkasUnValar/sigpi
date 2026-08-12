@@ -168,25 +168,17 @@ class ResearcherAffiliationService:
         """
         # At least one FK must be set
         if not center and not group and not line:
-            raise ValidationError(
-                "At least one of center, group, or line must be set."
-            )
+            raise ValidationError("At least one of center, group, or line must be set.")
 
         institution_id = researcher.institution_id
 
         # Cross-institution validation
         if center and center.institution_id != institution_id:
-            raise ValidationError(
-                "Affiliation entity does not belong to researcher's institution."
-            )
+            raise ValidationError("Affiliation entity does not belong to researcher's institution.")
         if group and group.institution_id != institution_id:
-            raise ValidationError(
-                "Affiliation entity does not belong to researcher's institution."
-            )
+            raise ValidationError("Affiliation entity does not belong to researcher's institution.")
         if line and line.institution_id != institution_id:
-            raise ValidationError(
-                "Affiliation entity does not belong to researcher's institution."
-            )
+            raise ValidationError("Affiliation entity does not belong to researcher's institution.")
 
         # Auto-set primary if this is the first affiliation
         if not ResearcherAffiliation.objects.filter(researcher=researcher).exists():
@@ -233,9 +225,9 @@ class ResearcherAffiliationService:
         researcher = affiliation.researcher
 
         # Unset all existing primary affiliations for this researcher
-        ResearcherAffiliation.objects.filter(
-            researcher=researcher, is_primary=True
-        ).update(is_primary=False)
+        ResearcherAffiliation.objects.filter(researcher=researcher, is_primary=True).update(
+            is_primary=False
+        )
 
         # Set the target as primary
         affiliation.is_primary = True

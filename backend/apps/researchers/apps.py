@@ -1,4 +1,5 @@
 """Django app configuration for the researchers module."""
+
 from django.apps import AppConfig
 
 

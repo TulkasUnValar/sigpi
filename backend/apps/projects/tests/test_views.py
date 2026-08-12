@@ -98,9 +98,7 @@ def institution(db):
 
 @pytest.fixture
 def center(db, institution):
-    return ResearchCenter.objects.create(
-        institution=institution, name="AI Lab", code="AI"
-    )
+    return ResearchCenter.objects.create(institution=institution, name="AI Lab", code="AI")
 
 
 @pytest.fixture
@@ -130,9 +128,7 @@ def auditor_role(db):
 
 @pytest.fixture
 def superadmin_user(db, institution, superadmin_role):
-    user = User.objects.create_user(
-        email="sa@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="sa@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=superadmin_role, is_active=True
     )
@@ -141,9 +137,7 @@ def superadmin_user(db, institution, superadmin_role):
 
 @pytest.fixture
 def admin_user(db, institution, admin_role):
-    user = User.objects.create_user(
-        email="admin@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="admin@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=admin_role, is_active=True
     )
@@ -152,9 +146,7 @@ def admin_user(db, institution, admin_role):
 
 @pytest.fixture
 def director_user(db, institution, center, director_role):
-    user = User.objects.create_user(
-        email="dir@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="dir@test.edu", auth_source="local", password="p")
     membership = InstitutionMembership.objects.create(
         user=user, institution=institution, role=director_role, is_active=True
     )
@@ -164,9 +156,7 @@ def director_user(db, institution, center, director_role):
 
 @pytest.fixture
 def researcher_user(db, institution, researcher_role):
-    user = User.objects.create_user(
-        email="res@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="res@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=researcher_role, is_active=True
     )
@@ -182,18 +172,14 @@ def researcher_pi(db, institution, researcher_user, center):
         document_number="PI000001",
         primary_email="res@test.edu",
     )
-    ResearcherAffiliation.objects.create(
-        researcher=pi, center=center, is_primary=True
-    )
+    ResearcherAffiliation.objects.create(researcher=pi, center=center, is_primary=True)
     return pi
 
 
 @pytest.fixture
 def researcher2_user(db, institution, researcher_role):
     """Second researcher user for co-investigator tests."""
-    user = User.objects.create_user(
-        email="res2@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="res2@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=researcher_role, is_active=True
     )
@@ -209,17 +195,13 @@ def researcher_coi(db, institution, researcher2_user, center):
         document_number="COI00001",
         primary_email="res2@test.edu",
     )
-    ResearcherAffiliation.objects.create(
-        researcher=coi, center=center, is_primary=True
-    )
+    ResearcherAffiliation.objects.create(researcher=coi, center=center, is_primary=True)
     return coi
 
 
 @pytest.fixture
 def auditor_user(db, institution, auditor_role):
-    user = User.objects.create_user(
-        email="aud@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="aud@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=auditor_role, is_active=True
     )
@@ -290,9 +272,7 @@ def project_cancelado(db, institution, center, researcher_pi):
 class TestProjectViewSetCRUD:
     """CRUD operations on /projects/"""
 
-    def test_list_as_researcher(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_list_as_researcher(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.get(reverse("projects:project-list"))
         assert r.status_code == 200
@@ -354,9 +334,7 @@ class TestProjectViewSetCRUD:
         )
         assert r.status_code in (403, 401)
 
-    def test_retrieve_as_pi(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_retrieve_as_pi(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.get(
             reverse(
@@ -370,9 +348,7 @@ class TestProjectViewSetCRUD:
         assert "members" in data
         assert "documents" in data
 
-    def test_update_as_pi(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_update_as_pi(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.patch(
             reverse(
@@ -414,9 +390,7 @@ class TestProjectViewSetCRUD:
         assert r.status_code == 204
         assert not Project.objects.filter(pk=project_borrador.pk).exists()
 
-    def test_delete_cerrado_denied(
-        self, api_client, institution, researcher_user, project_cerrado
-    ):
+    def test_delete_cerrado_denied(self, api_client, institution, researcher_user, project_cerrado):
         _login(api_client, researcher_user, institution)
         r = api_client.delete(
             reverse(
@@ -437,9 +411,7 @@ class TestProjectFSMActions:
 
     # ── submit (borrador → enviado) ──────────────────────
 
-    def test_submit_as_pi(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_submit_as_pi(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse(
@@ -505,9 +477,7 @@ class TestProjectFSMActions:
 
     # ── approve (en_revision → aprobado) ─────────────────
 
-    def test_approve_as_director(
-        self, api_client, institution, director_user, project_en_revision
-    ):
+    def test_approve_as_director(self, api_client, institution, director_user, project_en_revision):
         _login(api_client, director_user, institution)
         r = api_client.post(
             reverse(
@@ -521,9 +491,7 @@ class TestProjectFSMActions:
 
     # ── observe (en_revision → observado) ────────────────
 
-    def test_observe_as_director(
-        self, api_client, institution, director_user, project_en_revision
-    ):
+    def test_observe_as_director(self, api_client, institution, director_user, project_en_revision):
         _login(api_client, director_user, institution)
         r = api_client.post(
             reverse(
@@ -559,9 +527,7 @@ class TestProjectFSMActions:
 
     # ── reject (en_revision → rechazado) ─────────────────
 
-    def test_reject_as_director(
-        self, api_client, institution, director_user, project_en_revision
-    ):
+    def test_reject_as_director(self, api_client, institution, director_user, project_en_revision):
         _login(api_client, director_user, institution)
         r = api_client.post(
             reverse(
@@ -575,9 +541,7 @@ class TestProjectFSMActions:
 
     # ── resubmit (observado → enviado) ───────────────────
 
-    def test_resubmit_as_pi(
-        self, api_client, institution, researcher_user, project_observado
-    ):
+    def test_resubmit_as_pi(self, api_client, institution, researcher_user, project_observado):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse(
@@ -603,9 +567,7 @@ class TestProjectFSMActions:
 
     # ── start_execution (aprobado → en_ejecucion) ────────
 
-    def test_start_execution_as_admin(
-        self, api_client, institution, admin_user, project_aprobado
-    ):
+    def test_start_execution_as_admin(self, api_client, institution, admin_user, project_aprobado):
         _login(api_client, admin_user, institution)
         r = api_client.post(
             reverse(
@@ -649,9 +611,7 @@ class TestProjectFSMActions:
 
     # ── resume (suspendido → en_ejecucion) ───────────────
 
-    def test_resume_as_admin(
-        self, api_client, institution, admin_user, project_suspendido
-    ):
+    def test_resume_as_admin(self, api_client, institution, admin_user, project_suspendido):
         _login(api_client, admin_user, institution)
         r = api_client.post(
             reverse(
@@ -665,9 +625,7 @@ class TestProjectFSMActions:
 
     # ── finalize (en_ejecucion → finalizado) ─────────────
 
-    def test_finalize_as_pi(
-        self, api_client, institution, researcher_user, project_en_ejecucion
-    ):
+    def test_finalize_as_pi(self, api_client, institution, researcher_user, project_en_ejecucion):
         _login(api_client, researcher_user, institution)
         actual_end = datetime.date.today()
         r = api_client.post(
@@ -701,9 +659,7 @@ class TestProjectFSMActions:
 
     # ── close (en_cierre → cerrado) ─────────────────────
 
-    def test_close_as_director(
-        self, api_client, institution, director_user, project_en_cierre
-    ):
+    def test_close_as_director(self, api_client, institution, director_user, project_en_cierre):
         _login(api_client, director_user, institution)
         r = api_client.post(
             reverse(
@@ -717,9 +673,7 @@ class TestProjectFSMActions:
 
     # ── cancel (any non-terminal → cancelado) ────────────
 
-    def test_cancel_as_admin(
-        self, api_client, institution, admin_user, project_borrador
-    ):
+    def test_cancel_as_admin(self, api_client, institution, admin_user, project_borrador):
         _login(api_client, admin_user, institution)
         r = api_client.post(
             reverse(
@@ -733,9 +687,7 @@ class TestProjectFSMActions:
         project_borrador.refresh_from_db()
         assert project_borrador.status == "cancelado"
 
-    def test_cancel_denied_for_pi(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_cancel_denied_for_pi(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse(
@@ -770,11 +722,16 @@ class TestProjectMemberViewSet:
     """Nested member CRUD under /projects/{project_pk}/members/"""
 
     def test_list_members(
-        self, api_client, institution, researcher_user, project_borrador,
+        self,
+        api_client,
+        institution,
+        researcher_user,
+        project_borrador,
         researcher_coi,
     ):
         ProjectMember.objects.create(
-            project=project_borrador, researcher=researcher_coi,
+            project=project_borrador,
+            researcher=researcher_coi,
             role="co_investigator",
         )
         _login(api_client, researcher_user, institution)
@@ -789,7 +746,11 @@ class TestProjectMemberViewSet:
         assert len(data["results"]) >= 1
 
     def test_add_member_as_pi(
-        self, api_client, institution, researcher_user, project_borrador,
+        self,
+        api_client,
+        institution,
+        researcher_user,
+        project_borrador,
         researcher_coi,
     ):
         _login(api_client, researcher_user, institution)
@@ -807,7 +768,11 @@ class TestProjectMemberViewSet:
         assert data["role"] == "co_investigator"
 
     def test_add_member_denied_for_auditor(
-        self, api_client, institution, auditor_user, project_borrador,
+        self,
+        api_client,
+        institution,
+        auditor_user,
+        project_borrador,
         researcher_coi,
     ):
         _login(api_client, auditor_user, institution)
@@ -822,7 +787,11 @@ class TestProjectMemberViewSet:
         assert r.status_code in (403, 401)
 
     def test_update_member_role(
-        self, api_client, institution, researcher_user, project_borrador,
+        self,
+        api_client,
+        institution,
+        researcher_user,
+        project_borrador,
         researcher_coi,
     ):
         member = ProjectMember.objects.create(
@@ -845,11 +814,16 @@ class TestProjectMemberViewSet:
         assert member.role == "collaborator"
 
     def test_remove_member(
-        self, api_client, institution, researcher_user, project_borrador,
+        self,
+        api_client,
+        institution,
+        researcher_user,
+        project_borrador,
         researcher_coi,
     ):
         member = ProjectMember.objects.create(
-            project=project_borrador, researcher=researcher_coi,
+            project=project_borrador,
+            researcher=researcher_coi,
             role="collaborator",
         )
         _login(api_client, researcher_user, institution)
@@ -866,7 +840,11 @@ class TestProjectMemberViewSet:
         assert not ProjectMember.objects.filter(pk=member.pk).exists()
 
     def test_add_member_to_terminal_denied(
-        self, api_client, institution, researcher_user, project_cerrado,
+        self,
+        api_client,
+        institution,
+        researcher_user,
+        project_cerrado,
         researcher_coi,
     ):
         _login(api_client, researcher_user, institution)
@@ -881,11 +859,16 @@ class TestProjectMemberViewSet:
         assert r.status_code == 400
 
     def test_duplicate_member_rejected(
-        self, api_client, institution, researcher_user, project_borrador,
+        self,
+        api_client,
+        institution,
+        researcher_user,
+        project_borrador,
         researcher_coi,
     ):
         ProjectMember.objects.create(
-            project=project_borrador, researcher=researcher_coi,
+            project=project_borrador,
+            researcher=researcher_coi,
             role="co_investigator",
         )
         _login(api_client, researcher_user, institution)
@@ -908,11 +891,11 @@ class TestProjectMemberViewSet:
 class TestProjectDocumentViewSet:
     """Nested document CRUD under /projects/{project_pk}/documents/"""
 
-    def test_list_documents(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_list_documents(self, api_client, institution, researcher_user, project_borrador):
         ProjectDocument.objects.create(
-            project=project_borrador, name="test.pdf", doc_type="proposal",
+            project=project_borrador,
+            name="test.pdf",
+            doc_type="proposal",
             external_url="https://example.com/test.pdf",
         )
         _login(api_client, researcher_user, institution)
@@ -926,9 +909,7 @@ class TestProjectDocumentViewSet:
         data = r.json()
         assert len(data["results"]) >= 1
 
-    def test_add_document_as_pi(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_add_document_as_pi(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse(
@@ -947,11 +928,11 @@ class TestProjectDocumentViewSet:
         assert data["name"] == "proposal_v2.pdf"
         assert data["doc_type"] == "proposal"
 
-    def test_update_document(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_update_document(self, api_client, institution, researcher_user, project_borrador):
         doc = ProjectDocument.objects.create(
-            project=project_borrador, name="old.pdf", doc_type="other",
+            project=project_borrador,
+            name="old.pdf",
+            doc_type="other",
             external_url="https://example.com/old.pdf",
         )
         _login(api_client, researcher_user, institution)
@@ -970,11 +951,11 @@ class TestProjectDocumentViewSet:
         doc.refresh_from_db()
         assert doc.name == "updated.pdf"
 
-    def test_remove_document(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_remove_document(self, api_client, institution, researcher_user, project_borrador):
         doc = ProjectDocument.objects.create(
-            project=project_borrador, name="del.pdf", doc_type="other",
+            project=project_borrador,
+            name="del.pdf",
+            doc_type="other",
             external_url="https://example.com/del.pdf",
         )
         _login(api_client, researcher_user, institution)
@@ -999,11 +980,10 @@ class TestProjectDocumentViewSet:
 class TestProjectObservationViewSet:
     """Read-only observation list under /projects/{project_pk}/observations/"""
 
-    def test_list_observations(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_list_observations(self, api_client, institution, researcher_user, project_borrador):
         ProjectObservation.objects.create(
-            project=project_borrador, observation_text="Needs revision.",
+            project=project_borrador,
+            observation_text="Needs revision.",
         )
         _login(api_client, researcher_user, institution)
         r = api_client.get(
@@ -1016,9 +996,7 @@ class TestProjectObservationViewSet:
         data = r.json()
         assert len(data["results"]) >= 1
 
-    def test_post_not_allowed(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_post_not_allowed(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse(
@@ -1030,11 +1008,10 @@ class TestProjectObservationViewSet:
         )
         assert r.status_code in (405, 403, 401)
 
-    def test_put_not_allowed(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_put_not_allowed(self, api_client, institution, researcher_user, project_borrador):
         ProjectObservation.objects.create(
-            project=project_borrador, observation_text="Test.",
+            project=project_borrador,
+            observation_text="Test.",
         )
         _login(api_client, researcher_user, institution)
         r = api_client.put(
@@ -1057,11 +1034,11 @@ class TestProjectObservationViewSet:
 class TestProjectStateLogViewSet:
     """Read-only state history list under /projects/{project_pk}/state_history/"""
 
-    def test_list_state_history(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_list_state_history(self, api_client, institution, researcher_user, project_borrador):
         ProjectStateLog.objects.create(
-            project=project_borrador, from_state="borrador", to_state="enviado",
+            project=project_borrador,
+            from_state="borrador",
+            to_state="enviado",
         )
         _login(api_client, researcher_user, institution)
         r = api_client.get(
@@ -1074,9 +1051,7 @@ class TestProjectStateLogViewSet:
         data = r.json()
         assert len(data["results"]) >= 1
 
-    def test_post_not_allowed(
-        self, api_client, institution, researcher_user, project_borrador
-    ):
+    def test_post_not_allowed(self, api_client, institution, researcher_user, project_borrador):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse(
@@ -1097,9 +1072,7 @@ class TestProjectStateLogViewSet:
 class TestProjectErrorResponses:
     """Verify error codes for business rule violations (spec §Error Handling)."""
 
-    def test_missing_pi(
-        self, api_client, institution, researcher_user, researcher_pi, center
-    ):
+    def test_missing_pi(self, api_client, institution, researcher_user, researcher_pi, center):
         _login(api_client, researcher_user, institution)
         today = datetime.date.today()
         r = api_client.post(
@@ -1148,12 +1121,13 @@ class TestProjectErrorResponses:
         assert r.status_code == 400
 
     def test_cross_institution_access_denied(
-        self, api_client, institution, researcher_user,
+        self,
+        api_client,
+        institution,
+        researcher_user,
     ):
         """Project from another institution should be invisible/forbidden."""
-        other_inst = Institution.objects.create(
-            name="Other University", code="OU001"
-        )
+        other_inst = Institution.objects.create(name="Other University", code="OU001")
         other_center = ResearchCenter.objects.create(
             institution=other_inst, name="Other Lab", code="OL"
         )

@@ -9,6 +9,7 @@ Design reference: openspec/changes/researchers/design.md
 
 RED PHASE: All tests will fail because models don't exist yet.
 """
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -32,30 +33,42 @@ from apps.researchers.tests.conftest import (
 def _make_institution(code="TU"):
     """Create a test Institution for researcher tests."""
     from apps.institutions.models import Institution
+
     return Institution.objects.create(name=f"Test University {code}", code=code)
 
 
 def _make_center(institution, name="AI Lab", code="AI"):
     """Create a test ResearchCenter."""
     from apps.institutions.models import ResearchCenter
+
     return ResearchCenter.objects.create(
-        institution=institution, name=name, code=code,
+        institution=institution,
+        name=name,
+        code=code,
     )
 
 
 def _make_group(institution, center, name="NLP Group", code="NLP"):
     """Create a test ResearchGroup."""
     from apps.institutions.models import ResearchGroup
+
     return ResearchGroup.objects.create(
-        institution=institution, center=center, name=name, code=code,
+        institution=institution,
+        center=center,
+        name=name,
+        code=code,
     )
 
 
 def _make_line(institution, group, name="Sentiment", code="SA"):
     """Create a test ResearchLine."""
     from apps.institutions.models import ResearchLine
+
     return ResearchLine.objects.create(
-        institution=institution, group=group, name=name, code=code,
+        institution=institution,
+        group=group,
+        name=name,
+        code=code,
     )
 
 
@@ -115,14 +128,23 @@ class TestResearcherFields:
         inst = _make_institution("TU")
         user = User.objects.create_user(email="maria@test.edu")
         Researcher.objects.create(
-            institution=inst, user=user, first_name="M", last_name="G",
-            document_type="CC", document_number="111", primary_email="a@t.com",
+            institution=inst,
+            user=user,
+            first_name="M",
+            last_name="G",
+            document_type="CC",
+            document_number="111",
+            primary_email="a@t.com",
         )
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 Researcher.objects.create(
-                    institution=inst, user=user, first_name="X", last_name="Y",
-                    document_type="TI", document_number="222",
+                    institution=inst,
+                    user=user,
+                    first_name="X",
+                    last_name="Y",
+                    document_type="TI",
+                    document_number="222",
                     primary_email="b@t.com",
                 )
 
@@ -130,8 +152,11 @@ class TestResearcherFields:
         """Researcher __str__ returns 'first_name last_name'."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="12345678",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="12345678",
             primary_email="maria@test.edu",
         )
         assert str(researcher) == "Maria Gomez"
@@ -142,21 +167,30 @@ class TestResearcherFields:
         inst_b = _make_institution("UB")
         # Same institution, same document → should fail
         Researcher.objects.create(
-            institution=inst_a, first_name="A", last_name="One",
-            document_type="CC", document_number="DOC001",
+            institution=inst_a,
+            first_name="A",
+            last_name="One",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="a@test.edu",
         )
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 Researcher.objects.create(
-                    institution=inst_a, first_name="A", last_name="Two",
-                    document_type="TI", document_number="DOC001",
+                    institution=inst_a,
+                    first_name="A",
+                    last_name="Two",
+                    document_type="TI",
+                    document_number="DOC001",
                     primary_email="a2@test.edu",
                 )
         # Same document, different institution → allowed
         Researcher.objects.create(
-            institution=inst_b, first_name="B", last_name="One",
-            document_type="CC", document_number="DOC001",
+            institution=inst_b,
+            first_name="B",
+            last_name="One",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="b@test.edu",
         )
         assert Researcher.objects.filter(document_number="DOC001").count() == 2
@@ -166,8 +200,11 @@ class TestResearcherFields:
         inst = _make_institution("TU")
         for dtype in ("CC", "TI", "CE", "PA"):
             researcher = Researcher(
-                institution=inst, first_name="Test", last_name="User",
-                document_type=dtype, document_number=f"DN-{dtype}",
+                institution=inst,
+                first_name="Test",
+                last_name="User",
+                document_type=dtype,
+                document_number=f"DN-{dtype}",
                 primary_email=f"{dtype.lower()}@test.edu",
             )
             researcher.full_clean()  # should not raise
@@ -176,8 +213,11 @@ class TestResearcherFields:
         """Invalid document_type raises ValidationError."""
         inst = _make_institution("TU")
         researcher = Researcher(
-            institution=inst, first_name="Test", last_name="User",
-            document_type="INVALID", document_number="DN-001",
+            institution=inst,
+            first_name="Test",
+            last_name="User",
+            document_type="INVALID",
+            document_number="DN-001",
             primary_email="test@test.edu",
         )
         with pytest.raises(ValidationError):
@@ -187,8 +227,11 @@ class TestResearcherFields:
         """New Researcher starts with is_active=True and empty optional fields."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Test", last_name="User",
-            document_type="CC", document_number="DN-001",
+            institution=inst,
+            first_name="Test",
+            last_name="User",
+            document_type="CC",
+            document_number="DN-001",
             primary_email="test@test.edu",
         )
         assert researcher.is_active is True
@@ -218,6 +261,7 @@ class TestResearcherFactory:
     def test_factory_with_user(self, db):
         """ResearcherFactory can have user assigned post-creation."""
         from apps.accounts.models import User
+
         user = User.objects.create_user(email="test@example.com")
         researcher = ResearcherFactory(user=user)
         assert researcher.user == user
@@ -236,12 +280,17 @@ class TestResearcherAffiliationFields:
         inst = _make_institution("TU")
         center = _make_center(inst, name="AI Lab", code="AI")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation.objects.create(
-            researcher=researcher, center=center, is_primary=True,
+            researcher=researcher,
+            center=center,
+            is_primary=True,
         )
         assert affiliation.center == center
         assert affiliation.group is None
@@ -254,12 +303,16 @@ class TestResearcherAffiliationFields:
         center = _make_center(inst)
         group = _make_group(inst, center)
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation.objects.create(
-            researcher=researcher, group=group,
+            researcher=researcher,
+            group=group,
         )
         assert affiliation.group == group
         assert affiliation.center is None
@@ -271,12 +324,16 @@ class TestResearcherAffiliationFields:
         group = _make_group(inst, center)
         line = _make_line(inst, group)
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation.objects.create(
-            researcher=researcher, line=line,
+            researcher=researcher,
+            line=line,
         )
         assert affiliation.line == line
         assert affiliation.center is None
@@ -285,8 +342,11 @@ class TestResearcherAffiliationFields:
         """clean() rejects affiliation where no center/group/line is set (RN-AFF-02)."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation(researcher=researcher)
@@ -299,12 +359,16 @@ class TestResearcherAffiliationFields:
         inst_b = _make_institution("UB")
         center_b = _make_center(inst_b, name="B Center", code="BC")
         researcher = Researcher.objects.create(
-            institution=inst_a, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst_a,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation(
-            researcher=researcher, center=center_b,
+            researcher=researcher,
+            center=center_b,
         )
         with pytest.raises(ValidationError, match="different institution"):
             affiliation.full_clean()
@@ -316,12 +380,16 @@ class TestResearcherAffiliationFields:
         center_b = _make_center(inst_b, name="B Center", code="BC")
         group_b = _make_group(inst_b, center_b, name="B Group", code="BG")
         researcher = Researcher.objects.create(
-            institution=inst_a, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst_a,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation(
-            researcher=researcher, group=group_b,
+            researcher=researcher,
+            group=group_b,
         )
         with pytest.raises(ValidationError, match="different institution"):
             affiliation.full_clean()
@@ -334,12 +402,16 @@ class TestResearcherAffiliationFields:
         group_b = _make_group(inst_b, center_b, name="B Group", code="BG")
         line_b = _make_line(inst_b, group_b, name="B Line", code="BL")
         researcher = Researcher.objects.create(
-            institution=inst_a, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst_a,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation(
-            researcher=researcher, line=line_b,
+            researcher=researcher,
+            line=line_b,
         )
         with pytest.raises(ValidationError, match="different institution"):
             affiliation.full_clean()
@@ -349,17 +421,24 @@ class TestResearcherAffiliationFields:
         inst = _make_institution("TU")
         center = _make_center(inst)
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         # Create first primary
         ResearcherAffiliation.objects.create(
-            researcher=researcher, center=center, is_primary=True,
+            researcher=researcher,
+            center=center,
+            is_primary=True,
         )
         # Second primary should fail
         affiliation2 = ResearcherAffiliation(
-            researcher=researcher, center=center, is_primary=True,
+            researcher=researcher,
+            center=center,
+            is_primary=True,
         )
         with pytest.raises(ValidationError, match="Only one primary"):
             affiliation2.full_clean()
@@ -369,31 +448,40 @@ class TestResearcherAffiliationFields:
         inst = _make_institution("TU")
         center = _make_center(inst)
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         ResearcherAffiliation.objects.create(
-            researcher=researcher, center=center, is_primary=False,
+            researcher=researcher,
+            center=center,
+            is_primary=False,
         )
         ResearcherAffiliation.objects.create(
-            researcher=researcher, center=center, is_primary=False,
+            researcher=researcher,
+            center=center,
+            is_primary=False,
         )
-        assert ResearcherAffiliation.objects.filter(
-            researcher=researcher
-        ).count() == 2
+        assert ResearcherAffiliation.objects.filter(researcher=researcher).count() == 2
 
     def test_str_representation(self, db):
         """ResearcherAffiliation __str__ includes researcher name and entity."""
         inst = _make_institution("TU")
         center = _make_center(inst)
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         affiliation = ResearcherAffiliation.objects.create(
-            researcher=researcher, center=center,
+            researcher=researcher,
+            center=center,
         )
         assert "Maria Gomez" in str(affiliation)
 
@@ -427,8 +515,11 @@ class TestExternalProfileFields:
         """ExternalProfile stores provider and URL for a researcher (RN-EXT-01)."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         profile = ExternalProfile.objects.create(
@@ -445,13 +536,17 @@ class TestExternalProfileFields:
         linkedin, researchgate)."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         for provider in ("cvlac", "orcid", "google_scholar", "linkedin", "researchgate"):
             profile = ExternalProfile(
-                researcher=researcher, provider=provider,
+                researcher=researcher,
+                provider=provider,
                 url=f"https://example.com/{provider}",
             )
             profile.full_clean()  # should not raise
@@ -460,12 +555,17 @@ class TestExternalProfileFields:
         """Invalid provider raises ValidationError (RN-EXT-01)."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         profile = ExternalProfile(
-            researcher=researcher, provider="invalid", url="https://x.com",
+            researcher=researcher,
+            provider="invalid",
+            url="https://x.com",
         )
         with pytest.raises(ValidationError):
             profile.full_clean()
@@ -474,12 +574,16 @@ class TestExternalProfileFields:
         """ExternalProfile __str__ includes provider and researcher name."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         profile = ExternalProfile.objects.create(
-            researcher=researcher, provider="orcid",
+            researcher=researcher,
+            provider="orcid",
             url="https://orcid.org/test",
         )
         assert "orcid" in str(profile).lower()
@@ -498,8 +602,11 @@ class TestResearcherAttachmentFields:
         """ResearcherAttachment stores name, type, and external URL (RN-ATT-01)."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         attachment = ResearcherAttachment.objects.create(
@@ -517,14 +624,19 @@ class TestResearcherAttachmentFields:
         """All TypeChoices values (cv, certificate, photo, other) are valid."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         for atype in ("cv", "certificate", "photo", "other"):
             attachment = ResearcherAttachment(
-                researcher=researcher, name=f"file.{atype}",
-                type=atype, external_url=f"https://storage.example.com/{atype}",
+                researcher=researcher,
+                name=f"file.{atype}",
+                type=atype,
+                external_url=f"https://storage.example.com/{atype}",
             )
             attachment.full_clean()  # should not raise
 
@@ -532,12 +644,17 @@ class TestResearcherAttachmentFields:
         """Invalid type raises ValidationError (RN-ATT-01)."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         attachment = ResearcherAttachment(
-            researcher=researcher, name="file.txt", type="invalid",
+            researcher=researcher,
+            name="file.txt",
+            type="invalid",
             external_url="https://storage.example.com/file.txt",
         )
         with pytest.raises(ValidationError):
@@ -547,12 +664,17 @@ class TestResearcherAttachmentFields:
         """ResearcherAttachment __str__ includes name and type."""
         inst = _make_institution("TU")
         researcher = Researcher.objects.create(
-            institution=inst, first_name="Maria", last_name="Gomez",
-            document_type="CC", document_number="DOC001",
+            institution=inst,
+            first_name="Maria",
+            last_name="Gomez",
+            document_type="CC",
+            document_number="DOC001",
             primary_email="maria@test.edu",
         )
         attachment = ResearcherAttachment.objects.create(
-            researcher=researcher, name="CV.pdf", type="cv",
+            researcher=researcher,
+            name="CV.pdf",
+            type="cv",
             external_url="https://storage.example.com/cv.pdf",
         )
         assert "CV.pdf" in str(attachment)

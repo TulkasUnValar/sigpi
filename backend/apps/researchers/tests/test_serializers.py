@@ -13,6 +13,7 @@ Covers:
 Strict TDD: this file is written BEFORE serializers.py exists.
 Expected failure: ModuleNotFoundError (serializers.py not created yet).
 """
+
 import pytest
 
 from apps.researchers.tests.conftest import (
@@ -46,9 +47,7 @@ class TestResearcherListSerializer:
         """full_name must be computed as 'first_name last_name'."""
         from apps.researchers.serializers import ResearcherListSerializer
 
-        researcher = ResearcherFactory.build(
-            id=None, first_name="María", last_name="García"
-        )
+        researcher = ResearcherFactory.build(id=None, first_name="María", last_name="García")
         serialized = ResearcherListSerializer(researcher).data
         assert serialized["full_name"] == "María García"
 
@@ -76,8 +75,10 @@ class TestResearcherListSerializer:
         from apps.researchers.serializers import ResearcherListSerializer
 
         researcher = ResearcherFactory(
-            first_name="Juan", last_name="Pérez",
-            document_type="CC", document_number="123",
+            first_name="Juan",
+            last_name="Pérez",
+            document_type="CC",
+            document_number="123",
             primary_email="juan@test.com",
         )
         # Create an external profile so all 6 mandatory items are met → score 100
@@ -92,7 +93,8 @@ class TestResearcherListSerializer:
         from apps.researchers.serializers import ResearcherListSerializer
 
         researcher = ResearcherFactory(
-            first_name="", last_name="",
+            first_name="",
+            last_name="",
             primary_email="",
         )
         serialized = ResearcherListSerializer(researcher).data
@@ -116,12 +118,25 @@ class TestResearcherSerializer:
         serialized = ResearcherSerializer(researcher).data
 
         expected_fields = {
-            "id", "user", "institution", "first_name", "last_name",
-            "document_type", "document_number", "primary_email", "phone",
-            "bio", "academic_formation", "is_active",
-            "full_name", "completeness_score",
-            "affiliations", "external_profiles", "attachments",
-            "created_at", "updated_at",
+            "id",
+            "user",
+            "institution",
+            "first_name",
+            "last_name",
+            "document_type",
+            "document_number",
+            "primary_email",
+            "phone",
+            "bio",
+            "academic_formation",
+            "is_active",
+            "full_name",
+            "completeness_score",
+            "affiliations",
+            "external_profiles",
+            "attachments",
+            "created_at",
+            "updated_at",
         }
         assert set(serialized.keys()) == expected_fields
 
@@ -200,8 +215,10 @@ class TestResearcherSerializer:
         from apps.researchers.serializers import ResearcherSerializer
 
         researcher = ResearcherFactory(
-            first_name="A", last_name="B",
-            document_type="CC", document_number="X",
+            first_name="A",
+            last_name="B",
+            document_type="CC",
+            document_number="X",
             primary_email="a@b.com",
         )
         ExternalProfileFactory(researcher=researcher)
@@ -357,6 +374,7 @@ class TestResearcherAffiliationSerializer:
         researcher = ResearcherFactory()
         # Need a center in same institution
         from apps.institutions.tests.conftest import ResearchCenterFactory
+
         center = ResearchCenterFactory(institution=researcher.institution)
 
         data = {

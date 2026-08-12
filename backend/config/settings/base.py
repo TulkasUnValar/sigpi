@@ -3,6 +3,7 @@ Django base settings for SIGPI.
 
 Multi-institution research project management system.
 """
+
 import os
 from pathlib import Path
 
@@ -43,6 +44,11 @@ LOCAL_APPS = [
     "apps.institutions",
     "apps.researchers",
     "apps.projects",
+    "apps.progress",
+    "apps.products",
+    "apps.calls",
+    "apps.reports",
+    "apps.project_workflow",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -160,9 +166,7 @@ AUTHENTICATION_BACKENDS = [
 # OIDC (Keycloak) Configuration
 # ──────────────────────────────────────────────────────────
 OIDC_RP_CLIENT_ID = os.environ.get("OIDC_RP_CLIENT_ID", "sigpi-app")
-OIDC_RP_CLIENT_SECRET = os.environ.get(
-    "OIDC_RP_CLIENT_SECRET", "sigpi-client-secret-change-me"
-)
+OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_RP_CLIENT_SECRET", "sigpi-client-secret-change-me")
 OIDC_RP_SIGN_ALGO = "RS256"
 OIDC_RP_SCOPES = "openid email profile sigpi-custom-claims"
 OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get(
@@ -194,9 +198,10 @@ OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = int(
 )
 OIDC_STORE_ID_TOKEN = True
 OIDC_CREATE_USER = True
-OIDC_REDIRECT_REQUIRE_HTTPS = (
-    os.environ.get("OIDC_REDIRECT_REQUIRE_HTTPS", "False").lower()
-    in ("true", "1", "yes")
+OIDC_REDIRECT_REQUIRE_HTTPS = os.environ.get("OIDC_REDIRECT_REQUIRE_HTTPS", "False").lower() in (
+    "true",
+    "1",
+    "yes",
 )
 LOGIN_REDIRECT_URL = os.environ.get("LOGIN_REDIRECT_URL", "/")
 LOGOUT_REDIRECT_URL = os.environ.get("LOGOUT_REDIRECT_URL", "/auth/login/")
@@ -222,17 +227,15 @@ else:
     SESSION_ENGINE = "django.contrib.sessions.backends.cache"
     SESSION_CACHE_ALIAS = "default"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = (
-    os.environ.get("SESSION_COOKIE_SECURE", "False").lower()
-    in ("true", "1", "yes")
+SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "False").lower() in (
+    "true",
+    "1",
+    "yes",
 )
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 28800  # 8 hours
 CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SECURE = (
-    os.environ.get("CSRF_COOKIE_SECURE", "False").lower()
-    in ("true", "1", "yes")
-)
+CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False").lower() in ("true", "1", "yes")
 CSRF_COOKIE_SAMESITE = "Lax"
 
 # ──────────────────────────────────────────────────────────

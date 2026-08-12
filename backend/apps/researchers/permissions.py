@@ -12,6 +12,7 @@ Re-exports from apps.accounts.permissions:
 
 Design reference: openspec/changes/researchers/design.md — Permission Matrix
 """
+
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.request import Request
 

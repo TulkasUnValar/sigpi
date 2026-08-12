@@ -10,6 +10,7 @@ Provides 4 permission classes defined in design.md:
 Design reference: openspec/changes/projects/design.md — Permission Classes
 Spec reference:   openspec/changes/projects/spec.md — Permission Matrix
 """
+
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.request import Request
@@ -110,9 +111,7 @@ class IsCenterDirectorForProject(BasePermission):
         if obj_center_id is None:
             return False
 
-        user_center_ids = set(
-            membership.centers.values_list("id", flat=True)
-        )
+        user_center_ids = set(membership.centers.values_list("id", flat=True))
         return obj_center_id in user_center_ids
 
 

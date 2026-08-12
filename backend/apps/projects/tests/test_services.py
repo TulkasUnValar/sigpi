@@ -11,6 +11,7 @@ Design reference: openspec/changes/projects/design.md — Service Layer
 
 RED PHASE: Tests fail because services.py does not exist.
 """
+
 import datetime
 from unittest.mock import patch
 
@@ -217,6 +218,7 @@ class TestProjectServiceFSM:
 
     def _make_user(self):
         from apps.projects.tests.conftest import UserFactory
+
         return UserFactory()
 
     def _transitions(self, project, user, method_name, **kwargs):
@@ -561,9 +563,7 @@ class TestLogTransition:
 
         with patch("apps.projects.services.AuditEventEmitter") as mock_class:
             mock_emitter = mock_class.return_value
-            ProjectService._log_transition(
-                project, "borrador", "enviado", user
-            )
+            ProjectService._log_transition(project, "borrador", "enviado", user)
 
         mock_emitter.emit.assert_called_once_with(
             event_type="PROJECT_STATE_CHANGE",
