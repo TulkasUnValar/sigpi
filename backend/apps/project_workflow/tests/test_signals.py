@@ -9,6 +9,7 @@ Tests verify:
 Spec reference:  openspec/changes/project_workflow/spec.md
 Design reference: openspec/changes/project_workflow/design.md
 """
+
 import datetime
 from unittest.mock import patch
 
@@ -62,9 +63,7 @@ def _make_project(institution, center, pi, **overrides):
         expected_results=overrides.get("expected_results", "Valid expected results."),
         keywords=overrides.get("keywords", "ai, research"),
         start_date=overrides.get("start_date", datetime.date(2025, 1, 1)),
-        estimated_end_date=overrides.get(
-            "estimated_end_date", datetime.date(2025, 12, 31)
-        ),
+        estimated_end_date=overrides.get("estimated_end_date", datetime.date(2025, 12, 31)),
     )
 
 
@@ -395,9 +394,7 @@ class TestProjectServiceSignalEmission:
         project_state_changed.connect(_receiver)
         try:
             with patch("apps.projects.services.AuditEventEmitter"):
-                ProjectService._log_transition(
-                    project, "borrador", "enviado", user, reason=""
-                )
+                ProjectService._log_transition(project, "borrador", "enviado", user, reason="")
         finally:
             project_state_changed.disconnect(_receiver)
 
@@ -467,6 +464,4 @@ class TestSignalReceiverAtomicity:
             )
 
         assert WorkflowInstance.objects.filter(project_id=project.id).count() == 0
-        assert WorkflowAction.objects.filter(
-            instance__project_id=project.id
-        ).count() == 0
+        assert WorkflowAction.objects.filter(instance__project_id=project.id).count() == 0

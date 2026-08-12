@@ -13,6 +13,7 @@ Pattern reference: apps/projects/migrations/0002_rls_policies.py
 Note: RLS is a PostgreSQL feature. On SQLite (test environment),
 these operations are wrapped in a conditional that checks the DB engine.
 """
+
 from django.db import migrations
 
 

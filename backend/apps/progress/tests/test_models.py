@@ -10,6 +10,7 @@ Design reference: openspec/sdd/advances/design.md
 
 RED PHASE: All tests fail because models are empty stubs.
 """
+
 import datetime
 import uuid
 from decimal import Decimal
@@ -45,7 +46,9 @@ def _make_center(institution, name="AI Lab", code="AI"):
     from apps.institutions.models import ResearchCenter
 
     return ResearchCenter.objects.create(
-        institution=institution, name=name, code=code,
+        institution=institution,
+        name=name,
+        code=code,
     )
 
 
@@ -97,8 +100,12 @@ class TestProgressStatusEnum:
 
     def test_all_six_states_defined(self):
         expected = {
-            "borrador", "enviado", "en_revision",
-            "observado", "aprobado", "rechazado",
+            "borrador",
+            "enviado",
+            "en_revision",
+            "observado",
+            "aprobado",
+            "rechazado",
         }
         actual = {choice[0] for choice in ProgressStatus.choices}
         assert actual == expected
@@ -392,9 +399,7 @@ class TestProgressReportCheckConstraints:
 
     def test_check_constraints_exist(self):
         """CHECK constraints are registered in Meta.constraints."""
-        constraint_names = {
-            c.name for c in ProgressReport._meta.constraints
-        }
+        constraint_names = {c.name for c in ProgressReport._meta.constraints}
         assert "check_progress_percentage_range" in constraint_names
         assert "check_progress_period_dates" in constraint_names
 
@@ -1047,8 +1052,13 @@ class TestFsmAprobadoTerminal:
         """No transition is valid from aprobado."""
         report = self._make_approved(db)
         for method in [
-            "submit", "accept_review", "approve", "observe",
-            "return_to_draft", "reject", "resubmit",
+            "submit",
+            "accept_review",
+            "approve",
+            "observe",
+            "return_to_draft",
+            "reject",
+            "resubmit",
         ]:
             with pytest.raises(TransitionNotAllowed):
                 getattr(report, method)()

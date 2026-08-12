@@ -10,6 +10,7 @@ All methods are static — matches ProjectService / CallService pattern.
 Design reference: openspec/changes/project_workflow/design.md
 Spec reference:   openspec/changes/project_workflow/spec.md
 """
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import BooleanField, Case, Count, Q, Value, When
@@ -55,11 +56,7 @@ class WorkflowService:
             return existing
 
         template = WorkflowTemplate.objects.get(pk=template_id)
-        first_step = (
-            WorkflowStep.objects.filter(template=template)
-            .order_by("order")
-            .first()
-        )
+        first_step = WorkflowStep.objects.filter(template=template).order_by("order").first()
         if first_step is None:
             raise ValidationError("The selected template has no steps.")
 
@@ -220,8 +217,7 @@ class WorkflowService:
         return qs.annotate(
             is_overdue=Case(
                 When(
-                    Q(status=WorkflowInstanceStatus.PENDING)
-                    & Q(deadline_date__lt=now),
+                    Q(status=WorkflowInstanceStatus.PENDING) & Q(deadline_date__lt=now),
                     then=Value(True),
                 ),
                 default=Value(False),
@@ -306,9 +302,7 @@ class WorkflowService:
                 )
 
             first_step = (
-                WorkflowStep.objects.filter(template=instance.template)
-                .order_by("order")
-                .first()
+                WorkflowStep.objects.filter(template=instance.template).order_by("order").first()
             )
             if first_step is None:
                 raise ValidationError("Template has no steps.")

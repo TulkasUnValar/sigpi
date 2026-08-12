@@ -8,6 +8,7 @@ Covers gaps not exercised by the main CRUD tests:
 - Filter empty results
 - Year upper bound rejection via API
 """
+
 import datetime
 import uuid
 
@@ -95,9 +96,7 @@ def admin_role(db):
 
 @pytest.fixture
 def admin_user(db, institution, admin_role):
-    user = User.objects.create_user(
-        email="admin@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="admin@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=admin_role, is_active=True
     )
@@ -157,26 +156,28 @@ class TestProductPutUpdate:
 class TestAnonymousNestedAccess:
     """Unauthenticated users are rejected from nested endpoints."""
 
-    def test_anonymous_author_list(
-        self, api_client, institution, center, researcher_pi
-    ):
+    def test_anonymous_author_list(self, api_client, institution, center, researcher_pi):
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
-        r = api_client.get(
-            reverse("products:author-list", kwargs={"product_pk": str(product.id)})
-        )
+        r = api_client.get(reverse("products:author-list", kwargs={"product_pk": str(product.id)}))
         assert r.status_code in (401, 403)
 
-    def test_anonymous_attachment_list(
-        self, api_client, institution, center, researcher_pi
-    ):
+    def test_anonymous_attachment_list(self, api_client, institution, center, researcher_pi):
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         r = api_client.get(
             reverse(
@@ -212,9 +213,7 @@ class TestCrossInstitutionIsolation:
             type="articulo",
             publication_year=2025,
         )
-        r = api_client.get(
-            reverse("products:product-detail", kwargs={"pk": str(product.id)})
-        )
+        r = api_client.get(reverse("products:product-detail", kwargs={"pk": str(product.id)}))
         assert r.status_code == 404
 
     def test_cannot_update_foreign_product(
@@ -258,9 +257,7 @@ class TestCrossInstitutionIsolation:
             type="articulo",
             publication_year=2025,
         )
-        r = api_client.delete(
-            reverse("products:product-detail", kwargs={"pk": str(product.id)})
-        )
+        r = api_client.delete(reverse("products:product-detail", kwargs={"pk": str(product.id)}))
         assert r.status_code == 404
 
 
@@ -272,18 +269,18 @@ class TestCrossInstitutionIsolation:
 class TestFilterEdgeCases:
     """Filters that return empty or test boundary conditions."""
 
-    def test_filter_returns_empty(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_filter_returns_empty(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         ResearchProduct.objects.create(
-            institution=institution, project=project, title="P2024",
-            description="D", type="articulo", publication_year=2024,
+            institution=institution,
+            project=project,
+            title="P2024",
+            description="D",
+            type="articulo",
+            publication_year=2024,
         )
-        r = api_client.get(
-            reverse("products:product-list") + "?year=9999"
-        )
+        r = api_client.get(reverse("products:product-list") + "?year=9999")
         assert r.status_code == 200
         assert r.json()["results"] == []
 

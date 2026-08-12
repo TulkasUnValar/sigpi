@@ -50,15 +50,13 @@ def on_project_state_change(sender, project, from_state, to_state, triggered_by,
     if to_state in ("enviado", "en_revision"):
         # Resubmit from observed -> reset existing instance
         if to_state == "enviado" and from_state == "observado":
-            instance = (
-                WorkflowInstance.objects.filter(
-                    project_id=project.id,
-                    status__in=[
-                        WorkflowInstanceStatus.PENDING,
-                        WorkflowInstanceStatus.OBSERVED,
-                    ],
-                ).first()
-            )
+            instance = WorkflowInstance.objects.filter(
+                project_id=project.id,
+                status__in=[
+                    WorkflowInstanceStatus.PENDING,
+                    WorkflowInstanceStatus.OBSERVED,
+                ],
+            ).first()
             if instance:
                 with transaction.atomic():
                     WorkflowService.reset_instance(instance, triggered_by)
@@ -70,9 +68,7 @@ def on_project_state_change(sender, project, from_state, to_state, triggered_by,
                 project.institution_id, center_id=getattr(project, "center_id", None)
             )
             if template:
-                WorkflowService.create_instance(
-                    project.id, template.id, triggered_by=triggered_by
-                )
+                WorkflowService.create_instance(project.id, template.id, triggered_by=triggered_by)
         return
 
     # Terminal / action states that require an existing active instance

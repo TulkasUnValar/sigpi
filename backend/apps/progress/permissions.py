@@ -8,6 +8,7 @@ Provides:
 Design reference: openspec/sdd/advances/design.md — Permission Classes
 Spec reference:   openspec/sdd/advances/spec.md — Permission Matrix
 """
+
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.request import Request
 
@@ -107,8 +108,11 @@ class CanReturnToDraft(BasePermission):
         project = getattr(obj, "project", None)
         if project is not None:
             from apps.projects.permissions import IsCenterDirectorForProject
+
             return IsCenterDirectorForProject().has_object_permission(
-                request, view, project,
+                request,
+                view,
+                project,
             )
 
         return False

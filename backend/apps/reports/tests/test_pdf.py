@@ -191,9 +191,7 @@ class TestReportPDFView:
         pdf_content = b"".join(response.streaming_content)
         assert pdf_content == FAKE_PDF_BYTES
 
-    def test_pdf_researcher_returns_200(
-        self, api_client, inst, researcher_user, researcher
-    ):
+    def test_pdf_researcher_returns_200(self, api_client, inst, researcher_user, researcher):
         """PDF endpoint for researcher type returns 200 with PDF content."""
         _login(api_client, researcher_user)
         _set_institution(api_client, inst)
@@ -208,9 +206,7 @@ class TestReportPDFView:
         assert response.status_code == 200
         assert response["Content-Type"] == "application/pdf"
 
-    def test_pdf_center_returns_200(
-        self, api_client, inst, researcher_user, center
-    ):
+    def test_pdf_center_returns_200(self, api_client, inst, researcher_user, center):
         """PDF endpoint for center type returns 200 with PDF content."""
         _login(api_client, researcher_user)
         _set_institution(api_client, inst)
@@ -254,9 +250,7 @@ class TestReportPDFView:
         assert response["Content-Type"] == "application/json"
         assert "error" in response.data or "detail" in response.data
 
-    def test_pdf_invalid_type_returns_400(
-        self, api_client, inst, researcher_user, project
-    ):
+    def test_pdf_invalid_type_returns_400(self, api_client, inst, researcher_user, project):
         """Invalid report_type returns 400 Bad Request."""
         _login(api_client, researcher_user)
         _set_institution(api_client, inst)
@@ -270,9 +264,7 @@ class TestReportPDFView:
         assert response["Content-Type"] == "application/json"
         assert "error" in response.data or "detail" in response.data
 
-    def test_pdf_nonexistent_entity_returns_404(
-        self, api_client, inst, researcher_user
-    ):
+    def test_pdf_nonexistent_entity_returns_404(self, api_client, inst, researcher_user):
         """Entity not found returns 404."""
         _login(api_client, researcher_user)
         _set_institution(api_client, inst)
@@ -288,9 +280,7 @@ class TestReportPDFView:
         if response.status_code == 404:
             assert "not found" in str(response.data).lower() or "detail" in response.data
 
-    def test_pdf_superuser_bypasses_institution_check(
-        self, api_client, inst_b, project
-    ):
+    def test_pdf_superuser_bypasses_institution_check(self, api_client, inst_b, project):
         """Superuser can generate PDF for any entity regardless of institution."""
         from apps.accounts.models import User
 
@@ -310,9 +300,7 @@ class TestReportPDFView:
         assert response.status_code == 200
         assert response["Content-Type"] == "application/pdf"
 
-    def test_pdf_invalid_uuid_returns_400_or_404(
-        self, api_client, inst, researcher_user
-    ):
+    def test_pdf_invalid_uuid_returns_400_or_404(self, api_client, inst, researcher_user):
         """Invalid UUID format returns 400 or 404 at Django URL routing level."""
         _login(api_client, researcher_user)
         _set_institution(api_client, inst)
@@ -336,10 +324,13 @@ class TestReportPDFView:
             "reports:pdf",
             kwargs={"report_type": "project", "entity_id": str(project.pk)},
         )
-        with patch(
-            "apps.reports.services.ReportGenerator.generate_report",
-            return_value=(FAKE_PDF_BYTES, "<html>Mock</html>"),
-        ) as mock_gen, _mock_pdf_audit():
+        with (
+            patch(
+                "apps.reports.services.ReportGenerator.generate_report",
+                return_value=(FAKE_PDF_BYTES, "<html>Mock</html>"),
+            ) as mock_gen,
+            _mock_pdf_audit(),
+        ):
             response = api_client.get(url)
 
         assert response.status_code == 200
@@ -351,9 +342,7 @@ class TestReportPDFView:
         assert call_args[0] == "project"
         assert str(call_args[1]) == str(project.pk)
 
-    def test_pdf_advances_returns_200(
-        self, api_client, inst, researcher_user, project
-    ):
+    def test_pdf_advances_returns_200(self, api_client, inst, researcher_user, project):
         """RF-053: PDF endpoint for advances type returns 200 with PDF content."""
         _login(api_client, researcher_user)
         _set_institution(api_client, inst)
@@ -370,9 +359,7 @@ class TestReportPDFView:
         pdf_content = b"".join(response.streaming_content)
         assert pdf_content == FAKE_PDF_BYTES
 
-    def test_pdf_generates_audit_event(
-        self, api_client, inst, researcher_user, project
-    ):
+    def test_pdf_generates_audit_event(self, api_client, inst, researcher_user, project):
         """RF-058: PDF generation creates an AuditEvent with REPORT_GENERATED."""
         from apps.accounts.audit import AuditEvent, AuditEventType
 
@@ -404,6 +391,7 @@ class TestReportPDFView:
         report_id = audit_event.details.get("report_id")
         assert report_id is not None
         from apps.reports.models import Report
+
         report = Report.objects.filter(pk=report_id).first()
         assert report is not None
         assert report.report_type == "project"
@@ -427,9 +415,7 @@ class TestReportPDFView:
         assert response.status_code == 404
         assert "not found" in str(response.data).lower() or "detail" in response.data
 
-    def test_pdf_render_failure_returns_500(
-        self, api_client, inst, researcher_user, project
-    ):
+    def test_pdf_render_failure_returns_500(self, api_client, inst, researcher_user, project):
         """RF-057: Template/rendering failure returns 500 with error structure."""
         _login(api_client, researcher_user)
         _set_institution(api_client, inst)

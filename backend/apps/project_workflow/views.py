@@ -15,6 +15,7 @@ Permission model (spec §Security):
 Design reference: openspec/changes/project_workflow/design.md — ViewSets & Permissions
 Spec reference: openspec/changes/project_workflow/spec.md — API Contract, Security
 """
+
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend

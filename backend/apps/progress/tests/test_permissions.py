@@ -15,6 +15,7 @@ Design reference: openspec/sdd/advances/design.md — Permission Classes
 RED PHASE: Tests written against permissions.py; will FAIL if permission
 logic is incomplete or incorrect.
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -27,6 +28,7 @@ from rest_framework.request import Request
 
 class _FakeObj:
     """Minimal object without MagicMock auto-creation for attribute tests."""
+
     pass
 
 
@@ -185,10 +187,10 @@ class TestIsProgressCreatorOrProjectMember:
     @pytest.mark.parametrize(
         "role_level,method,expected",
         [
-            (1, "POST", True),   # Superadmin
-            (2, "POST", True),   # Admin
-            (3, "POST", True),   # Director (level 3 ≤ 4)
-            (4, "POST", True),   # Researcher
+            (1, "POST", True),  # Superadmin
+            (2, "POST", True),  # Admin
+            (3, "POST", True),  # Director (level 3 ≤ 4)
+            (4, "POST", True),  # Researcher
             (5, "POST", False),  # Evaluador (level 5 > 4)
             (6, "POST", False),  # Asistente (level 6 > 4)
             (7, "POST", False),  # Auditor (level 7 > 4)
@@ -431,7 +433,7 @@ class TestPermissionMatrix:
             # creator/member — SAFE methods are NOT a bypass at object level
             (3, "SAFE", False, False),  # not creator/member — blocked
             (3, "CREATE", False, True),  # has_permission only (no object)
-            (3, "UPDATE", True, True),   # is creator
+            (3, "UPDATE", True, True),  # is creator
             (3, "UPDATE", False, False),  # not creator
             (3, "DELETE", True, True),
             (3, "SUBMIT", True, True),
@@ -439,7 +441,7 @@ class TestPermissionMatrix:
             # Researcher/PI (level 4): passes has_permission (≤ 4); object depends on creator
             (4, "SAFE", False, False),  # not creator/member — blocked
             (4, "CREATE", False, True),  # has_permission only
-            (4, "UPDATE", True, True),   # is creator
+            (4, "UPDATE", True, True),  # is creator
             (4, "UPDATE", False, False),
             (4, "DELETE", True, True),
             (4, "DELETE", False, False),

@@ -15,6 +15,7 @@ Models:
 Design reference: openspec/changes/project_workflow/design.md
 Spec reference:   openspec/changes/project_workflow/spec.md
 """
+
 import uuid
 
 from django.db import models

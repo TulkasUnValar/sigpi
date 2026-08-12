@@ -15,6 +15,7 @@ Spec reference:  openspec/changes/project_workflow/spec.md — WR-006
 Design reference: openspec/changes/project_workflow/design.md — RLS Policies
 Pattern reference: apps/projects/tests/test_rls.py
 """
+
 import importlib
 import inspect
 import json
@@ -107,6 +108,7 @@ class TestRLSMigrationExists:
         migration = _get_migration()
         assert migration is not None
         from django.db.migrations import RunPython
+
         run_python_ops = [op for op in migration.operations if isinstance(op, RunPython)]
         assert len(run_python_ops) > 0, (
             "Migration 0002 must contain at least one RunPython operation"
@@ -117,6 +119,7 @@ class TestRLSMigrationExists:
         migration = _get_migration()
         assert migration is not None
         from django.db.migrations import RunPython
+
         for op in migration.operations:
             if isinstance(op, RunPython):
                 assert op.reverse_code is not None, (
@@ -235,9 +238,7 @@ class TestRLSPostgresGuard:
             or "postgresql" in source.lower()
             or "_is_postgresql" in source
         )
-        assert has_guard, (
-            "Forward function must guard against non-PostgreSQL."
-        )
+        assert has_guard, "Forward function must guard against non-PostgreSQL."
 
 
 # ──────────────────────────────────────────────
@@ -262,7 +263,9 @@ class TestApplicationLevelTenantScoping:
 
         user = User.objects.create_user(email="u@test.edu", password="p")
         role = Role.objects.get(name="Admin Institucional")
-        InstitutionMembership.objects.create(user=user, institution=inst_a, role=role, is_active=True)
+        InstitutionMembership.objects.create(
+            user=user, institution=inst_a, role=role, is_active=True
+        )
 
         client = Client()
         client.force_login(user)
@@ -288,12 +291,19 @@ class TestApplicationLevelTenantScoping:
         template_b = WorkflowTemplate.objects.create(institution=inst_b, name="TB")
 
         import uuid
-        WorkflowInstance.objects.create(project_id=uuid.uuid4(), institution=inst_a, template=template_a)
-        WorkflowInstance.objects.create(project_id=uuid.uuid4(), institution=inst_b, template=template_b)
+
+        WorkflowInstance.objects.create(
+            project_id=uuid.uuid4(), institution=inst_a, template=template_a
+        )
+        WorkflowInstance.objects.create(
+            project_id=uuid.uuid4(), institution=inst_b, template=template_b
+        )
 
         user = User.objects.create_user(email="u2@test.edu", password="p")
         role = Role.objects.get(name="Director de Centro")
-        InstitutionMembership.objects.create(user=user, institution=inst_a, role=role, is_active=True)
+        InstitutionMembership.objects.create(
+            user=user, institution=inst_a, role=role, is_active=True
+        )
 
         client = Client()
         client.force_login(user)

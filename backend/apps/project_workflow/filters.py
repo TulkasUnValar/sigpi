@@ -12,6 +12,7 @@ Used by WorkflowInstanceViewSet.filter_backends.
 Design reference: openspec/changes/project_workflow/design.md — Filtering
 Spec reference:   openspec/changes/project_workflow/spec.md — WF-005, WF-007
 """
+
 import django_filters
 from django.db.models import Q
 from django.utils import timezone

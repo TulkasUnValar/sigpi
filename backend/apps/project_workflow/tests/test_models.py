@@ -9,6 +9,7 @@ Design reference: openspec/changes/project_workflow/design.md
 
 RED PHASE: All tests fail because models are empty stubs.
 """
+
 import uuid
 
 import pytest
@@ -34,7 +35,8 @@ def _make_institution(code="TU"):
     from apps.institutions.models import Institution
 
     return Institution.objects.create(
-        name=f"Test University {code}", code=code,
+        name=f"Test University {code}",
+        code=code,
     )
 
 
@@ -42,7 +44,9 @@ def _make_center(institution, name="AI Lab", code="AI"):
     from apps.institutions.models import ResearchCenter
 
     return ResearchCenter.objects.create(
-        institution=institution, name=name, code=code,
+        institution=institution,
+        name=name,
+        code=code,
     )
 
 
@@ -121,21 +125,24 @@ class TestWorkflowTemplateFields:
         """center is optional."""
         inst = _make_institution("TU")
         template = WorkflowTemplate.objects.create(
-            institution=inst, name="No Center",
+            institution=inst,
+            name="No Center",
         )
         assert template.center is None
 
     def test_str_representation(self, db):
         inst = _make_institution("TU")
         template = WorkflowTemplate.objects.create(
-            institution=inst, name="T1",
+            institution=inst,
+            name="T1",
         )
         assert str(template) == "T1"
 
     def test_timestamps_auto_set(self, db):
         inst = _make_institution("TU")
         template = WorkflowTemplate.objects.create(
-            institution=inst, name="T1",
+            institution=inst,
+            name="T1",
         )
         assert template.created_at is not None
         assert template.updated_at is not None
@@ -191,7 +198,9 @@ class TestWorkflowStepFields:
         inst = _make_institution("TU")
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step = WorkflowStep.objects.create(
-            template=template, order=1, name="Review",
+            template=template,
+            order=1,
+            name="Review",
         )
         assert "Review" in str(step)
 

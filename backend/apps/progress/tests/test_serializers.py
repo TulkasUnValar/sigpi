@@ -57,8 +57,13 @@ class TestProgressReportListSerializer:
         data = serializer.data
 
         expected_fields = {
-            "id", "project", "status", "cumulative_percentage",
-            "period_start", "period_end", "created_at",
+            "id",
+            "project",
+            "status",
+            "cumulative_percentage",
+            "period_start",
+            "period_end",
+            "created_at",
         }
         assert set(data.keys()) == expected_fields
 
@@ -94,10 +99,22 @@ class TestProgressReportSerializer:
         data = serializer.data
 
         # Check required model fields are present
-        required = {"id", "institution", "project", "created_by",
-                     "period_start", "period_end", "description",
-                     "cumulative_percentage", "activities", "difficulties",
-                     "next_steps", "status", "created_at", "updated_at"}
+        required = {
+            "id",
+            "institution",
+            "project",
+            "created_by",
+            "period_start",
+            "period_end",
+            "description",
+            "cumulative_percentage",
+            "activities",
+            "difficulties",
+            "next_steps",
+            "status",
+            "created_at",
+            "updated_at",
+        }
         for field in required:
             assert field in data, f"Missing field: {field}"
 
@@ -162,9 +179,7 @@ class TestProgressReportSerializer:
         # SerializerMethodField is always read-only — verify we can't
         # inject nested data via update
         payload = {"description": "Updated", "documents": [{"name": "injected"}]}
-        update_serializer = ProgressReportSerializer(
-            progress_borrador, data=payload, partial=True
-        )
+        update_serializer = ProgressReportSerializer(progress_borrador, data=payload, partial=True)
         assert update_serializer.is_valid()
         # documents should NOT be in validated_data (read-only)
         assert "documents" not in update_serializer.validated_data
@@ -182,8 +197,7 @@ class TestProgressReportCreateSerializer:
         """All required fields pass validation."""
         from apps.progress.serializers import ProgressReportCreateSerializer
 
-        data = _make_valid_data(progress_borrador.project,
-                                cumulative_percentage="75.50")
+        data = _make_valid_data(progress_borrador.project, cumulative_percentage="75.50")
         serializer = ProgressReportCreateSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
 
@@ -241,8 +255,7 @@ class TestProgressReportCreateSerializer:
         """cumulative_percentage > 100 rejected by model clean()."""
         from apps.progress.serializers import ProgressReportCreateSerializer
 
-        data = _make_valid_data(progress_borrador.project,
-                                cumulative_percentage="105.00")
+        data = _make_valid_data(progress_borrador.project, cumulative_percentage="105.00")
         serializer = ProgressReportCreateSerializer(data=data)
         assert serializer.is_valid(), f"Serializer should validate, error: {serializer.errors}"
         # Model-level validation catches this in save/clean
@@ -257,8 +270,7 @@ class TestProgressReportCreateSerializer:
         """cumulative_percentage < 0 rejected by model clean()."""
         from apps.progress.serializers import ProgressReportCreateSerializer
 
-        data = _make_valid_data(progress_borrador.project,
-                                cumulative_percentage="-5.00")
+        data = _make_valid_data(progress_borrador.project, cumulative_percentage="-5.00")
         serializer = ProgressReportCreateSerializer(data=data)
         assert serializer.is_valid()
         with pytest.raises(DjangoValidationError) as exc_info:
@@ -272,14 +284,12 @@ class TestProgressReportCreateSerializer:
         from apps.progress.serializers import ProgressReportCreateSerializer
 
         # 0.00
-        data_zero = _make_valid_data(progress_borrador.project,
-                                     cumulative_percentage="0.00")
+        data_zero = _make_valid_data(progress_borrador.project, cumulative_percentage="0.00")
         serializer_zero = ProgressReportCreateSerializer(data=data_zero)
         assert serializer_zero.is_valid(), serializer_zero.errors
 
         # 100.00
-        data_hundred = _make_valid_data(progress_borrador.project,
-                                        cumulative_percentage="100.00")
+        data_hundred = _make_valid_data(progress_borrador.project, cumulative_percentage="100.00")
         serializer_hundred = ProgressReportCreateSerializer(data=data_hundred)
         assert serializer_hundred.is_valid(), serializer_hundred.errors
 
@@ -304,8 +314,7 @@ class TestProgressReportCreateSerializer:
         """difficulties and next_steps can be blank."""
         from apps.progress.serializers import ProgressReportCreateSerializer
 
-        data = _make_valid_data(progress_borrador.project,
-                                difficulties="", next_steps="")
+        data = _make_valid_data(progress_borrador.project, difficulties="", next_steps="")
         serializer = ProgressReportCreateSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
 
@@ -366,8 +375,7 @@ class TestProgressDocumentSerializer:
         serializer = ProgressDocumentSerializer(doc)
         data = serializer.data
 
-        expected = {"id", "progress_report", "name", "doc_type",
-                    "external_url", "uploaded_at"}
+        expected = {"id", "progress_report", "name", "doc_type", "external_url", "uploaded_at"}
         assert set(data.keys()) >= expected
 
     def test_document_report_is_read_only(self, db, progress_borrador):
@@ -403,9 +411,7 @@ class TestProgressDocumentSerializer:
         from apps.progress.serializers import ProgressDocumentSerializer
 
         for valid_choice in ("evidence", "annex", "report", "other"):
-            serializer = ProgressDocumentSerializer(
-                data={"name": "Doc", "doc_type": valid_choice}
-            )
+            serializer = ProgressDocumentSerializer(data={"name": "Doc", "doc_type": valid_choice})
             assert serializer.is_valid(), (
                 f"Choice '{valid_choice}' should be valid: {serializer.errors}"
             )
@@ -414,9 +420,7 @@ class TestProgressDocumentSerializer:
         """Invalid doc_type returns validation error."""
         from apps.progress.serializers import ProgressDocumentSerializer
 
-        serializer = ProgressDocumentSerializer(
-            data={"name": "Doc", "doc_type": "invalid_type"}
-        )
+        serializer = ProgressDocumentSerializer(data={"name": "Doc", "doc_type": "invalid_type"})
         assert not serializer.is_valid()
         assert "doc_type" in serializer.errors
 
@@ -424,9 +428,7 @@ class TestProgressDocumentSerializer:
         """external_url is optional (blank allowed)."""
         from apps.progress.serializers import ProgressDocumentSerializer
 
-        serializer = ProgressDocumentSerializer(
-            data={"name": "Doc", "doc_type": "evidence"}
-        )
+        serializer = ProgressDocumentSerializer(data={"name": "Doc", "doc_type": "evidence"})
         assert serializer.is_valid(), serializer.errors
 
 
@@ -447,8 +449,14 @@ class TestProgressReviewSerializer:
         serializer = ProgressReviewSerializer(review)
         data = serializer.data
 
-        expected = {"id", "progress_report", "reviewed_by", "review_text",
-                    "review_type", "created_at"}
+        expected = {
+            "id",
+            "progress_report",
+            "reviewed_by",
+            "review_text",
+            "review_type",
+            "created_at",
+        }
         assert set(data.keys()) >= expected
 
     def test_review_is_read_only(self, db, progress_borrador):
@@ -488,8 +496,15 @@ class TestProgressStateLogSerializer:
         serializer = ProgressStateLogSerializer(log)
         data = serializer.data
 
-        expected = {"id", "progress_report", "from_state", "to_state",
-                    "triggered_by", "reason", "created_at"}
+        expected = {
+            "id",
+            "progress_report",
+            "from_state",
+            "to_state",
+            "triggered_by",
+            "reason",
+            "created_at",
+        }
         assert set(data.keys()) >= expected
 
     def test_state_log_is_read_only(self, db, progress_borrador):
@@ -524,8 +539,7 @@ class TestSerializerRoundTrip:
             ProgressReportSerializer,
         )
 
-        data = _make_valid_data(progress_borrador.project,
-                                cumulative_percentage="42.50")
+        data = _make_valid_data(progress_borrador.project, cumulative_percentage="42.50")
         create_s = ProgressReportCreateSerializer(data=data)
         assert create_s.is_valid(), create_s.errors
 

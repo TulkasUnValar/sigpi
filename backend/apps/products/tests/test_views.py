@@ -12,6 +12,7 @@ Error cases: 400 missing project, 400 invalid type/year, 404 foreign project,
 Spec reference: openspec/changes/products/specs/products/spec.md
 Design reference: openspec/changes/products/design.md
 """
+
 import datetime
 import uuid
 
@@ -116,9 +117,7 @@ def admin_role(db):
 
 @pytest.fixture
 def admin_user(db, institution, admin_role):
-    user = User.objects.create_user(
-        email="admin@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="admin@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=admin_role, is_active=True
     )
@@ -127,9 +126,7 @@ def admin_user(db, institution, admin_role):
 
 @pytest.fixture
 def researcher_user(db, institution, researcher_role):
-    user = User.objects.create_user(
-        email="res@test.edu", auth_source="local", password="p"
-    )
+    user = User.objects.create_user(email="res@test.edu", auth_source="local", password="p")
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=researcher_role, is_active=True
     )
@@ -338,20 +335,30 @@ class TestResearchProductViewSet:
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         ResearchProduct.objects.create(
-            institution=institution, project=project, title="P2023",
-            description="D", type="articulo", publication_year=2023,
+            institution=institution,
+            project=project,
+            title="P2023",
+            description="D",
+            type="articulo",
+            publication_year=2023,
         )
         ResearchProduct.objects.create(
-            institution=institution, project=project, title="P2024",
-            description="D", type="articulo", publication_year=2024,
+            institution=institution,
+            project=project,
+            title="P2024",
+            description="D",
+            type="articulo",
+            publication_year=2024,
         )
         ResearchProduct.objects.create(
-            institution=institution, project=project, title="P2024Libro",
-            description="D", type="libro", publication_year=2024,
+            institution=institution,
+            project=project,
+            title="P2024Libro",
+            description="D",
+            type="libro",
+            publication_year=2024,
         )
-        r = api_client.get(
-            reverse("products:product-list") + "?year__gte=2024&type=articulo"
-        )
+        r = api_client.get(reverse("products:product-list") + "?year__gte=2024&type=articulo")
         assert r.status_code == 200
         data = r.json()["results"]
         assert len(data) == 1
@@ -366,32 +373,34 @@ class TestResearchProductViewSet:
 class TestProductAuthorViewSet:
     """Nested CRUD for ProductAuthor under /products/{id}/authors/."""
 
-    def test_list_authors(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_list_authors(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         ProductAuthor.objects.create(
             product=product, researcher=researcher_pi, is_principal=True, order=1
         )
-        r = api_client.get(
-            reverse("products:author-list", kwargs={"product_pk": str(product.id)})
-        )
+        r = api_client.get(reverse("products:author-list", kwargs={"product_pk": str(product.id)}))
         assert r.status_code == 200
         assert len(r.json()["results"]) == 1
 
-    def test_create_author(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_create_author(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         # First author must be principal
         ProductAuthor.objects.create(
@@ -414,12 +423,14 @@ class TestProductAuthorViewSet:
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
-        ProductAuthor.objects.create(
-            product=product, researcher=researcher_pi, is_principal=True
-        )
+        ProductAuthor.objects.create(product=product, researcher=researcher_pi, is_principal=True)
         r = api_client.post(
             reverse("products:author-list", kwargs={"product_pk": str(product.id)}),
             {"researcher": str(researcher_pi.id), "is_principal": False, "order": 2},
@@ -427,14 +438,16 @@ class TestProductAuthorViewSet:
         )
         assert r.status_code == 400
 
-    def test_update_author(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_update_author(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         # Create a co-author first (requires a principal to exist)
         principal = _make_researcher(institution, document_number="PRIN1")
@@ -455,14 +468,16 @@ class TestProductAuthorViewSet:
         assert r.status_code == 200
         assert r.json()["is_principal"] is True
 
-    def test_delete_author(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_delete_author(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         author = ProductAuthor.objects.create(
             product=product, researcher=researcher_pi, is_principal=True
@@ -483,8 +498,12 @@ class TestProductAuthorViewSet:
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         r = api_client.post(
             reverse("products:author-list", kwargs={"product_pk": str(product.id)}),
@@ -503,17 +522,21 @@ class TestProductAuthorViewSet:
 class TestProductAttachmentViewSet:
     """Nested CRUD for ProductAttachment under /products/{id}/attachments/."""
 
-    def test_list_attachments(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_list_attachments(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         ProductAttachment.objects.create(
-            product=product, name="File.pdf", doc_type="pdf",
+            product=product,
+            name="File.pdf",
+            doc_type="pdf",
             external_url="https://example.com/file.pdf",
         )
         r = api_client.get(
@@ -522,14 +545,16 @@ class TestProductAttachmentViewSet:
         assert r.status_code == 200
         assert len(r.json()["results"]) == 1
 
-    def test_create_attachment(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_create_attachment(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         r = api_client.post(
             reverse("products:attachment-list", kwargs={"product_pk": str(product.id)}),
@@ -551,8 +576,12 @@ class TestProductAttachmentViewSet:
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         r = api_client.post(
             reverse("products:attachment-list", kwargs={"product_pk": str(product.id)}),
@@ -561,17 +590,21 @@ class TestProductAttachmentViewSet:
         )
         assert r.status_code == 400
 
-    def test_update_attachment(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_update_attachment(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         attachment = ProductAttachment.objects.create(
-            product=product, name="Old.pdf", doc_type="pdf",
+            product=product,
+            name="Old.pdf",
+            doc_type="pdf",
             external_url="https://example.com/old.pdf",
         )
         r = api_client.patch(
@@ -585,17 +618,21 @@ class TestProductAttachmentViewSet:
         assert r.status_code == 200
         assert r.json()["name"] == "New.pdf"
 
-    def test_delete_attachment(
-        self, api_client, institution, admin_user, center, researcher_pi
-    ):
+    def test_delete_attachment(self, api_client, institution, admin_user, center, researcher_pi):
         _login(api_client, admin_user, institution)
         project = _make_project(institution, center, researcher_pi)
         product = ResearchProduct.objects.create(
-            institution=institution, project=project, title="Paper",
-            description="D", type="articulo", publication_year=2025,
+            institution=institution,
+            project=project,
+            title="Paper",
+            description="D",
+            type="articulo",
+            publication_year=2025,
         )
         attachment = ProductAttachment.objects.create(
-            product=product, name="Del.pdf", doc_type="pdf",
+            product=product,
+            name="Del.pdf",
+            doc_type="pdf",
             external_url="https://example.com/del.pdf",
         )
         r = api_client.delete(

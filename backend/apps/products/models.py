@@ -9,6 +9,7 @@ Implements the data model defined in design.md and spec.md:
 Design reference: openspec/changes/products/design.md
 Spec reference:   openspec/changes/products/specs/products/spec.md
 """
+
 import datetime
 import uuid
 
@@ -109,9 +110,7 @@ class ResearchProduct(models.Model):
 
         # RF-081: type must be a valid choice
         if self.type not in {choice[0] for choice in ProductType.choices}:
-            errors.setdefault("type", []).append(
-                "Invalid product type."
-            )
+            errors.setdefault("type", []).append("Invalid product type.")
 
         # RF-081: publication_year between 1900 and current_year+1
         current_year = datetime.date.today().year
@@ -175,15 +174,11 @@ class ProductAuthor(models.Model):
         super().clean()
         # RF-082: prevent duplicate principal authors on the same product
         if self.is_principal:
-            qs = ProductAuthor.objects.filter(
-                product=self.product, is_principal=True
-            )
+            qs = ProductAuthor.objects.filter(product=self.product, is_principal=True)
             if self.pk is not None:
                 qs = qs.exclude(pk=self.pk)
             if qs.exists():
-                raise ValidationError(
-                    {"is_principal": "Product already has a principal author."}
-                )
+                raise ValidationError({"is_principal": "Product already has a principal author."})
 
     def __str__(self) -> str:
         principal = " (principal)" if self.is_principal else ""

@@ -10,6 +10,7 @@ django-fsm @transition methods directly.
 Design reference: openspec/sdd/advances/design.md — Service Layer
 Spec reference:   openspec/sdd/advances/spec.md — RF-041 through RF-049
 """
+
 from django.core.exceptions import ValidationError
 
 from apps.accounts.audit import AuditEventEmitter
@@ -29,17 +30,13 @@ from apps.projects.models import TERMINAL_STATES as PROJECT_TERMINAL_STATES
 def _validate_project_not_terminal(project):
     """Reject if the project is in a terminal state (RN-P09)."""
     if project.status in PROJECT_TERMINAL_STATES:
-        raise ValidationError(
-            "Cannot create advances for a closed project."
-        )
+        raise ValidationError("Cannot create advances for a closed project.")
 
 
 def _validate_borrador(report):
     """Reject if the report is not in borrador state."""
     if report.status != ProgressStatus.BORRADOR:
-        raise ValidationError(
-            "Advance can only be edited in draft state."
-        )
+        raise ValidationError("Advance can only be edited in draft state.")
 
 
 # ──────────────────────────────────────────────
@@ -187,9 +184,7 @@ class ProgressService:
         from_state = report.status
         report.return_to_draft()
         report.save()
-        ProgressService._log_transition(
-            report, from_state, report.status, user, reason=reason
-        )
+        ProgressService._log_transition(report, from_state, report.status, user, reason=reason)
         return report
 
     @staticmethod

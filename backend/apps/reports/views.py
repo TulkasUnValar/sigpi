@@ -200,9 +200,7 @@ class ReportPDFView(APIView):
         # Generate PDF
         try:
             generator = ReportGenerator()
-            pdf_bytes, _html = generator.generate_report(
-                report_type, entity_id, request.user
-            )
+            pdf_bytes, _html = generator.generate_report(report_type, entity_id, request.user)
         except ValueError as exc:
             raise Http404(str(exc)) from exc
         except Exception as exc:
@@ -292,11 +290,7 @@ class ReportApprovalView(APIView):
             service = ReportApprovalService()
             approval = service.approve(report, request.user)
         except ValidationError as exc:
-            error_msg = (
-                exc.messages[0]
-                if hasattr(exc, "messages") and exc.messages
-                else str(exc)
-            )
+            error_msg = exc.messages[0] if hasattr(exc, "messages") and exc.messages else str(exc)
             return Response({"error": error_msg}, status=409)
 
         return Response(

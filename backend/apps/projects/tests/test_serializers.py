@@ -13,6 +13,7 @@ Covers 7 serializers:
 Strict TDD: this file is written BEFORE serializers.py exists.
 Expected failure: ImportError (serializers.py not created yet).
 """
+
 from uuid import uuid4
 
 import pytest
@@ -35,8 +36,15 @@ class TestProjectListSerializer:
         project = ProjectFactory()
         serialized = ProjectListSerializer(project).data
 
-        expected = {"id", "title", "status", "center", "principal_investigator",
-                     "start_date", "created_at"}
+        expected = {
+            "id",
+            "title",
+            "status",
+            "center",
+            "principal_investigator",
+            "start_date",
+            "created_at",
+        }
         assert set(serialized.keys()) == expected
 
     @pytest.mark.django_db
@@ -89,12 +97,27 @@ class TestProjectSerializer:
         serialized = ProjectSerializer(project).data
 
         expected_core = {
-            "id", "institution", "center", "group", "line",
-            "principal_investigator", "title", "abstract",
-            "objectives", "methodology", "expected_results", "keywords",
-            "start_date", "estimated_end_date", "actual_end_date",
-            "status", "is_active", "created_at", "updated_at",
-            "members", "documents",
+            "id",
+            "institution",
+            "center",
+            "group",
+            "line",
+            "principal_investigator",
+            "title",
+            "abstract",
+            "objectives",
+            "methodology",
+            "expected_results",
+            "keywords",
+            "start_date",
+            "estimated_end_date",
+            "actual_end_date",
+            "status",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "members",
+            "documents",
         }
         missing = expected_core - set(serialized.keys())
         assert not missing, f"Missing fields: {missing}"
@@ -216,9 +239,15 @@ class TestProjectCreateSerializer:
         serializer = ProjectCreateSerializer(data={})
         assert not serializer.is_valid()
         required = [
-            "title", "abstract", "objectives", "methodology",
-            "expected_results", "center", "principal_investigator",
-            "start_date", "estimated_end_date",
+            "title",
+            "abstract",
+            "objectives",
+            "methodology",
+            "expected_results",
+            "center",
+            "principal_investigator",
+            "start_date",
+            "estimated_end_date",
         ]
         for field in required:
             assert field in serializer.errors, f"{field} should be required"

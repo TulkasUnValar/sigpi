@@ -7,6 +7,7 @@ list_filter, and raw_id_fields.
 
 RED PHASE: Tests WILL fail — admin.py does not exist yet.
 """
+
 import pytest
 from django.contrib.admin.sites import site as admin_site
 
@@ -32,9 +33,7 @@ class TestAdminRegistration:
     )
     def test_model_is_registered(self, db, model):
         """Each project model is registered in admin site."""
-        assert model in admin_site._registry, (
-            f"{model.__name__} is not registered in admin site"
-        )
+        assert model in admin_site._registry, f"{model.__name__} is not registered in admin site"
 
 
 # ──────────────────────────────────────────────

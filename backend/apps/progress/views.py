@@ -18,6 +18,7 @@ Permission model (spec §Security):
 Design reference: openspec/sdd/advances/design.md — ViewSets & Permissions
 Spec reference:   openspec/sdd/advances/spec.md — API Contract, Security
 """
+
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import Http404
@@ -108,7 +109,10 @@ class ProgressViewSet(viewsets.ModelViewSet):
 
         # Director-only FSM actions
         director_actions = {
-            "accept_review", "approve", "observe", "reject",
+            "accept_review",
+            "approve",
+            "observe",
+            "reject",
         }
         if self.action in director_actions:
             return [IsAuthenticated(), IsCenterDirectorForProject()]
@@ -140,9 +144,7 @@ class ProgressViewSet(viewsets.ModelViewSet):
             membership = getattr(self.request, "active_membership", None)
             if membership is None:
                 return ProgressReport.objects.none()
-            qs = ProgressReport.objects.filter(
-                institution=membership.institution
-            )
+            qs = ProgressReport.objects.filter(institution=membership.institution)
 
         # Nested shortcut: /projects/{project_pk}/progress/
         project_pk = self.kwargs.get("project_pk")
@@ -163,8 +165,7 @@ class ProgressViewSet(viewsets.ModelViewSet):
         project = validated.get("project")
 
         data = {
-            k: v for k, v in validated.items()
-            if k not in ("institution", "project", "created_by")
+            k: v for k, v in validated.items() if k not in ("institution", "project", "created_by")
         }
 
         try:
@@ -184,7 +185,8 @@ class ProgressViewSet(viewsets.ModelViewSet):
         report = self.get_object()
         validated = serializer.validated_data
         data = {
-            k: v for k, v in validated.items()
+            k: v
+            for k, v in validated.items()
             if k not in ("institution", "created_by", "status", "project")
         }
 
@@ -201,9 +203,7 @@ class ProgressViewSet(viewsets.ModelViewSet):
         try:
             ProgressService.delete(instance)
         except ValidationError as e:
-            raise PermissionDenied(
-                detail=e.message if hasattr(e, "message") else str(e)
-            )
+            raise PermissionDenied(detail=e.message if hasattr(e, "message") else str(e))
 
     # ── FSM Action Endpoints (9 total) ───────────────────
     # Each calls the corresponding ProgressService method.
@@ -255,9 +255,7 @@ class ProgressViewSet(viewsets.ModelViewSet):
         report = self.get_object()
         reason = request.data.get("reason", "")
         try:
-            updated = ProgressService.return_to_draft(
-                report, request.user, reason=reason
-            )
+            updated = ProgressService.return_to_draft(report, request.user, reason=reason)
             serializer = self.get_serializer(updated)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except (ValidationError, TransitionNotAllowed) as e:
@@ -313,9 +311,7 @@ class ProgressDocumentViewSet(viewsets.ModelViewSet):
         """Filter documents by parent progress report from URL."""
         progress_pk = self.kwargs.get("progressreport_pk")
         if progress_pk:
-            return ProgressDocument.objects.filter(
-                progress_report_id=progress_pk
-            )
+            return ProgressDocument.objects.filter(progress_report_id=progress_pk)
         return ProgressDocument.objects.none()
 
     def _get_parent_report(self) -> ProgressReport:
@@ -351,31 +347,23 @@ class ProgressDocumentViewSet(viewsets.ModelViewSet):
             doc = ProgressDocumentService.add(report, name, doc_type, external_url)
             serializer.instance = doc
         except ValidationError as e:
-            raise PermissionDenied(
-                detail=e.message if hasattr(e, "message") else str(e)
-            )
+            raise PermissionDenied(detail=e.message if hasattr(e, "message") else str(e))
 
     def perform_update(self, serializer):
         """Update document via service (handles borrador guard)."""
         document = self.get_object()
         try:
-            updated = ProgressDocumentService.update(
-                document, **serializer.validated_data
-            )
+            updated = ProgressDocumentService.update(document, **serializer.validated_data)
             serializer.instance = updated
         except ValidationError as e:
-            raise PermissionDenied(
-                detail=e.message if hasattr(e, "message") else str(e)
-            )
+            raise PermissionDenied(detail=e.message if hasattr(e, "message") else str(e))
 
     def perform_destroy(self, instance):
         """Remove document via service (handles borrador guard)."""
         try:
             ProgressDocumentService.remove(instance)
         except ValidationError as e:
-            raise PermissionDenied(
-                detail=e.message if hasattr(e, "message") else str(e)
-            )
+            raise PermissionDenied(detail=e.message if hasattr(e, "message") else str(e))
 
 
 # ──────────────────────────────────────────────────────────
@@ -397,9 +385,7 @@ class ProgressReviewViewSet(viewsets.ReadOnlyModelViewSet):
         """Filter reviews by parent progress report from URL."""
         progress_pk = self.kwargs.get("progressreport_pk")
         if progress_pk:
-            return ProgressReview.objects.filter(
-                progress_report_id=progress_pk
-            )
+            return ProgressReview.objects.filter(progress_report_id=progress_pk)
         return ProgressReview.objects.none()
 
 
@@ -422,7 +408,5 @@ class ProgressStateLogViewSet(viewsets.ReadOnlyModelViewSet):
         """Filter state logs by parent progress report from URL."""
         progress_pk = self.kwargs.get("progressreport_pk")
         if progress_pk:
-            return ProgressStateLog.objects.filter(
-                progress_report_id=progress_pk
-            )
+            return ProgressStateLog.objects.filter(progress_report_id=progress_pk)
         return ProgressStateLog.objects.none()

@@ -18,6 +18,7 @@ Design decisions (from design.md):
 Spec reference: openspec/changes/researchers/spec.md — API Contract
 Design reference: openspec/changes/researchers/design.md — Serializer Mapping
 """
+
 from rest_framework import serializers
 
 from apps.researchers.models import (

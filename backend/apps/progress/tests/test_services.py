@@ -14,6 +14,7 @@ Design reference: openspec/sdd/advances/design.md
 RED PHASE: Tests reference services.py; will FAIL if implementation
 is incorrect or incomplete.
 """
+
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -282,9 +283,7 @@ class TestProgressServiceFsm:
         """observado → borrador via return_to_draft."""
         from apps.progress.services import ProgressService
 
-        report = ProgressService.return_to_draft(
-            progress_observado, progress_observado.created_by
-        )
+        report = ProgressService.return_to_draft(progress_observado, progress_observado.created_by)
         assert report.status == "borrador"
 
     def test_return_to_draft_from_rechazado(self, db, progress_rechazado):
@@ -324,15 +323,18 @@ class TestProgressServiceFsm:
 
     # ── Dual audit for every transition ─────────────
 
-    @pytest.mark.parametrize("method_name,fixture_name", [
-        ("submit", "progress_borrador"),
-        ("accept_review", "progress_enviado"),
-        ("approve", "progress_en_revision"),
-        ("observe", "progress_en_revision"),
-        ("reject", "progress_en_revision"),
-        ("return_to_draft", "progress_en_revision"),
-        ("resubmit", "progress_observado"),
-    ])
+    @pytest.mark.parametrize(
+        "method_name,fixture_name",
+        [
+            ("submit", "progress_borrador"),
+            ("accept_review", "progress_enviado"),
+            ("approve", "progress_en_revision"),
+            ("observe", "progress_en_revision"),
+            ("reject", "progress_en_revision"),
+            ("return_to_draft", "progress_en_revision"),
+            ("resubmit", "progress_observado"),
+        ],
+    )
     def test_all_fsm_methods_create_state_log(self, db, method_name, fixture_name, request):
         """Every FSM method must create exactly one ProgressStateLog row."""
         from apps.progress.services import ProgressService
@@ -349,9 +351,7 @@ class TestProgressServiceFsm:
         method(report, report.created_by, **kwargs)
 
         count_after = ProgressStateLog.objects.filter(progress_report=report).count()
-        assert count_after == count_before + 1, (
-            f"{method_name} did not create a StateLog row"
-        )
+        assert count_after == count_before + 1, f"{method_name} did not create a StateLog row"
 
     def test_all_fsm_methods_contain_report_id_in_details(self, db, progress_enviado):
         """AuditEvent details must include progress_report_id."""
@@ -402,9 +402,7 @@ class TestProgressDocumentService:
         """update() modifies a document on a borrador report."""
         from apps.progress.services import ProgressDocumentService
 
-        doc = ProgressDocumentService.add(
-            progress_borrador, name="Original", doc_type="evidence"
-        )
+        doc = ProgressDocumentService.add(progress_borrador, name="Original", doc_type="evidence")
         updated = ProgressDocumentService.update(doc, name="Updated", doc_type="annex")
         assert updated.name == "Updated"
         assert updated.doc_type == "annex"
@@ -427,9 +425,7 @@ class TestProgressDocumentService:
         """remove() deletes a document on a borrador report."""
         from apps.progress.services import ProgressDocumentService
 
-        doc = ProgressDocumentService.add(
-            progress_borrador, name="ToDelete", doc_type="other"
-        )
+        doc = ProgressDocumentService.add(progress_borrador, name="ToDelete", doc_type="other")
         pk = doc.pk
         ProgressDocumentService.remove(doc)
         assert not ProgressDocument.objects.filter(pk=pk).exists()
@@ -447,9 +443,7 @@ class TestProgressDocumentService:
         """add() defaults external_url to empty string."""
         from apps.progress.services import ProgressDocumentService
 
-        doc = ProgressDocumentService.add(
-            progress_borrador, name="No URL", doc_type="evidence"
-        )
+        doc = ProgressDocumentService.add(progress_borrador, name="No URL", doc_type="evidence")
         assert doc.external_url == ""
 
 

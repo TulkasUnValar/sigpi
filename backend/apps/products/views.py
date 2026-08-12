@@ -12,6 +12,7 @@ Project FK validated in perform_create (404 if foreign).
 Design reference: openspec/changes/products/design.md
 Spec reference: openspec/changes/products/specs/products/spec.md
 """
+
 from django.db.models import QuerySet
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -120,6 +121,7 @@ class ProductAuthorViewSet(viewsets.ModelViewSet):
             serializer.save(product=product)
         except Exception as exc:
             from django.db import IntegrityError
+
             if isinstance(exc, IntegrityError):
                 raise DRFValidationError(
                     {"researcher": "Researcher already associated with this product."}

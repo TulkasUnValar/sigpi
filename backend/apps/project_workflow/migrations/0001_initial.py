@@ -7,123 +7,261 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('institutions', '0004_alter_facultad_status_alter_institution_status_and_more'),
+        ("institutions", "0004_alter_facultad_status_alter_institution_status_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='WorkflowTemplate',
+            name="WorkflowTemplate",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=100)),
-                ('description', models.TextField(blank=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('center', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='workflow_templates', to='institutions.researchcenter')),
-                ('institution', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='workflow_templates', to='institutions.institution')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("description", models.TextField(blank=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "center",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="workflow_templates",
+                        to="institutions.researchcenter",
+                    ),
+                ),
+                (
+                    "institution",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="workflow_templates",
+                        to="institutions.institution",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Workflow Template',
-                'verbose_name_plural': 'Workflow Templates',
-                'db_table': 'project_workflow_workflowtemplate',
-                'ordering': ['institution', 'name'],
+                "verbose_name": "Workflow Template",
+                "verbose_name_plural": "Workflow Templates",
+                "db_table": "project_workflow_workflowtemplate",
+                "ordering": ["institution", "name"],
             },
         ),
         migrations.CreateModel(
-            name='WorkflowStep',
+            name="WorkflowStep",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('order', models.PositiveIntegerField()),
-                ('name', models.CharField(max_length=100)),
-                ('description', models.TextField(blank=True)),
-                ('role_required', models.CharField(choices=[('center_director', 'Center Director')], default='center_director', max_length=30)),
-                ('deadline_days', models.PositiveIntegerField(default=15)),
-                ('template', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='steps', to='project_workflow.workflowtemplate')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("order", models.PositiveIntegerField()),
+                ("name", models.CharField(max_length=100)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "role_required",
+                    models.CharField(
+                        choices=[("center_director", "Center Director")],
+                        default="center_director",
+                        max_length=30,
+                    ),
+                ),
+                ("deadline_days", models.PositiveIntegerField(default=15)),
+                (
+                    "template",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="steps",
+                        to="project_workflow.workflowtemplate",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Workflow Step',
-                'verbose_name_plural': 'Workflow Steps',
-                'db_table': 'project_workflow_workflowstep',
-                'ordering': ['template', 'order'],
+                "verbose_name": "Workflow Step",
+                "verbose_name_plural": "Workflow Steps",
+                "db_table": "project_workflow_workflowstep",
+                "ordering": ["template", "order"],
             },
         ),
         migrations.CreateModel(
-            name='WorkflowInstance',
+            name="WorkflowInstance",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('project_id', models.UUIDField(editable=False)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('completed', 'Completed'), ('observed', 'Observed'), ('rejected', 'Rejected'), ('cancelled', 'Cancelled')], default='pending', max_length=20)),
-                ('deadline_date', models.DateTimeField(blank=True, null=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('institution', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='workflow_instances', to='institutions.institution')),
-                ('current_step', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='current_instances', to='project_workflow.workflowstep')),
-                ('template', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='instances', to='project_workflow.workflowtemplate')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("project_id", models.UUIDField(editable=False)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("completed", "Completed"),
+                            ("observed", "Observed"),
+                            ("rejected", "Rejected"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("deadline_date", models.DateTimeField(blank=True, null=True)),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "institution",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="workflow_instances",
+                        to="institutions.institution",
+                    ),
+                ),
+                (
+                    "current_step",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="current_instances",
+                        to="project_workflow.workflowstep",
+                    ),
+                ),
+                (
+                    "template",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="instances",
+                        to="project_workflow.workflowtemplate",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Workflow Instance',
-                'verbose_name_plural': 'Workflow Instances',
-                'db_table': 'project_workflow_workflowinstance',
-                'ordering': ['-created_at'],
+                "verbose_name": "Workflow Instance",
+                "verbose_name_plural": "Workflow Instances",
+                "db_table": "project_workflow_workflowinstance",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='WorkflowAction',
+            name="WorkflowAction",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('action', models.CharField(choices=[('create', 'Create'), ('approve', 'Approve'), ('observe', 'Observe'), ('reject', 'Reject'), ('resubmit', 'Resubmit'), ('cancel', 'Cancel')], max_length=20)),
-                ('observation_text', models.TextField(blank=True)),
-                ('metadata', models.JSONField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('acted_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='workflow_actions', to=settings.AUTH_USER_MODEL)),
-                ('instance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='actions', to='project_workflow.workflowinstance')),
-                ('step', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='actions', to='project_workflow.workflowstep')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("create", "Create"),
+                            ("approve", "Approve"),
+                            ("observe", "Observe"),
+                            ("reject", "Reject"),
+                            ("resubmit", "Resubmit"),
+                            ("cancel", "Cancel"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("observation_text", models.TextField(blank=True)),
+                ("metadata", models.JSONField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "acted_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="workflow_actions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "instance",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="actions",
+                        to="project_workflow.workflowinstance",
+                    ),
+                ),
+                (
+                    "step",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="actions",
+                        to="project_workflow.workflowstep",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Workflow Action',
-                'verbose_name_plural': 'Workflow Actions',
-                'db_table': 'project_workflow_workflowaction',
-                'ordering': ['instance', '-created_at'],
-                'indexes': [models.Index(fields=['instance', '-created_at'], name='idx_action_instance_time')],
+                "verbose_name": "Workflow Action",
+                "verbose_name_plural": "Workflow Actions",
+                "db_table": "project_workflow_workflowaction",
+                "ordering": ["instance", "-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["instance", "-created_at"], name="idx_action_instance_time"
+                    )
+                ],
             },
         ),
         migrations.AddIndex(
-            model_name='workflowtemplate',
-            index=models.Index(fields=['institution', 'is_active'], name='idx_wftmpl_inst_active'),
+            model_name="workflowtemplate",
+            index=models.Index(fields=["institution", "is_active"], name="idx_wftmpl_inst_active"),
         ),
         migrations.AddConstraint(
-            model_name='workflowtemplate',
-            constraint=models.UniqueConstraint(fields=('institution', 'name'), name='unique_template_name_per_institution'),
+            model_name="workflowtemplate",
+            constraint=models.UniqueConstraint(
+                fields=("institution", "name"), name="unique_template_name_per_institution"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='workflowstep',
-            constraint=models.UniqueConstraint(fields=('template', 'order'), name='unique_step_order_per_template'),
+            model_name="workflowstep",
+            constraint=models.UniqueConstraint(
+                fields=("template", "order"), name="unique_step_order_per_template"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='workflowstep',
-            constraint=models.CheckConstraint(condition=models.Q(('deadline_days__gt', 0)), name='check_step_deadline_days_positive'),
+            model_name="workflowstep",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("deadline_days__gt", 0)),
+                name="check_step_deadline_days_positive",
+            ),
         ),
         migrations.AddIndex(
-            model_name='workflowinstance',
-            index=models.Index(fields=['institution', 'status'], name='idx_instance_inst_status'),
+            model_name="workflowinstance",
+            index=models.Index(fields=["institution", "status"], name="idx_instance_inst_status"),
         ),
         migrations.AddIndex(
-            model_name='workflowinstance',
-            index=models.Index(fields=['project_id', 'status'], name='idx_instance_project_status'),
+            model_name="workflowinstance",
+            index=models.Index(fields=["project_id", "status"], name="idx_instance_project_status"),
         ),
         migrations.AddIndex(
-            model_name='workflowinstance',
-            index=models.Index(fields=['deadline_date'], name='idx_instance_deadline'),
+            model_name="workflowinstance",
+            index=models.Index(fields=["deadline_date"], name="idx_instance_deadline"),
         ),
         migrations.AddConstraint(
-            model_name='workflowinstance',
-            constraint=models.UniqueConstraint(condition=models.Q(('status__in', ['pending', 'observed'])), fields=('project_id',), name='unique_active_instance_per_project'),
+            model_name="workflowinstance",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("status__in", ["pending", "observed"])),
+                fields=("project_id",),
+                name="unique_active_instance_per_project",
+            ),
         ),
     ]

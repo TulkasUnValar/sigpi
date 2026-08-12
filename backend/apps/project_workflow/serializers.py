@@ -18,6 +18,7 @@ Design decisions (from design.md):
 Spec reference: openspec/changes/project_workflow/spec.md — API Contract
 Design reference: openspec/changes/project_workflow/design.md — Serializers
 """
+
 from django.utils import timezone
 from rest_framework import serializers
 

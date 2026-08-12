@@ -9,6 +9,7 @@ Design reference: openspec/changes/products/design.md
 
 RED PHASE: All tests fail because models do not exist yet.
 """
+
 import datetime
 import uuid
 
@@ -32,7 +33,8 @@ def _make_institution(code="TU"):
     from apps.institutions.models import Institution
 
     return Institution.objects.create(
-        name=f"Test University {code}", code=code,
+        name=f"Test University {code}",
+        code=code,
     )
 
 
@@ -40,7 +42,9 @@ def _make_center(institution, name="AI Lab", code="AI"):
     from apps.institutions.models import ResearchCenter
 
     return ResearchCenter.objects.create(
-        institution=institution, name=name, code=code,
+        institution=institution,
+        name=name,
+        code=code,
     )
 
 
@@ -370,12 +374,16 @@ class TestProductAuthorFields:
             publication_year=2025,
         )
         ProductAuthor.objects.create(
-            product=product, researcher=researcher2, is_principal=False,
+            product=product,
+            researcher=researcher2,
+            is_principal=False,
         )
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 ProductAuthor.objects.create(
-                    product=product, researcher=researcher2, is_principal=True,
+                    product=product,
+                    researcher=researcher2,
+                    is_principal=True,
                 )
 
     def test_str_representation(self, db):
@@ -393,7 +401,9 @@ class TestProductAuthorFields:
             publication_year=2025,
         )
         author = ProductAuthor.objects.create(
-            product=product, researcher=pi, is_principal=True,
+            product=product,
+            researcher=pi,
+            is_principal=True,
         )
         assert str(pi) in str(author)
         assert "AI Paper" in str(author)
@@ -413,7 +423,9 @@ class TestProductAuthorFields:
             publication_year=2025,
         )
         author = ProductAuthor.objects.create(
-            product=product, researcher=pi, is_principal=False,
+            product=product,
+            researcher=pi,
+            is_principal=False,
         )
         assert author.order == 0
 

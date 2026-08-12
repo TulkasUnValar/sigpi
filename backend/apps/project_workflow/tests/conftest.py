@@ -7,6 +7,7 @@ WorkflowStep, WorkflowInstance, and WorkflowAction.
 Spec reference:  openspec/changes/project_workflow/spec.md
 Design reference: openspec/changes/project_workflow/design.md
 """
+
 import uuid
 
 import factory
@@ -44,9 +45,7 @@ class UserFactory(DjangoModelFactory):
 class WorkflowTemplateFactory(DjangoModelFactory):
     """Factory for WorkflowTemplate — institution-scoped."""
 
-    institution = factory.SubFactory(
-        "apps.institutions.tests.conftest.InstitutionFactory"
-    )
+    institution = factory.SubFactory("apps.institutions.tests.conftest.InstitutionFactory")
     center = None
     name = factory.Sequence(lambda n: f"Template {n}")
     description = factory.Faker("paragraph", nb_sentences=2)

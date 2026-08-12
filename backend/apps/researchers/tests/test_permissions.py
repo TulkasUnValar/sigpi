@@ -12,6 +12,7 @@ Covers:
 Strict TDD: this file is written BEFORE permissions.py exists.
 Expected failure: ModuleNotFoundError (permissions.py not created yet).
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,6 +29,7 @@ class _FakeObj:
     MagicMock auto-creates attributes on access, which breaks duck-typing
     checks like getattr(obj, 'researcher', None). This plain class does not.
     """
+
     pass
 
 

@@ -19,6 +19,7 @@ Design reference: openspec/changes/project_workflow/design.md
 
 RED PHASE: Tests fail because views.py and urls.py do not exist yet.
 """
+
 import datetime
 import json
 import uuid
@@ -55,6 +56,7 @@ def _login(client, user, institution):
 
 def _make_project(institution, center, pi, **overrides):
     from apps.projects.models import Project
+
     return Project.objects.create(
         institution=institution,
         center=center,
@@ -108,14 +110,18 @@ def researcher_role(db):
 @pytest.fixture
 def admin_user(db, institution, admin_role):
     user = User.objects.create_user(email="admin@test.edu", auth_source="local", password="p")
-    InstitutionMembership.objects.create(user=user, institution=institution, role=admin_role, is_active=True)
+    InstitutionMembership.objects.create(
+        user=user, institution=institution, role=admin_role, is_active=True
+    )
     return user
 
 
 @pytest.fixture
 def director_user(db, institution, center, director_role):
     user = User.objects.create_user(email="dir@test.edu", auth_source="local", password="p")
-    membership = InstitutionMembership.objects.create(user=user, institution=institution, role=director_role, is_active=True)
+    membership = InstitutionMembership.objects.create(
+        user=user, institution=institution, role=director_role, is_active=True
+    )
     membership.centers.add(center)
     return user
 
@@ -123,7 +129,9 @@ def director_user(db, institution, center, director_role):
 @pytest.fixture
 def researcher_user(db, institution, researcher_role):
     user = User.objects.create_user(email="res@test.edu", auth_source="local", password="p")
-    InstitutionMembership.objects.create(user=user, institution=institution, role=researcher_role, is_active=True)
+    InstitutionMembership.objects.create(
+        user=user, institution=institution, role=researcher_role, is_active=True
+    )
     return user
 
 
@@ -139,6 +147,7 @@ def researcher_pi(db, institution, researcher_user, center):
         primary_email="res@test.edu",
     )
     from apps.researchers.models import ResearcherAffiliation
+
     ResearcherAffiliation.objects.create(researcher=pi, center=center, is_primary=True)
     return pi
 
@@ -150,7 +159,9 @@ def workflow_template(db, institution):
 
 @pytest.fixture
 def workflow_step(db, workflow_template):
-    return WorkflowStep.objects.create(template=workflow_template, order=1, name="Director Review", deadline_days=7)
+    return WorkflowStep.objects.create(
+        template=workflow_template, order=1, name="Director Review", deadline_days=7
+    )
 
 
 @pytest.fixture
@@ -175,7 +186,9 @@ def workflow_instance(db, institution, workflow_template, workflow_step, researc
 class TestWorkflowTemplateViewSet:
     """CRUD for templates — admin+ only."""
 
-    def test_list_templates(self, api_client, institution, admin_user, workflow_template, workflow_step):
+    def test_list_templates(
+        self, api_client, institution, admin_user, workflow_template, workflow_step
+    ):
         _login(api_client, admin_user, institution)
         response = api_client.get(reverse("project_workflow:workflowtemplate-list"))
         assert response.status_code == 200
@@ -190,7 +203,12 @@ class TestWorkflowTemplateViewSet:
             "institution": str(institution.id),
             "name": "New Template",
             "steps": [
-                {"order": 1, "name": "Step 1", "role_required": "center_director", "deadline_days": 10},
+                {
+                    "order": 1,
+                    "name": "Step 1",
+                    "role_required": "center_director",
+                    "deadline_days": 10,
+                },
             ],
         }
         response = api_client.post(
@@ -205,7 +223,9 @@ class TestWorkflowTemplateViewSet:
 
     def test_retrieve_template(self, api_client, institution, admin_user, workflow_template):
         _login(api_client, admin_user, institution)
-        response = api_client.get(reverse("project_workflow:workflowtemplate-detail", kwargs={"pk": workflow_template.id}))
+        response = api_client.get(
+            reverse("project_workflow:workflowtemplate-detail", kwargs={"pk": workflow_template.id})
+        )
         assert response.status_code == 200
         data = json.loads(response.content)
         assert data["name"] == "Approval"
@@ -213,7 +233,9 @@ class TestWorkflowTemplateViewSet:
     def test_update_template(self, api_client, institution, admin_user, workflow_template):
         _login(api_client, admin_user, institution)
         response = api_client.patch(
-            reverse("project_workflow:workflowtemplate-detail", kwargs={"pk": workflow_template.id}),
+            reverse(
+                "project_workflow:workflowtemplate-detail", kwargs={"pk": workflow_template.id}
+            ),
             json.dumps({"name": "Updated"}),
             content_type="application/json",
         )
@@ -223,10 +245,14 @@ class TestWorkflowTemplateViewSet:
 
     def test_delete_template(self, api_client, institution, admin_user, workflow_template):
         _login(api_client, admin_user, institution)
-        response = api_client.delete(reverse("project_workflow:workflowtemplate-detail", kwargs={"pk": workflow_template.id}))
+        response = api_client.delete(
+            reverse("project_workflow:workflowtemplate-detail", kwargs={"pk": workflow_template.id})
+        )
         assert response.status_code == 204
 
-    def test_list_forbidden_to_researcher(self, api_client, institution, researcher_user, workflow_template):
+    def test_list_forbidden_to_researcher(
+        self, api_client, institution, researcher_user, workflow_template
+    ):
         _login(api_client, researcher_user, institution)
         response = api_client.get(reverse("project_workflow:workflowtemplate-list"))
         assert response.status_code == 403
@@ -251,30 +277,44 @@ class TestWorkflowInstanceViewSet:
 
     def test_retrieve_instance(self, api_client, institution, director_user, workflow_instance):
         _login(api_client, director_user, institution)
-        response = api_client.get(reverse("project_workflow:workflowinstance-detail", kwargs={"pk": workflow_instance.id}))
+        response = api_client.get(
+            reverse("project_workflow:workflowinstance-detail", kwargs={"pk": workflow_instance.id})
+        )
         assert response.status_code == 200
         data = json.loads(response.content)
         assert data["id"] == str(workflow_instance.id)
         assert "actions" in data
 
-    def test_filter_by_status(self, api_client, institution, director_user, workflow_template, workflow_step):
+    def test_filter_by_status(
+        self, api_client, institution, director_user, workflow_template, workflow_step
+    ):
         _login(api_client, director_user, institution)
         WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(), institution=institution, template=workflow_template,
-            current_step=workflow_step, status=WorkflowInstanceStatus.COMPLETED,
+            project_id=uuid.uuid4(),
+            institution=institution,
+            template=workflow_template,
+            current_step=workflow_step,
+            status=WorkflowInstanceStatus.COMPLETED,
         )
         WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(), institution=institution, template=workflow_template,
-            current_step=workflow_step, status=WorkflowInstanceStatus.PENDING,
+            project_id=uuid.uuid4(),
+            institution=institution,
+            template=workflow_template,
+            current_step=workflow_step,
+            status=WorkflowInstanceStatus.PENDING,
         )
 
-        response = api_client.get(reverse("project_workflow:workflowinstance-list") + "?status=pending")
+        response = api_client.get(
+            reverse("project_workflow:workflowinstance-list") + "?status=pending"
+        )
         assert response.status_code == 200
         data = json.loads(response.content)
         for item in data["results"]:
             assert item["status"] == "pending"
 
-    def test_filter_by_overdue(self, api_client, institution, director_user, workflow_template, workflow_step):
+    def test_filter_by_overdue(
+        self, api_client, institution, director_user, workflow_template, workflow_step
+    ):
         _login(api_client, director_user, institution)
         WorkflowInstance.objects.create(
             project_id=uuid.uuid4(),
@@ -293,7 +333,9 @@ class TestWorkflowInstanceViewSet:
             deadline_date=timezone.now() + datetime.timedelta(days=1),
         )
 
-        response = api_client.get(reverse("project_workflow:workflowinstance-list") + "?overdue=true")
+        response = api_client.get(
+            reverse("project_workflow:workflowinstance-list") + "?overdue=true"
+        )
         assert response.status_code == 200
         data = json.loads(response.content)
         for item in data["results"]:
@@ -302,7 +344,9 @@ class TestWorkflowInstanceViewSet:
     def test_approve_action(self, api_client, institution, director_user, workflow_instance):
         _login(api_client, director_user, institution)
         response = api_client.post(
-            reverse("project_workflow:workflowinstance-approve", kwargs={"pk": workflow_instance.id}),
+            reverse(
+                "project_workflow:workflowinstance-approve", kwargs={"pk": workflow_instance.id}
+            ),
         )
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -311,7 +355,9 @@ class TestWorkflowInstanceViewSet:
     def test_observe_action(self, api_client, institution, director_user, workflow_instance):
         _login(api_client, director_user, institution)
         response = api_client.post(
-            reverse("project_workflow:workflowinstance-observe", kwargs={"pk": workflow_instance.id}),
+            reverse(
+                "project_workflow:workflowinstance-observe", kwargs={"pk": workflow_instance.id}
+            ),
             json.dumps({"observation_text": "Needs changes."}),
             content_type="application/json",
         )
@@ -322,7 +368,9 @@ class TestWorkflowInstanceViewSet:
     def test_reject_action(self, api_client, institution, director_user, workflow_instance):
         _login(api_client, director_user, institution)
         response = api_client.post(
-            reverse("project_workflow:workflowinstance-reject", kwargs={"pk": workflow_instance.id}),
+            reverse(
+                "project_workflow:workflowinstance-reject", kwargs={"pk": workflow_instance.id}
+            ),
             json.dumps({"reason": "Insufficient data."}),
             content_type="application/json",
         )
@@ -333,8 +381,12 @@ class TestWorkflowInstanceViewSet:
     def test_approve_forbidden_to_other_center_director(
         self, api_client, institution, center, director_user, workflow_instance
     ):
-        other_center = ResearchCenter.objects.create(institution=institution, name="Other", code="O")
-        other_user = User.objects.create_user(email="other@test.edu", auth_source="local", password="p")
+        other_center = ResearchCenter.objects.create(
+            institution=institution, name="Other", code="O"
+        )
+        other_user = User.objects.create_user(
+            email="other@test.edu", auth_source="local", password="p"
+        )
         other_role = Role.objects.get(name="Director de Centro")
         other_membership = InstitutionMembership.objects.create(
             user=other_user, institution=institution, role=other_role, is_active=True
@@ -343,7 +395,9 @@ class TestWorkflowInstanceViewSet:
 
         _login(api_client, other_user, institution)
         response = api_client.post(
-            reverse("project_workflow:workflowinstance-approve", kwargs={"pk": workflow_instance.id}),
+            reverse(
+                "project_workflow:workflowinstance-approve", kwargs={"pk": workflow_instance.id}
+            ),
         )
         assert response.status_code == 403
 
@@ -357,26 +411,37 @@ class TestWorkflowInstanceViewSet:
 class TestWorkflowActionViewSet:
     """Create+list+retrieve — 405 on update/delete (WF-006)."""
 
-    def test_list_actions(self, api_client, institution, director_user, workflow_instance, workflow_step):
+    def test_list_actions(
+        self, api_client, institution, director_user, workflow_instance, workflow_step
+    ):
         WorkflowAction.objects.create(
-            instance=workflow_instance, step=workflow_step, action=WorkflowActionType.CREATE, acted_by=director_user
+            instance=workflow_instance,
+            step=workflow_step,
+            action=WorkflowActionType.CREATE,
+            acted_by=director_user,
         )
         _login(api_client, director_user, institution)
         response = api_client.get(
-            reverse("project_workflow:workflowaction-list", kwargs={"instance_pk": workflow_instance.id})
+            reverse(
+                "project_workflow:workflowaction-list", kwargs={"instance_pk": workflow_instance.id}
+            )
         )
         assert response.status_code == 200
         data = json.loads(response.content)
         assert len(data) >= 1
 
-    def test_create_action(self, api_client, institution, director_user, workflow_instance, workflow_step):
+    def test_create_action(
+        self, api_client, institution, director_user, workflow_instance, workflow_step
+    ):
         _login(api_client, director_user, institution)
         payload = {
             "action": "observe",
             "observation_text": "Needs revision.",
         }
         response = api_client.post(
-            reverse("project_workflow:workflowaction-list", kwargs={"instance_pk": workflow_instance.id}),
+            reverse(
+                "project_workflow:workflowaction-list", kwargs={"instance_pk": workflow_instance.id}
+            ),
             json.dumps(payload),
             content_type="application/json",
         )
@@ -384,24 +449,34 @@ class TestWorkflowActionViewSet:
         data = json.loads(response.content)
         assert data["action"] == "observe"
 
-    def test_update_action_returns_405(self, api_client, institution, director_user, workflow_instance, workflow_step):
+    def test_update_action_returns_405(
+        self, api_client, institution, director_user, workflow_instance, workflow_step
+    ):
         action = WorkflowAction.objects.create(
             instance=workflow_instance, step=workflow_step, action=WorkflowActionType.CREATE
         )
         _login(api_client, director_user, institution)
         response = api_client.patch(
-            reverse("project_workflow:workflowaction-detail", kwargs={"instance_pk": workflow_instance.id, "pk": action.id}),
+            reverse(
+                "project_workflow:workflowaction-detail",
+                kwargs={"instance_pk": workflow_instance.id, "pk": action.id},
+            ),
             json.dumps({"observation_text": "Changed."}),
             content_type="application/json",
         )
         assert response.status_code == 405
 
-    def test_delete_action_returns_405(self, api_client, institution, director_user, workflow_instance, workflow_step):
+    def test_delete_action_returns_405(
+        self, api_client, institution, director_user, workflow_instance, workflow_step
+    ):
         action = WorkflowAction.objects.create(
             instance=workflow_instance, step=workflow_step, action=WorkflowActionType.CREATE
         )
         _login(api_client, director_user, institution)
         response = api_client.delete(
-            reverse("project_workflow:workflowaction-detail", kwargs={"instance_pk": workflow_instance.id, "pk": action.id}),
+            reverse(
+                "project_workflow:workflowaction-detail",
+                kwargs={"instance_pk": workflow_instance.id, "pk": action.id},
+            ),
         )
         assert response.status_code == 405

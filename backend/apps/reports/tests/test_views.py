@@ -174,9 +174,7 @@ class TestViewHelpers:
         from apps.accounts.models import User
         from apps.reports.views import _check_institution_access
 
-        superuser = User.objects.create_superuser(
-            email="su@test.edu", password="testpass"
-        )
+        superuser = User.objects.create_superuser(email="su@test.edu", password="testpass")
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = superuser
@@ -191,9 +189,7 @@ class TestViewHelpers:
         inst = Institution.objects.create(name="Test", code="T01")
         user = User.objects.create_user(email="u@test.edu", password="testpass")
         role = Role.objects.create(name="Role", level=4)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
@@ -210,9 +206,7 @@ class TestViewHelpers:
         center = ResearchCenter.objects.create(institution=inst, name="C1", code="C1")
         user = User.objects.create_user(email="dir@test.edu", password="testpass")
         role = Role.objects.create(name="Director", level=3)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         membership.centers.add(center)
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
@@ -261,18 +255,14 @@ class TestViewHelpers:
         )
         user = User.objects.create_user(email="dir2@test.edu", password="testpass")
         role = Role.objects.create(name="Director", level=3)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         membership.centers.add(center)
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
         request.active_membership = membership
         request.institution_id = str(inst.pk)
-        result = ReportApprovalView._user_is_entity_director(
-            request, "project", str(project.pk)
-        )
+        result = ReportApprovalView._user_is_entity_director(request, "project", str(project.pk))
         assert result is True
 
     def test_get_or_create_report_existing_report(self, db):
@@ -293,9 +283,7 @@ class TestViewHelpers:
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
-        result = ReportApprovalView._get_or_create_report(
-            request, "project", report.entity_id
-        )
+        result = ReportApprovalView._get_or_create_report(request, "project", report.entity_id)
         assert result.pk == report.pk
 
     def test_get_or_create_report_entity_not_found_raises_404(self, db):
@@ -310,9 +298,7 @@ class TestViewHelpers:
         request = factory.get("/dummy/")
         request.user = user
         with pytest.raises(Http404):
-            ReportApprovalView._get_or_create_report(
-                request, "project", str(uuid.uuid4())
-            )
+            ReportApprovalView._get_or_create_report(request, "project", str(uuid.uuid4()))
 
     def test_get_entity_institution_id_unknown_type_returns_none(self, db):
         """_get_entity_institution_id returns None for unknown report_type (line 84)."""
@@ -326,15 +312,11 @@ class TestViewHelpers:
         from apps.accounts.models import User
         from apps.reports.views import ReportApprovalView
 
-        superuser = User.objects.create_superuser(
-            email="su@test.edu", password="testpass"
-        )
+        superuser = User.objects.create_superuser(email="su@test.edu", password="testpass")
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = superuser
-        result = ReportApprovalView._user_is_entity_director(
-            request, "project", str(uuid.uuid4())
-        )
+        result = ReportApprovalView._user_is_entity_director(request, "project", str(uuid.uuid4()))
         assert result is True
 
     def test_user_is_entity_director_center_with_valid_director(self, db):
@@ -347,18 +329,14 @@ class TestViewHelpers:
         center = ResearchCenter.objects.create(institution=inst, name="Center1", code="C1")
         user = User.objects.create_user(email="cdir@test.edu", password="testpass")
         role = Role.objects.create(name="CenterDir", level=3)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         membership.centers.add(center)
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
         request.active_membership = membership
         request.institution_id = str(inst.pk)
-        result = ReportApprovalView._user_is_entity_director(
-            request, "center", str(center.pk)
-        )
+        result = ReportApprovalView._user_is_entity_director(request, "center", str(center.pk))
         assert result is True
 
     def test_user_is_entity_director_center_without_membership_returns_false(self, db):
@@ -371,18 +349,14 @@ class TestViewHelpers:
         center = ResearchCenter.objects.create(institution=inst, name="Center2", code="C2")
         user = User.objects.create_user(email="nodir@test.edu", password="testpass")
         role = Role.objects.create(name="NoDir", level=3)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         # Intentionally NOT adding center to membership
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
         request.active_membership = membership
         request.institution_id = str(inst.pk)
-        result = ReportApprovalView._user_is_entity_director(
-            request, "center", str(center.pk)
-        )
+        result = ReportApprovalView._user_is_entity_director(request, "center", str(center.pk))
         assert result is False
 
     def test_user_is_entity_director_researcher_no_centers_returns_false(self, db):
@@ -394,9 +368,7 @@ class TestViewHelpers:
         inst = Institution.objects.create(name="Res Inst", code="RI01")
         user = User.objects.create_user(email="resdir@test.edu", password="testpass")
         role = Role.objects.create(name="ResDir", level=3)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         # Intentionally NOT adding any centers
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
@@ -417,9 +389,7 @@ class TestViewHelpers:
         inst = Institution.objects.create(name="Unknown Inst", code="UI01")
         user = User.objects.create_user(email="unk@test.edu", password="testpass")
         role = Role.objects.create(name="Unk", level=3)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
@@ -440,18 +410,14 @@ class TestViewHelpers:
         center = ResearchCenter.objects.create(institution=inst, name="Center3", code="C3")
         user = User.objects.create_user(email="lowrole@test.edu", password="testpass")
         role = Role.objects.create(name="Researcher", level=4)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         membership.centers.add(center)
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
         request.active_membership = membership
         request.institution_id = str(inst.pk)
-        result = ReportApprovalView._user_is_entity_director(
-            request, "center", str(center.pk)
-        )
+        result = ReportApprovalView._user_is_entity_director(request, "center", str(center.pk))
         assert result is False
 
     def test_user_is_entity_director_researcher_low_role_returns_false(self, db):
@@ -463,9 +429,7 @@ class TestViewHelpers:
         inst = Institution.objects.create(name="LowRole2 Inst", code="LR02")
         user = User.objects.create_user(email="lowrole2@test.edu", password="testpass")
         role = Role.objects.create(name="Researcher2", level=4)
-        membership = InstitutionMembership.objects.create(
-            user=user, institution=inst, role=role
-        )
+        membership = InstitutionMembership.objects.create(user=user, institution=inst, role=role)
         factory = APIRequestFactory()
         request = factory.get("/dummy/")
         request.user = user
@@ -596,9 +560,7 @@ class TestReportPreviewView:
         if response.status_code == 404:
             assert "not found" in str(response.data).lower() or "detail" in response.data
 
-    def test_preview_superuser_bypasses_institution_check(
-        self, api_client, inst_b, project
-    ):
+    def test_preview_superuser_bypasses_institution_check(self, api_client, inst_b, project):
         """Superuser can preview any entity regardless of institution (line 92-93)."""
         from apps.accounts.models import User
 
@@ -623,9 +585,7 @@ class TestReportPreviewView:
         _login(api_client, researcher_user, inst)
         _set_institution(api_client, inst)
         # Bypass reverse() because Django URL pattern rejects non-UUID strings
-        response = api_client.get(
-            "/api/reports/project/not-a-uuid/preview/"
-        )
+        response = api_client.get("/api/reports/project/not-a-uuid/preview/")
         assert response.status_code in (404, 400)
 
     def test_preview_render_valueerror_returns_404(

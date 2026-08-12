@@ -10,6 +10,7 @@ Design reference: openspec/sdd/advances/design.md
 
 RED PHASE: Factories reference model fields that don't exist yet.
 """
+
 import datetime
 
 import factory
@@ -44,9 +45,7 @@ class UserFactory(DjangoModelFactory):
 class ProgressReportFactory(DjangoModelFactory):
     """Factory for ProgressReport — institution-scoped with 6-state FSM."""
 
-    institution = factory.SubFactory(
-        "apps.institutions.tests.conftest.InstitutionFactory"
-    )
+    institution = factory.SubFactory("apps.institutions.tests.conftest.InstitutionFactory")
     project = factory.SubFactory(
         "apps.projects.tests.conftest.ProjectFactory",
         institution=factory.SelfAttribute("..institution"),

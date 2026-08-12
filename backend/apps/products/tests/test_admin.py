@@ -7,6 +7,7 @@ list_filter, and raw_id_fields.
 
 RED PHASE: Tests WILL fail if admin.py is incomplete.
 """
+
 import pytest
 from django.contrib.admin.sites import site as admin_site
 
@@ -26,9 +27,7 @@ class TestAdminRegistration:
     )
     def test_model_is_registered(self, db, model):
         """Each product model is registered in admin site."""
-        assert model in admin_site._registry, (
-            f"{model.__name__} is not registered in admin site"
-        )
+        assert model in admin_site._registry, f"{model.__name__} is not registered in admin site"
 
 
 # ──────────────────────────────────────────────
@@ -87,6 +86,7 @@ class TestResearchProductAdmin:
             assert field in admin_class.raw_id_fields, (
                 f"Expected {field!r} in raw_id_fields, got {admin_class.raw_id_fields}"
             )
+
 
 # ──────────────────────────────────────────────
 # ProductAuthor Admin Tests

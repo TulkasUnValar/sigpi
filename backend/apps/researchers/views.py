@@ -17,6 +17,7 @@ Permission model (spec §Security):
 Design reference: openspec/changes/researchers/design.md — ViewSets & Permissions
 Spec reference: openspec/changes/researchers/spec.md — API Contract, Security
 """
+
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import Http404
@@ -133,8 +134,7 @@ class ResearcherViewSet(viewsets.ModelViewSet):
             raise DRFValidationError("No active institution membership.")
 
         institution = membership.institution
-        validated_data = {k: v for k, v in serializer.validated_data.items()
-                          if k != "institution"}
+        validated_data = {k: v for k, v in serializer.validated_data.items() if k != "institution"}
 
         try:
             researcher = ResearcherProfileService.create(
@@ -152,8 +152,7 @@ class ResearcherViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         """Delegate update to service layer for business logic."""
         researcher = self.get_object()
-        validated_data = {k: v for k, v in serializer.validated_data.items()
-                          if k != "institution"}
+        validated_data = {k: v for k, v in serializer.validated_data.items() if k != "institution"}
         updated = ResearcherProfileService.update(researcher, **validated_data)
         serializer.instance = updated
 
@@ -170,9 +169,7 @@ class ResearcherViewSet(viewsets.ModelViewSet):
         researcher = self.get_object()
         try:
             updated = ResearcherProfileService.deactivate(researcher)
-            serializer = ResearcherSerializer(
-                updated, context={"request": request}
-            )
+            serializer = ResearcherSerializer(updated, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(
@@ -202,9 +199,7 @@ class ResearcherAffiliationViewSet(viewsets.ModelViewSet):
         """Filter affiliations by researcher from URL."""
         researcher_pk = self.kwargs.get("researcher_pk")
         if researcher_pk:
-            return ResearcherAffiliation.objects.filter(
-                researcher_id=researcher_pk
-            )
+            return ResearcherAffiliation.objects.filter(researcher_id=researcher_pk)
         return ResearcherAffiliation.objects.none()
 
     def perform_create(self, serializer):
@@ -244,9 +239,7 @@ class ResearcherAffiliationViewSet(viewsets.ModelViewSet):
         affiliation = self.get_object()
         try:
             updated = ResearcherAffiliationService.set_primary(affiliation)
-            serializer = ResearcherAffiliationSerializer(
-                updated, context={"request": request}
-            )
+            serializer = ResearcherAffiliationSerializer(updated, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(
@@ -275,9 +268,7 @@ class ExternalProfileViewSet(viewsets.ModelViewSet):
         """Filter profiles by researcher from URL."""
         researcher_pk = self.kwargs.get("researcher_pk")
         if researcher_pk:
-            return ExternalProfile.objects.filter(
-                researcher_id=researcher_pk
-            )
+            return ExternalProfile.objects.filter(researcher_id=researcher_pk)
         return ExternalProfile.objects.none()
 
     def perform_create(self, serializer):
@@ -310,9 +301,7 @@ class ResearcherAttachmentViewSet(viewsets.ModelViewSet):
         """Filter attachments by researcher from URL."""
         researcher_pk = self.kwargs.get("researcher_pk")
         if researcher_pk:
-            return ResearcherAttachment.objects.filter(
-                researcher_id=researcher_pk
-            )
+            return ResearcherAttachment.objects.filter(researcher_id=researcher_pk)
         return ResearcherAttachment.objects.none()
 
     def perform_create(self, serializer):

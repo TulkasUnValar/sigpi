@@ -14,6 +14,7 @@ Design reference: openspec/changes/project_workflow/design.md
 
 RED PHASE: Tests fail because serializers.py does not exist yet.
 """
+
 import datetime
 import uuid
 
@@ -35,21 +36,25 @@ from apps.project_workflow.models import (
 
 def _make_institution(code="TU"):
     from apps.institutions.models import Institution
+
     return Institution.objects.create(name=f"Test University {code}", code=code)
 
 
 def _make_center(institution, name="AI Lab", code="AI"):
     from apps.institutions.models import ResearchCenter
+
     return ResearchCenter.objects.create(institution=institution, name=name, code=code)
 
 
 def _make_user(email="test@example.com"):
     from apps.accounts.models import User
+
     return User.objects.create_user(email=email)
 
 
 def _make_project(institution, center, pi, **overrides):
     from apps.projects.models import Project
+
     return Project.objects.create(
         institution=institution,
         center=center,
@@ -154,7 +159,12 @@ class TestWorkflowTemplateSerializer:
             "institution": str(inst.id),
             "name": "New Template",
             "steps": [
-                {"order": 1, "name": "Step 1", "role_required": "center_director", "deadline_days": 10},
+                {
+                    "order": 1,
+                    "name": "Step 1",
+                    "role_required": "center_director",
+                    "deadline_days": 10,
+                },
             ],
         }
 
@@ -176,7 +186,12 @@ class TestWorkflowTemplateSerializer:
         payload = {
             "name": "Updated",
             "steps": [
-                {"order": 1, "name": "New Step", "role_required": "center_director", "deadline_days": 14},
+                {
+                    "order": 1,
+                    "name": "New Step",
+                    "role_required": "center_director",
+                    "deadline_days": 14,
+                },
             ],
         }
 
@@ -278,7 +293,9 @@ class TestWorkflowInstanceSerializer:
             status=WorkflowInstanceStatus.PENDING,
         )
         user = _make_user("dir@test.edu")
-        WorkflowAction.objects.create(instance=instance, step=step, action=WorkflowActionType.CREATE, acted_by=user)
+        WorkflowAction.objects.create(
+            instance=instance, step=step, action=WorkflowActionType.CREATE, acted_by=user
+        )
 
         serializer = WorkflowInstanceSerializer(instance)
         data = serializer.data
@@ -333,7 +350,10 @@ class TestWorkflowActionSerializer:
         )
         user = _make_user("dir@test.edu")
         action = WorkflowAction.objects.create(
-            instance=instance, step=step, action=WorkflowActionType.APPROVE, acted_by=user,
+            instance=instance,
+            step=step,
+            action=WorkflowActionType.APPROVE,
+            acted_by=user,
             observation_text="Looks good.",
         )
 

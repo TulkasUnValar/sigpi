@@ -11,6 +11,7 @@ django-fsm @transition methods directly.
 Design reference: openspec/changes/projects/design.md — Service Layer
 Spec reference:   openspec/changes/projects/spec.md — RF-027 through RF-039
 """
+
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
@@ -31,9 +32,7 @@ from apps.projects.models import (
 def _validate_not_terminal(project):
     """Reject mutations if the project is in a terminal state (RN-011)."""
     if project.status in TERMINAL_STATES:
-        raise ValidationError(
-            "Project is in a terminal state and cannot be modified."
-        )
+        raise ValidationError("Project is in a terminal state and cannot be modified.")
 
 
 # ──────────────────────────────────────────────
@@ -77,9 +76,7 @@ class ProjectService:
             center=center,
         ).exists()
         if not affiliated:
-            raise ValidationError(
-                "PI must be affiliated with the target center."
-            )
+            raise ValidationError("PI must be affiliated with the target center.")
 
         # RN-013: date validation
         start_date = data.get("start_date")

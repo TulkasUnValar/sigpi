@@ -4,6 +4,7 @@ Factory-boy factories for the researchers module.
 Provides ergonomic test data generation for Researcher,
 ResearcherAffiliation, ExternalProfile, and ResearcherAttachment.
 """
+
 import factory
 from factory.django import DjangoModelFactory
 
@@ -19,9 +20,7 @@ class ResearcherFactory(DjangoModelFactory):
     """Factory for Researcher — institution-scoped with optional User."""
 
     user = None  # no user by default
-    institution = factory.SubFactory(
-        "apps.institutions.tests.conftest.InstitutionFactory"
-    )
+    institution = factory.SubFactory("apps.institutions.tests.conftest.InstitutionFactory")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     document_type = "CC"

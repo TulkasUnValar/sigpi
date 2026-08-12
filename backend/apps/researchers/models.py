@@ -10,6 +10,7 @@ Implements the data model defined in design.md and spec.md:
 Design reference: openspec/changes/researchers/design.md
 Spec reference:   openspec/changes/researchers/spec.md
 """
+
 import uuid
 
 from django.core.exceptions import ValidationError
@@ -175,36 +176,26 @@ class ResearcherAffiliation(models.Model):
 
         # 1. At least one FK must be set
         if not self.center and not self.group and not self.line:
-            raise ValidationError(
-                "At least one of center, group, or line must be set."
-            )
+            raise ValidationError("At least one of center, group, or line must be set.")
 
         institution_id = self.researcher.institution_id
 
         # 2. All FK targets must belong to researcher's institution
         errors = {}
         if self.center and self.center.institution_id != institution_id:
-            errors["center"] = (
-                "Center belongs to a different institution."
-            )
+            errors["center"] = "Center belongs to a different institution."
         if self.group and self.group.institution_id != institution_id:
-            errors["group"] = (
-                "Group belongs to a different institution."
-            )
+            errors["group"] = "Group belongs to a different institution."
         if self.line and self.line.institution_id != institution_id:
-            errors["line"] = (
-                "Line belongs to a different institution."
-            )
+            errors["line"] = "Line belongs to a different institution."
         if errors:
             raise ValidationError(errors)
 
         # 3. Only one is_primary=True per researcher
         if self.is_primary:
-            conflicting = (
-                ResearcherAffiliation.objects
-                .filter(researcher=self.researcher, is_primary=True)
-                .exclude(pk=self.pk)
-            )
+            conflicting = ResearcherAffiliation.objects.filter(
+                researcher=self.researcher, is_primary=True
+            ).exclude(pk=self.pk)
             if conflicting.exists():
                 raise ValidationError(
                     {"is_primary": "Only one primary affiliation allowed per researcher."}

@@ -8,6 +8,7 @@ Tests define the expected behavior of ResearchProductFilter:
 Spec reference: openspec/changes/products/specs/products/spec.md — RF-084
 Design reference: openspec/changes/products/design.md
 """
+
 import datetime
 import uuid
 

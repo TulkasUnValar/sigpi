@@ -192,9 +192,7 @@ def _mock_audit_emit():
 class TestReportApprovalView:
     """POST /api/reports/{type}/{id}/approve/ — approval endpoint."""
 
-    def test_approve_project_success_returns_200(
-        self, api_client, inst, director_user, project
-    ):
+    def test_approve_project_success_returns_200(self, api_client, inst, director_user, project):
         """Director can approve a project report — returns 200."""
         _login(api_client, director_user)
         _set_institution(api_client, inst)
@@ -211,9 +209,7 @@ class TestReportApprovalView:
         assert "approved" in str(response.data).lower()
         assert "report_id" in response.data
 
-    def test_approve_creates_report_record(
-        self, api_client, inst, director_user, project
-    ):
+    def test_approve_creates_report_record(self, api_client, inst, director_user, project):
         """Approval creates a Report record if none exists."""
         _login(api_client, director_user)
         _set_institution(api_client, inst)
@@ -326,9 +322,7 @@ class TestReportApprovalView:
         assert response["Content-Type"] == "application/json"
         assert "error" in response.data or "detail" in response.data
 
-    def test_approve_emits_audit_event(
-        self, api_client, inst, director_user, project
-    ):
+    def test_approve_emits_audit_event(self, api_client, inst, director_user, project):
         """Approval emits REPORT_APPROVED audit event."""
         _login(api_client, director_user)
         _set_institution(api_client, inst)
@@ -344,15 +338,11 @@ class TestReportApprovalView:
         assert response["Content-Type"] == "application/json"
         # Verify at least one audit call has REPORT_APPROVED
         approved_calls = [
-            c
-            for c in mock_emit.call_args_list
-            if c.kwargs.get("event_type") == "REPORT_APPROVED"
+            c for c in mock_emit.call_args_list if c.kwargs.get("event_type") == "REPORT_APPROVED"
         ]
         assert len(approved_calls) >= 1
 
-    def test_approve_center_report_success(
-        self, api_client, inst, director_user, center
-    ):
+    def test_approve_center_report_success(self, api_client, inst, director_user, center):
         """Director can approve a center report — non-project type skips RN-017."""
         _login(api_client, director_user)
         _set_institution(api_client, inst)
@@ -368,9 +358,7 @@ class TestReportApprovalView:
         assert response["Content-Type"] == "application/json"
         assert "approved" in str(response.data).lower()
 
-    def test_approve_nonexistent_entity_returns_404(
-        self, api_client, inst, director_user
-    ):
+    def test_approve_nonexistent_entity_returns_404(self, api_client, inst, director_user):
         """Entity not found returns 404."""
         _login(api_client, director_user)
         _set_institution(api_client, inst)
@@ -384,9 +372,7 @@ class TestReportApprovalView:
         if response.status_code == 404:
             assert "not found" in str(response.data).lower() or "detail" in response.data
 
-    def test_approve_invalid_type_returns_400(
-        self, api_client, inst, director_user, project
-    ):
+    def test_approve_invalid_type_returns_400(self, api_client, inst, director_user, project):
         """Invalid report_type returns 400 Bad Request."""
         _login(api_client, director_user)
         _set_institution(api_client, inst)
@@ -420,9 +406,7 @@ class TestReportApprovalView:
         assert response["Content-Type"] == "application/json"
         assert "approved" in str(response.data).lower()
 
-    def test_approve_uses_existing_report(
-        self, api_client, inst, director_user, project, report
-    ):
+    def test_approve_uses_existing_report(self, api_client, inst, director_user, project, report):
         """Approval reuses an existing Report record instead of creating a new one."""
         existing_report_id = report.pk
         _login(api_client, director_user)
@@ -441,9 +425,7 @@ class TestReportApprovalView:
         assert report.pk == existing_report_id
         assert report.status == ReportStatus.APPROVED
 
-    def test_approve_real_director_check_no_mock(
-        self, api_client, inst, center, project
-    ):
+    def test_approve_real_director_check_no_mock(self, api_client, inst, center, project):
         """Director with center membership passes real _user_is_entity_director (line 308)."""
         from apps.accounts.models import InstitutionMembership, Role, User
 

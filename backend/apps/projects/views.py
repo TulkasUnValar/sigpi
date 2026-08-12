@@ -18,6 +18,7 @@ Permission model (spec §Security):
 Design reference: openspec/changes/projects/design.md — ViewSets & Permissions
 Spec reference: openspec/changes/projects/spec.md — API Contract, Security
 """
+
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import Http404
@@ -118,9 +119,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         # FSM — director actions
         director_actions = {
-            "accept_review", "approve", "observe", "return_to_draft",
-            "reject", "start_execution", "suspend", "resume",
-            "initiate_closure", "close",
+            "accept_review",
+            "approve",
+            "observe",
+            "return_to_draft",
+            "reject",
+            "start_execution",
+            "suspend",
+            "resume",
+            "initiate_closure",
+            "close",
         }
         if self.action in director_actions:
             return [IsAuthenticated(), IsCenterDirectorForProject()]
@@ -171,7 +179,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         principal_investigator = validated.get("principal_investigator")
 
         data = {
-            k: v for k, v in validated.items()
+            k: v
+            for k, v in validated.items()
             if k not in ("institution", "center", "principal_investigator")
         }
 
@@ -208,9 +217,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if instance.status != "borrador":
             # Admin+ (level ≤ 2) can delete any project
             if not HasRoleLevelOrHigher.has_level(self.request, 2):
-                raise DRFValidationError(
-                    "Only projects in borrador state can be deleted."
-                )
+                raise DRFValidationError("Only projects in borrador state can be deleted.")
         instance.delete()
 
     # ── FSM Action Endpoints (16 total) ───────────────────
@@ -288,9 +295,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         actual_end_date = request.data.get("actual_end_date")
         try:
-            updated = ProjectService.finalize(
-                project, request.user, actual_end_date
-            )
+            updated = ProjectService.finalize(project, request.user, actual_end_date)
             serializer = self.get_serializer(updated)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except (ValidationError, TransitionNotAllowed) as e:
@@ -488,9 +493,7 @@ class ProjectDocumentViewSet(viewsets.ModelViewSet):
         """Update document via service (handles terminal guard)."""
         document = self.get_object()
         try:
-            updated = ProjectDocumentService.update(
-                document, **serializer.validated_data
-            )
+            updated = ProjectDocumentService.update(document, **serializer.validated_data)
             serializer.instance = updated
         except ValidationError as e:
             raise DRFValidationError(

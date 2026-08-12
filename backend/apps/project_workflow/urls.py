@@ -22,6 +22,7 @@ API contract (from spec.md):
 Design reference: openspec/changes/project_workflow/design.md — URL Routing
 Spec reference:   openspec/changes/project_workflow/spec.md — API Contract
 """
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

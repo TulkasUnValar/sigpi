@@ -26,9 +26,7 @@ class TestAdminRegistration:
     )
     def test_model_is_registered(self, db, model):
         """Each reports model is registered in admin site."""
-        assert model in admin_site._registry, (
-            f"{model.__name__} is not registered in admin site"
-        )
+        assert model in admin_site._registry, f"{model.__name__} is not registered in admin site"
 
 
 # ──────────────────────────────────────────────

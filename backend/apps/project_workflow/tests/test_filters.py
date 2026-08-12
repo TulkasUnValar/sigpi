@@ -12,6 +12,7 @@ Design reference: openspec/changes/project_workflow/design.md
 
 RED PHASE: Tests fail because filters.py does not exist yet.
 """
+
 import datetime
 import uuid
 
@@ -30,21 +31,25 @@ from apps.project_workflow.models import (
 
 def _make_institution(code="TU"):
     from apps.institutions.models import Institution
+
     return Institution.objects.create(name=f"Test University {code}", code=code)
 
 
 def _make_center(institution, name="AI Lab", code="AI"):
     from apps.institutions.models import ResearchCenter
+
     return ResearchCenter.objects.create(institution=institution, name=name, code=code)
 
 
 def _make_user(email="test@example.com"):
     from apps.accounts.models import User
+
     return User.objects.create_user(email=email)
 
 
 def _make_project(institution, center, pi, **overrides):
     from apps.projects.models import Project
+
     return Project.objects.create(
         institution=institution,
         center=center,
@@ -89,7 +94,9 @@ class TestWorkflowInstanceFilterByProject:
 
         inst = _make_institution("TU")
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
-        WorkflowInstance.objects.create(project_id=uuid.uuid4(), institution=inst, template=template)
+        WorkflowInstance.objects.create(
+            project_id=uuid.uuid4(), institution=inst, template=template
+        )
 
         qs = WorkflowInstance.objects.all()
         f = WorkflowInstanceFilter(data={"project": str(uuid.uuid4())}, queryset=qs)
@@ -105,10 +112,16 @@ class TestWorkflowInstanceFilterByStatus:
         inst = _make_institution("TU")
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(), institution=inst, template=template, status=WorkflowInstanceStatus.PENDING
+            project_id=uuid.uuid4(),
+            institution=inst,
+            template=template,
+            status=WorkflowInstanceStatus.PENDING,
         )
         WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(), institution=inst, template=template, status=WorkflowInstanceStatus.COMPLETED
+            project_id=uuid.uuid4(),
+            institution=inst,
+            template=template,
+            status=WorkflowInstanceStatus.COMPLETED,
         )
 
         qs = WorkflowInstance.objects.all()
@@ -122,10 +135,16 @@ class TestWorkflowInstanceFilterByStatus:
         inst = _make_institution("TU")
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(), institution=inst, template=template, status=WorkflowInstanceStatus.PENDING
+            project_id=uuid.uuid4(),
+            institution=inst,
+            template=template,
+            status=WorkflowInstanceStatus.PENDING,
         )
         WorkflowInstance.objects.create(
-            project_id=uuid.uuid4(), institution=inst, template=template, status=WorkflowInstanceStatus.COMPLETED
+            project_id=uuid.uuid4(),
+            institution=inst,
+            template=template,
+            status=WorkflowInstanceStatus.COMPLETED,
         )
 
         qs = WorkflowInstance.objects.all()
@@ -151,8 +170,12 @@ class TestWorkflowInstanceFilterByCenter:
         project_b = _make_project(inst, center_b, pi)
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
 
-        WorkflowInstance.objects.create(project_id=project_a.id, institution=inst, template=template)
-        WorkflowInstance.objects.create(project_id=project_b.id, institution=inst, template=template)
+        WorkflowInstance.objects.create(
+            project_id=project_a.id, institution=inst, template=template
+        )
+        WorkflowInstance.objects.create(
+            project_id=project_b.id, institution=inst, template=template
+        )
 
         qs = WorkflowInstance.objects.all()
         f = WorkflowInstanceFilter(data={"center": str(center_a.id)}, queryset=qs)

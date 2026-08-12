@@ -21,6 +21,7 @@ Design decisions (from design.md):
 Spec reference:   openspec/sdd/advances/spec.md
 Design reference: openspec/sdd/advances/design.md
 """
+
 from rest_framework import serializers
 
 from apps.progress.models import (

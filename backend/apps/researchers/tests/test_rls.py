@@ -93,8 +93,7 @@ class TestRLSMigrationExists:
         assert migration is not None
         deps = [(app, name) for (app, name) in migration.dependencies]
         assert ("researchers", "0001_initial") in deps, (
-            f"Expected dependency on researchers.0001_initial, "
-            f"got: {deps}"
+            f"Expected dependency on researchers.0001_initial, got: {deps}"
         )
 
     def test_has_run_python_operation(self, db):
@@ -102,10 +101,8 @@ class TestRLSMigrationExists:
         migration = _get_migration()
         assert migration is not None
         from django.db.migrations import RunPython
-        run_python_ops = [
-            op for op in migration.operations
-            if isinstance(op, RunPython)
-        ]
+
+        run_python_ops = [op for op in migration.operations if isinstance(op, RunPython)]
         assert len(run_python_ops) > 0, (
             "Migration 0002 must contain at least one RunPython operation"
         )
@@ -114,6 +111,7 @@ class TestRLSMigrationExists:
         """RunPython must have a reverse_code for rollback."""
         migration = _get_migration()
         from django.db.migrations import RunPython
+
         for op in migration.operations:
             if isinstance(op, RunPython):
                 assert op.reverse_code is not None, (
@@ -161,9 +159,7 @@ class TestRLSPolicySQL:
         sql = self._get_all_sql()
         for table in EXPECTED_RLS_TABLES:
             pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, (
-                f"tenant_isolation policy missing for '{table}'"
-            )
+            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
 
     def test_superadmin_bypass_policy_per_table(self, db):
         """Each table must have a superadmin_bypass policy."""
@@ -172,9 +168,7 @@ class TestRLSPolicySQL:
         sql = self._get_all_sql()
         for table in EXPECTED_RLS_TABLES:
             pattern = f"CREATE POLICY superadmin_bypass ON {table}"
-            assert pattern in sql, (
-                f"superadmin_bypass policy missing for '{table}'"
-            )
+            assert pattern in sql, f"superadmin_bypass policy missing for '{table}'"
 
     def test_each_table_has_enable_rls(self, db):
         """Each table must have ENABLE ROW LEVEL SECURITY."""
@@ -193,8 +187,7 @@ class TestRLSPolicySQL:
         sql = self._get_all_sql()
         # Parent table should use direct institution_id
         assert "institution_id = current_setting" in sql, (
-            "Researcher table must use direct institution_id filter. "
-            "Child tables use subquery."
+            "Researcher table must use direct institution_id filter. Child tables use subquery."
         )
 
     def test_child_tables_use_subquery(self, db):

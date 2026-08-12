@@ -8,6 +8,7 @@ Admin+ (level ≤ 2) bypasses.
 Design reference: openspec/changes/project_workflow/design.md
 Spec reference:   openspec/changes/project_workflow/spec.md
 """
+
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 
@@ -49,9 +50,7 @@ class IsWorkflowStepApprover(BasePermission):
         if obj_center_id is None:
             return False
 
-        user_center_ids = set(
-            membership.centers.values_list("id", flat=True)
-        )
+        user_center_ids = set(membership.centers.values_list("id", flat=True))
         return obj_center_id in user_center_ids
 
     @staticmethod

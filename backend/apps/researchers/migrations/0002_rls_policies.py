@@ -17,6 +17,7 @@ Policies applied:
 Note: RLS is a PostgreSQL feature. On SQLite (test environment),
 these operations are wrapped in a conditional that checks the DB engine.
 """
+
 from django.db import migrations
 
 

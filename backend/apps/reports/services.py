@@ -305,9 +305,7 @@ class ReportApprovalService:
             try:
                 project = Project.objects.only("pk").get(pk=report.entity_id)
             except Project.DoesNotExist:
-                raise ValidationError(
-                    "Project not found for this report's entity_id."
-                )
+                raise ValidationError("Project not found for this report's entity_id.")
 
             if self.has_pending_progress_reports(project):
                 raise ValidationError("Pending progress reports must be reviewed")

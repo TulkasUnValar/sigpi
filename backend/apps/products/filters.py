@@ -14,6 +14,7 @@ Used by ResearchProductViewSet.filter_backends.
 Design reference: openspec/changes/products/design.md
 Spec reference: openspec/changes/products/specs/products/spec.md — RF-084
 """
+
 import django_filters
 
 from apps.products.models import ProductType, ResearchProduct
@@ -28,12 +29,8 @@ class ResearchProductFilter(django_filters.FilterSet):
 
     type = django_filters.ChoiceFilter(choices=ProductType.choices)
     year = django_filters.NumberFilter(field_name="publication_year")
-    year__gte = django_filters.NumberFilter(
-        field_name="publication_year", lookup_expr="gte"
-    )
-    year__lte = django_filters.NumberFilter(
-        field_name="publication_year", lookup_expr="lte"
-    )
+    year__gte = django_filters.NumberFilter(field_name="publication_year", lookup_expr="gte")
+    year__lte = django_filters.NumberFilter(field_name="publication_year", lookup_expr="lte")
     project = django_filters.UUIDFilter(field_name="project_id")
     center = django_filters.UUIDFilter(field_name="project__center_id")
     group = django_filters.UUIDFilter(field_name="project__group_id")

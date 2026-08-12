@@ -11,6 +11,7 @@ Design reference: openspec/changes/project_workflow/design.md
 
 RED PHASE: Tests fail because permissions.py does not exist yet.
 """
+
 import datetime
 from unittest.mock import MagicMock
 
@@ -90,9 +91,7 @@ def _make_project(institution, center, pi, **overrides):
         expected_results=overrides.get("expected_results", "Valid expected results."),
         keywords=overrides.get("keywords", "ai, research"),
         start_date=overrides.get("start_date", datetime.date(2025, 1, 1)),
-        estimated_end_date=overrides.get(
-            "estimated_end_date", datetime.date(2025, 12, 31)
-        ),
+        estimated_end_date=overrides.get("estimated_end_date", datetime.date(2025, 12, 31)),
     )
 
 

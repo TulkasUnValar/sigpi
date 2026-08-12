@@ -10,6 +10,7 @@ Implements the data model defined in design.md and spec.md:
 Spec reference:   openspec/sdd/advances/spec.md
 Design reference: openspec/sdd/advances/design.md
 """
+
 import uuid
 
 from django.core.exceptions import ValidationError

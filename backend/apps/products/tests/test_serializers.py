@@ -9,6 +9,7 @@ Tests define the expected behavior of 3 serializers:
 Spec reference: openspec/changes/products/specs/products/spec.md
 Design reference: openspec/changes/products/design.md
 """
+
 import datetime
 import uuid
 
@@ -106,13 +107,15 @@ class TestResearchProductSerializer:
         pi = _make_researcher(inst)
         project = _make_project(inst, center, pi)
 
-        serializer = ResearchProductSerializer(data={
-            "title": "Test",
-            "description": "D",
-            "type": "patente",
-            "publication_year": 2025,
-            "project": str(project.id),
-        })
+        serializer = ResearchProductSerializer(
+            data={
+                "title": "Test",
+                "description": "D",
+                "type": "patente",
+                "publication_year": 2025,
+                "project": str(project.id),
+            }
+        )
         assert not serializer.is_valid()
         assert "type" in serializer.errors
 
@@ -124,13 +127,15 @@ class TestResearchProductSerializer:
         pi = _make_researcher(inst)
         project = _make_project(inst, center, pi)
 
-        serializer = ResearchProductSerializer(data={
-            "title": "Test",
-            "description": "D",
-            "type": "",
-            "publication_year": 2025,
-            "project": str(project.id),
-        })
+        serializer = ResearchProductSerializer(
+            data={
+                "title": "Test",
+                "description": "D",
+                "type": "",
+                "publication_year": 2025,
+                "project": str(project.id),
+            }
+        )
         assert not serializer.is_valid()
         assert "type" in serializer.errors
 
@@ -142,13 +147,15 @@ class TestResearchProductSerializer:
         pi = _make_researcher(inst)
         project = _make_project(inst, center, pi)
 
-        serializer = ResearchProductSerializer(data={
-            "title": "Test",
-            "description": "D",
-            "type": "articulo",
-            "publication_year": 1899,
-            "project": str(project.id),
-        })
+        serializer = ResearchProductSerializer(
+            data={
+                "title": "Test",
+                "description": "D",
+                "type": "articulo",
+                "publication_year": 1899,
+                "project": str(project.id),
+            }
+        )
         assert not serializer.is_valid()
         assert "publication_year" in serializer.errors
 
@@ -161,13 +168,15 @@ class TestResearchProductSerializer:
         project = _make_project(inst, center, pi)
         current_year = datetime.date.today().year
 
-        serializer = ResearchProductSerializer(data={
-            "title": "Test",
-            "description": "D",
-            "type": "articulo",
-            "publication_year": current_year + 2,
-            "project": str(project.id),
-        })
+        serializer = ResearchProductSerializer(
+            data={
+                "title": "Test",
+                "description": "D",
+                "type": "articulo",
+                "publication_year": current_year + 2,
+                "project": str(project.id),
+            }
+        )
         assert not serializer.is_valid()
         assert "publication_year" in serializer.errors
 
@@ -180,13 +189,15 @@ class TestResearchProductSerializer:
         project = _make_project(inst, center, pi)
         current_year = datetime.date.today().year
 
-        serializer = ResearchProductSerializer(data={
-            "title": "Test",
-            "description": "D",
-            "type": "articulo",
-            "publication_year": current_year + 1,
-            "project": str(project.id),
-        })
+        serializer = ResearchProductSerializer(
+            data={
+                "title": "Test",
+                "description": "D",
+                "type": "articulo",
+                "publication_year": current_year + 1,
+                "project": str(project.id),
+            }
+        )
         assert serializer.is_valid(), serializer.errors
 
     def test_institution_read_only(self, db):
@@ -197,14 +208,16 @@ class TestResearchProductSerializer:
         pi = _make_researcher(inst)
         project = _make_project(inst, center, pi)
 
-        serializer = ResearchProductSerializer(data={
-            "title": "Test",
-            "description": "D",
-            "type": "articulo",
-            "publication_year": 2025,
-            "project": str(project.id),
-            "institution": str(uuid.uuid4()),
-        })
+        serializer = ResearchProductSerializer(
+            data={
+                "title": "Test",
+                "description": "D",
+                "type": "articulo",
+                "publication_year": 2025,
+                "project": str(project.id),
+                "institution": str(uuid.uuid4()),
+            }
+        )
         assert serializer.is_valid(), serializer.errors
         assert "institution" not in serializer.validated_data
 
@@ -226,7 +239,10 @@ class TestProductAuthorSerializer:
         project = _make_project(inst, center, pi)
         product = _make_product(inst, project)
         author = ProductAuthor.objects.create(
-            product=product, researcher=pi, is_principal=True, order=1,
+            product=product,
+            researcher=pi,
+            is_principal=True,
+            order=1,
         )
 
         serializer = ProductAuthorSerializer(author)
@@ -246,12 +262,14 @@ class TestProductAuthorSerializer:
         product = _make_product(inst, project)
         ProductAuthor.objects.create(product=product, researcher=pi, is_principal=True)
 
-        serializer = ProductAuthorSerializer(data={
-            "product": str(product.id),
-            "researcher": str(pi.id),
-            "is_principal": False,
-            "order": 2,
-        })
+        serializer = ProductAuthorSerializer(
+            data={
+                "product": str(product.id),
+                "researcher": str(pi.id),
+                "is_principal": False,
+                "order": 2,
+            }
+        )
         assert not serializer.is_valid()
         assert "researcher" in serializer.errors or "non_field_errors" in serializer.errors
 
@@ -296,12 +314,14 @@ class TestProductAttachmentSerializer:
         project = _make_project(inst, center, pi)
         product = _make_product(inst, project)
 
-        serializer = ProductAttachmentSerializer(data={
-            "product": str(product.id),
-            "name": "Evidence.pdf",
-            "doc_type": "article",
-            "external_url": "",
-        })
+        serializer = ProductAttachmentSerializer(
+            data={
+                "product": str(product.id),
+                "name": "Evidence.pdf",
+                "doc_type": "article",
+                "external_url": "",
+            }
+        )
         assert not serializer.is_valid()
         assert "external_url" in serializer.errors
 
@@ -314,10 +334,12 @@ class TestProductAttachmentSerializer:
         project = _make_project(inst, center, pi)
         product = _make_product(inst, project)
 
-        serializer = ProductAttachmentSerializer(data={
-            "product": str(product.id),
-            "name": "Evidence.pdf",
-            "doc_type": "article",
-        })
+        serializer = ProductAttachmentSerializer(
+            data={
+                "product": str(product.id),
+                "name": "Evidence.pdf",
+                "doc_type": "article",
+            }
+        )
         assert not serializer.is_valid()
         assert "external_url" in serializer.errors

@@ -18,6 +18,7 @@ Test pattern (matches projects/tests/test_views.py):
 Spec reference:   openspec/sdd/advances/spec.md — API Contract
 Design reference: openspec/sdd/advances/design.md — ViewSets & Permissions
 """
+
 import datetime
 import uuid
 
@@ -122,16 +123,12 @@ def center(db, institution):
 
 @pytest.fixture
 def director_role(db):
-    return Role.objects.create(
-        name=f"Director Centro {uuid.uuid4().hex[:4]}", level=3
-    )
+    return Role.objects.create(name=f"Director Centro {uuid.uuid4().hex[:4]}", level=3)
 
 
 @pytest.fixture
 def researcher_role(db):
-    return Role.objects.create(
-        name=f"Investigador {uuid.uuid4().hex[:4]}", level=4
-    )
+    return Role.objects.create(name=f"Investigador {uuid.uuid4().hex[:4]}", level=4)
 
 
 @pytest.fixture
@@ -142,9 +139,7 @@ def director_user(db, institution, center, director_role):
         password="testpass123",
     )
     researcher = _make_researcher(institution, user=user)
-    ResearcherAffiliation.objects.create(
-        researcher=researcher, center=center, is_primary=True
-    )
+    ResearcherAffiliation.objects.create(researcher=researcher, center=center, is_primary=True)
     membership = InstitutionMembership.objects.create(
         user=user, institution=institution, role=director_role, is_active=True
     )
@@ -160,9 +155,7 @@ def researcher_user(db, institution, center, researcher_role):
         password="testpass123",
     )
     researcher = _make_researcher(institution, user=user)
-    ResearcherAffiliation.objects.create(
-        researcher=researcher, center=center, is_primary=True
-    )
+    ResearcherAffiliation.objects.create(researcher=researcher, center=center, is_primary=True)
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=researcher_role, is_active=True
     )
@@ -177,9 +170,7 @@ def pi_user(db, institution, center, researcher_role):
         password="testpass123",
     )
     researcher = _make_researcher(institution, user=user)
-    ResearcherAffiliation.objects.create(
-        researcher=researcher, center=center, is_primary=True
-    )
+    ResearcherAffiliation.objects.create(researcher=researcher, center=center, is_primary=True)
     InstitutionMembership.objects.create(
         user=user, institution=institution, role=researcher_role, is_active=True
     )
@@ -264,9 +255,7 @@ def report_rechazado(db, report_en_revision, director_user, api_client, institut
     _login(api_client, director_user, institution)
 
     url = reverse("progressreport-reject", args=[report_en_revision.pk])
-    response = api_client.post(
-        url, {"review_text": "Data wrong"}, content_type="application/json"
-    )
+    response = api_client.post(url, {"review_text": "Data wrong"}, content_type="application/json")
     assert response.status_code == 200, response.content
     report_en_revision.refresh_from_db()
     return report_en_revision
@@ -280,8 +269,7 @@ def report_rechazado(db, report_en_revision, director_user, api_client, institut
 class TestProgressViewSetList:
     """GET /progress/ — list endpoint."""
 
-    def test_list_returns_reports(self, api_client, institution,
-                                   researcher_user, report_borrador):
+    def test_list_returns_reports(self, api_client, institution, researcher_user, report_borrador):
         """GET /progress/ returns list of progress reports."""
         _login(api_client, researcher_user, institution)
 
@@ -293,8 +281,9 @@ class TestProgressViewSetList:
         assert isinstance(data, list)
         assert len(data) >= 1
 
-    def test_list_uses_list_serializer_fields(self, api_client, institution,
-                                               researcher_user, report_borrador):
+    def test_list_uses_list_serializer_fields(
+        self, api_client, institution, researcher_user, report_borrador
+    ):
         """List response has only the 7 list serializer fields."""
         _login(api_client, researcher_user, institution)
 
@@ -302,26 +291,28 @@ class TestProgressViewSetList:
         response = api_client.get(url)
 
         item = _result_list(response)[0]
-        list_fields = {"id", "project", "status", "cumulative_percentage",
-                       "period_start", "period_end", "created_at"}
+        list_fields = {
+            "id",
+            "project",
+            "status",
+            "cumulative_percentage",
+            "period_start",
+            "period_end",
+            "created_at",
+        }
         assert set(item.keys()) == list_fields, f"Got: {set(item.keys())}"
 
-    def test_list_institution_scoped(self, api_client, institution,
-                                      researcher_user, report_borrador):
+    def test_list_institution_scoped(
+        self, api_client, institution, researcher_user, report_borrador
+    ):
         """Reports from another institution are not visible."""
-        other_inst = Institution.objects.create(
-            code="OTHER", name="Other Institution"
-        )
-        ResearchCenter.objects.create(
-            institution=other_inst, name="Other Center", code="OC001"
-        )
+        other_inst = Institution.objects.create(code="OTHER", name="Other Institution")
+        ResearchCenter.objects.create(institution=other_inst, name="Other Center", code="OC001")
         other_user = User.objects.create_user(
             email=f"other-{uuid.uuid4().hex[:8]}@test.edu",
             password="testpass123",
         )
-        other_role = Role.objects.create(
-            name=f"Other Researcher {uuid.uuid4().hex[:4]}", level=4
-        )
+        other_role = Role.objects.create(name=f"Other Researcher {uuid.uuid4().hex[:4]}", level=4)
         _make_researcher(other_inst, user=other_user)
         InstitutionMembership.objects.create(
             user=other_user, institution=other_inst, role=other_role, is_active=True
@@ -353,9 +344,7 @@ class TestProgressViewSetCRUD:
     def test_create_borrador(self, api_client, institution, pi_user, project):
         """POST /progress/ creates a borrador report."""
         user, pi = pi_user
-        ProjectMember.objects.create(
-            project=project, researcher=pi, role="principal_investigator"
-        )
+        ProjectMember.objects.create(project=project, researcher=pi, role="principal_investigator")
         _login(api_client, user, institution)
 
         url = reverse("progressreport-list")
@@ -374,13 +363,12 @@ class TestProgressViewSetCRUD:
         assert body["status"] == "borrador"
         assert body["cumulative_percentage"] == "50.00"
 
-    def test_create_missing_required_field_returns_400(self, api_client, institution,
-                                                         pi_user, project):
+    def test_create_missing_required_field_returns_400(
+        self, api_client, institution, pi_user, project
+    ):
         """POST without activities returns 400."""
         user, pi = pi_user
-        ProjectMember.objects.create(
-            project=project, researcher=pi, role="principal_investigator"
-        )
+        ProjectMember.objects.create(project=project, researcher=pi, role="principal_investigator")
         _login(api_client, user, institution)
 
         url = reverse("progressreport-list")
@@ -395,8 +383,7 @@ class TestProgressViewSetCRUD:
         response = api_client.post(url, data, content_type="application/json")
         assert response.status_code == 400
 
-    def test_retrieve_detail(self, api_client, institution, researcher_user,
-                              report_borrador):
+    def test_retrieve_detail(self, api_client, institution, researcher_user, report_borrador):
         """GET /progress/{id}/ returns full detail with nested data."""
         _login(api_client, researcher_user, institution)
 
@@ -414,13 +401,11 @@ class TestProgressViewSetCRUD:
         """GET with non-existent UUID returns 404."""
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-detail",
-                      args=["00000000-0000-0000-0000-000000000000"])
+        url = reverse("progressreport-detail", args=["00000000-0000-0000-0000-000000000000"])
         response = api_client.get(url)
         assert response.status_code == 404
 
-    def test_update_borrador(self, api_client, institution, pi_user,
-                              report_borrador):
+    def test_update_borrador(self, api_client, institution, pi_user, report_borrador):
         """PATCH borrador report succeeds."""
         user, pi = pi_user
         _login(api_client, user, institution)
@@ -433,8 +418,7 @@ class TestProgressViewSetCRUD:
         assert response.status_code == 200
         assert response.json()["description"] == "Updated desc"
 
-    def test_update_non_borrador_rejected(self, api_client, institution,
-                                            pi_user, report_enviado):
+    def test_update_non_borrador_rejected(self, api_client, institution, pi_user, report_enviado):
         """PATCH on enviado returns 4xx (borrador guard)."""
         user, pi = pi_user
         _login(api_client, user, institution)
@@ -446,8 +430,7 @@ class TestProgressViewSetCRUD:
 
         assert response.status_code in (400, 403)
 
-    def test_delete_borrador(self, api_client, institution, pi_user,
-                              report_borrador):
+    def test_delete_borrador(self, api_client, institution, pi_user, report_borrador):
         """DELETE borrador report succeeds."""
         user, pi = pi_user
         _login(api_client, user, institution)
@@ -458,8 +441,7 @@ class TestProgressViewSetCRUD:
         assert response.status_code == 204
         assert not ProgressReport.objects.filter(pk=report_borrador.pk).exists()
 
-    def test_delete_non_borrador_rejected(self, api_client, institution,
-                                            pi_user, report_enviado):
+    def test_delete_non_borrador_rejected(self, api_client, institution, pi_user, report_enviado):
         """DELETE on enviado returns 403."""
         user, pi = pi_user
         _login(api_client, user, institution)
@@ -478,8 +460,7 @@ class TestProgressViewSetCRUD:
 class TestProgressViewSetFSM:
     """9 FSM action endpoints."""
 
-    def test_submit_borrador_to_enviado(self, api_client, institution, pi_user,
-                                         report_borrador):
+    def test_submit_borrador_to_enviado(self, api_client, institution, pi_user, report_borrador):
         """POST submit/ transitions borrador → enviado."""
         user, pi = pi_user
         _login(api_client, user, institution)
@@ -490,8 +471,9 @@ class TestProgressViewSetFSM:
         assert response.status_code == 200
         assert response.json()["status"] == "enviado"
 
-    def test_accept_review_to_en_revision(self, api_client, institution,
-                                            director_user, report_enviado):
+    def test_accept_review_to_en_revision(
+        self, api_client, institution, director_user, report_enviado
+    ):
         """POST accept_review/ transitions enviado → en_revision."""
         _login(api_client, director_user, institution)
 
@@ -501,8 +483,9 @@ class TestProgressViewSetFSM:
         assert response.status_code == 200
         assert response.json()["status"] == "en_revision"
 
-    def test_accept_review_non_director_403(self, api_client, institution,
-                                              researcher_user, report_enviado):
+    def test_accept_review_non_director_403(
+        self, api_client, institution, researcher_user, report_enviado
+    ):
         """Non-director cannot accept_review."""
         _login(api_client, researcher_user, institution)
 
@@ -511,8 +494,7 @@ class TestProgressViewSetFSM:
 
         assert response.status_code == 403
 
-    def test_approve_to_aprobado(self, api_client, institution, director_user,
-                                  report_en_revision):
+    def test_approve_to_aprobado(self, api_client, institution, director_user, report_en_revision):
         """POST approve/ transitions en_revision → aprobado + updates project."""
         _login(api_client, director_user, institution)
 
@@ -523,11 +505,14 @@ class TestProgressViewSetFSM:
         assert response.json()["status"] == "aprobado"
         # RN-P08: project cumulative_progress updated
         report_en_revision.project.refresh_from_db()
-        assert report_en_revision.project.cumulative_progress == \
-            report_en_revision.cumulative_percentage
+        assert (
+            report_en_revision.project.cumulative_progress
+            == report_en_revision.cumulative_percentage
+        )
 
-    def test_approve_non_director_403(self, api_client, institution,
-                                        researcher_user, report_en_revision):
+    def test_approve_non_director_403(
+        self, api_client, institution, researcher_user, report_en_revision
+    ):
         """Non-director cannot approve."""
         _login(api_client, researcher_user, institution)
 
@@ -536,8 +521,7 @@ class TestProgressViewSetFSM:
 
         assert response.status_code == 403
 
-    def test_observe_to_observado(self, api_client, institution, director_user,
-                                   report_en_revision):
+    def test_observe_to_observado(self, api_client, institution, director_user, report_en_revision):
         """POST observe/ + review_text → observado + ProgressReview."""
         _login(api_client, director_user, institution)
 
@@ -553,8 +537,7 @@ class TestProgressViewSetFSM:
             review_type="observation",
         ).exists()
 
-    def test_reject_to_rechazado(self, api_client, institution, director_user,
-                                  report_en_revision):
+    def test_reject_to_rechazado(self, api_client, institution, director_user, report_en_revision):
         """POST reject/ + review_text → rechazado + ProgressReview."""
         _login(api_client, director_user, institution)
 
@@ -570,47 +553,49 @@ class TestProgressViewSetFSM:
             review_type="rejection",
         ).exists()
 
-    def test_return_to_draft_en_revision(self, api_client, institution,
-                                            director_user, report_en_revision):
+    def test_return_to_draft_en_revision(
+        self, api_client, institution, director_user, report_en_revision
+    ):
         """POST return_to_draft/ en_revision → borrador."""
         _login(api_client, director_user, institution)
 
-        url = reverse("progressreport-return-to-draft",
-                      args=[report_en_revision.pk])
+        url = reverse("progressreport-return-to-draft", args=[report_en_revision.pk])
         response = api_client.post(url, content_type="application/json")
 
         assert response.status_code == 200
         assert response.json()["status"] == "borrador"
 
-    def test_return_to_draft_rechazado_by_creator(self, api_client, institution,
-                                                   pi_user, report_rechazado):
+    def test_return_to_draft_rechazado_by_creator(
+        self, api_client, institution, pi_user, report_rechazado
+    ):
         """POST return_to_draft/ rechazado → borrador by creator (PI)."""
         user, pi = pi_user
         _login(api_client, user, institution)
 
-        url = reverse("progressreport-return-to-draft",
-                      args=[report_rechazado.pk])
-        response = api_client.post(
-            url, {"reason": "Fixing data"}, content_type="application/json"
-        )
+        url = reverse("progressreport-return-to-draft", args=[report_rechazado.pk])
+        response = api_client.post(url, {"reason": "Fixing data"}, content_type="application/json")
 
         assert response.status_code == 200
         assert response.json()["status"] == "borrador"
 
     def test_return_to_draft_rechazado_by_non_creator_403(
-        self, api_client, institution, researcher_user, report_rechazado,
+        self,
+        api_client,
+        institution,
+        researcher_user,
+        report_rechazado,
     ):
         """Non-creator cannot return_to_draft from rechazado."""
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-return-to-draft",
-                      args=[report_rechazado.pk])
+        url = reverse("progressreport-return-to-draft", args=[report_rechazado.pk])
         response = api_client.post(url, content_type="application/json")
 
         assert response.status_code == 403
 
-    def test_resubmit_observado_to_enviado(self, api_client, institution, pi_user,
-                                            report_observado):
+    def test_resubmit_observado_to_enviado(
+        self, api_client, institution, pi_user, report_observado
+    ):
         """POST resubmit/ observado → enviado."""
         user, pi = pi_user
         _login(api_client, user, institution)
@@ -621,8 +606,9 @@ class TestProgressViewSetFSM:
         assert response.status_code == 200
         assert response.json()["status"] == "enviado"
 
-    def test_state_log_created_on_transition(self, api_client, institution,
-                                               pi_user, report_borrador):
+    def test_state_log_created_on_transition(
+        self, api_client, institution, pi_user, report_borrador
+    ):
         """Every FSM action creates a ProgressStateLog."""
         user, pi = pi_user
         _login(api_client, user, institution)
@@ -646,8 +632,7 @@ class TestProgressViewSetFSM:
 class TestProgressViewSetFiltering:
     """Filtering via query params."""
 
-    def test_filter_by_status(self, api_client, institution, researcher_user,
-                               report_borrador):
+    def test_filter_by_status(self, api_client, institution, researcher_user, report_borrador):
         """?status=borrador returns only borrador reports."""
         _login(api_client, researcher_user, institution)
 
@@ -658,21 +643,20 @@ class TestProgressViewSetFiltering:
         for item in _result_list(response):
             assert item["status"] == "borrador"
 
-    def test_filter_by_project(self, api_client, institution, researcher_user,
-                                report_borrador):
+    def test_filter_by_project(self, api_client, institution, researcher_user, report_borrador):
         """?project={id} returns only reports for that project."""
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-list") + \
-            f"?project={report_borrador.project_id}"
+        url = reverse("progressreport-list") + f"?project={report_borrador.project_id}"
         response = api_client.get(url)
 
         assert response.status_code == 200
         for item in _result_list(response):
             assert item["project"] == str(report_borrador.project_id)
 
-    def test_filter_by_period_after_no_results(self, api_client, institution,
-                                                  researcher_user, report_borrador):
+    def test_filter_by_period_after_no_results(
+        self, api_client, institution, researcher_user, report_borrador
+    ):
         """?period_start_after= far future returns empty list."""
         _login(api_client, researcher_user, institution)
 
@@ -691,8 +675,7 @@ class TestProgressViewSetFiltering:
 class TestProgressDocumentViewSet:
     """Nested CRUD for documents under /progress/{id}/documents/."""
 
-    def test_list_documents(self, api_client, institution, pi_user,
-                             report_borrador):
+    def test_list_documents(self, api_client, institution, pi_user, report_borrador):
         """GET /progress/{id}/documents/ returns list."""
         user, pi = pi_user
         # Create a document first
@@ -703,22 +686,19 @@ class TestProgressDocumentViewSet:
         )
         _login(api_client, user, institution)
 
-        url = reverse("progressreport-documents-list",
-                      args=[report_borrador.pk])
+        url = reverse("progressreport-documents-list", args=[report_borrador.pk])
         response = api_client.get(url)
 
         assert response.status_code == 200
         data = _result_list(response)
         assert len(data) >= 1
 
-    def test_create_document(self, api_client, institution, pi_user,
-                              report_borrador):
+    def test_create_document(self, api_client, institution, pi_user, report_borrador):
         """POST /progress/{id}/documents/ creates a document."""
         user, pi = pi_user
         _login(api_client, user, institution)
 
-        url = reverse("progressreport-documents-list",
-                      args=[report_borrador.pk])
+        url = reverse("progressreport-documents-list", args=[report_borrador.pk])
         data = {
             "name": "Evidence Q1",
             "doc_type": "evidence",
@@ -731,22 +711,20 @@ class TestProgressDocumentViewSet:
         assert body["name"] == "Evidence Q1"
         assert body["doc_type"] == "evidence"
 
-    def test_create_document_on_non_borrador_rejected(self, api_client, institution,
-                                                        pi_user,
-                                                        report_enviado):
+    def test_create_document_on_non_borrador_rejected(
+        self, api_client, institution, pi_user, report_enviado
+    ):
         """POST on enviado report returns 403."""
         user, pi = pi_user
         _login(api_client, user, institution)
 
-        url = reverse("progressreport-documents-list",
-                      args=[report_enviado.pk])
+        url = reverse("progressreport-documents-list", args=[report_enviado.pk])
         data = {"name": "Doc", "doc_type": "evidence"}
         response = api_client.post(url, data, content_type="application/json")
 
         assert response.status_code == 403
 
-    def test_update_document(self, api_client, institution, pi_user,
-                              report_borrador):
+    def test_update_document(self, api_client, institution, pi_user, report_borrador):
         """PATCH document updates name."""
         user, pi = pi_user
         doc = ProgressDocument.objects.create(
@@ -756,17 +734,13 @@ class TestProgressDocumentViewSet:
         )
         _login(api_client, user, institution)
 
-        url = reverse("progressreport-documents-detail",
-                      args=[report_borrador.pk, doc.pk])
-        response = api_client.patch(
-            url, {"name": "Updated"}, content_type="application/json"
-        )
+        url = reverse("progressreport-documents-detail", args=[report_borrador.pk, doc.pk])
+        response = api_client.patch(url, {"name": "Updated"}, content_type="application/json")
 
         assert response.status_code == 200
         assert response.json()["name"] == "Updated"
 
-    def test_delete_document(self, api_client, institution, pi_user,
-                              report_borrador):
+    def test_delete_document(self, api_client, institution, pi_user, report_borrador):
         """DELETE document removes it."""
         user, pi = pi_user
         doc = ProgressDocument.objects.create(
@@ -776,8 +750,7 @@ class TestProgressDocumentViewSet:
         )
         _login(api_client, user, institution)
 
-        url = reverse("progressreport-documents-detail",
-                      args=[report_borrador.pk, doc.pk])
+        url = reverse("progressreport-documents-detail", args=[report_borrador.pk, doc.pk])
         response = api_client.delete(url)
 
         assert response.status_code == 204
@@ -792,8 +765,7 @@ class TestProgressDocumentViewSet:
 class TestProgressReviewViewSet:
     """Read-only review list under /progress/{id}/reviews/."""
 
-    def test_list_reviews(self, api_client, institution, researcher_user,
-                           report_borrador):
+    def test_list_reviews(self, api_client, institution, researcher_user, report_borrador):
         """GET /progress/{id}/reviews/ returns review list."""
         ProgressReview.objects.create(
             progress_report=report_borrador,
@@ -802,28 +774,24 @@ class TestProgressReviewViewSet:
         )
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-reviews-list",
-                      args=[report_borrador.pk])
+        url = reverse("progressreport-reviews-list", args=[report_borrador.pk])
         response = api_client.get(url)
 
         assert response.status_code == 200
         assert len(response.json()) >= 1
 
-    def test_post_review_rejected(self, api_client, institution, researcher_user,
-                                   report_borrador):
+    def test_post_review_rejected(self, api_client, institution, researcher_user, report_borrador):
         """POST /progress/{id}/reviews/ returns 405."""
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-reviews-list",
-                      args=[report_borrador.pk])
-        response = api_client.post(
-            url, {"review_text": "Test"}, content_type="application/json"
-        )
+        url = reverse("progressreport-reviews-list", args=[report_borrador.pk])
+        response = api_client.post(url, {"review_text": "Test"}, content_type="application/json")
 
         assert response.status_code == 405
 
-    def test_delete_review_rejected(self, api_client, institution, researcher_user,
-                                     report_borrador):
+    def test_delete_review_rejected(
+        self, api_client, institution, researcher_user, report_borrador
+    ):
         """DELETE on a review returns 405."""
         review = ProgressReview.objects.create(
             progress_report=report_borrador,
@@ -832,8 +800,7 @@ class TestProgressReviewViewSet:
         )
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-reviews-detail",
-                      args=[report_borrador.pk, review.pk])
+        url = reverse("progressreport-reviews-detail", args=[report_borrador.pk, review.pk])
         response = api_client.delete(url)
 
         assert response.status_code == 405
@@ -847,8 +814,7 @@ class TestProgressReviewViewSet:
 class TestProgressStateLogViewSet:
     """Read-only state log list under /progress/{id}/state_history/."""
 
-    def test_list_state_logs(self, api_client, institution, researcher_user,
-                              report_borrador):
+    def test_list_state_logs(self, api_client, institution, researcher_user, report_borrador):
         """GET /progress/{id}/state_history/ returns state log list."""
         ProgressStateLog.objects.create(
             progress_report=report_borrador,
@@ -857,23 +823,20 @@ class TestProgressStateLogViewSet:
         )
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-state-history-list",
-                      args=[report_borrador.pk])
+        url = reverse("progressreport-state-history-list", args=[report_borrador.pk])
         response = api_client.get(url)
 
         assert response.status_code == 200
         assert len(response.json()) >= 1
 
-    def test_post_state_log_rejected(self, api_client, institution,
-                                       researcher_user, report_borrador):
+    def test_post_state_log_rejected(
+        self, api_client, institution, researcher_user, report_borrador
+    ):
         """POST /progress/{id}/state_history/ returns 405."""
         _login(api_client, researcher_user, institution)
 
-        url = reverse("progressreport-state-history-list",
-                      args=[report_borrador.pk])
-        response = api_client.post(
-            url, {"from_state": "x"}, content_type="application/json"
-        )
+        url = reverse("progressreport-state-history-list", args=[report_borrador.pk])
+        response = api_client.post(url, {"from_state": "x"}, content_type="application/json")
 
         assert response.status_code == 405
 
@@ -886,22 +849,22 @@ class TestProgressStateLogViewSet:
 class TestNestedProjectProgress:
     """Nested shortcut /projects/{id}/progress/."""
 
-    def test_nested_project_progress_list(self, api_client, institution,
-                                            researcher_user, report_borrador):
+    def test_nested_project_progress_list(
+        self, api_client, institution, researcher_user, report_borrador
+    ):
         """GET /projects/{id}/progress/ returns reports for project."""
         _login(api_client, researcher_user, institution)
 
-        url = reverse("project-progress-list",
-                      args=[report_borrador.project_id])
+        url = reverse("project-progress-list", args=[report_borrador.project_id])
         response = api_client.get(url)
 
         assert response.status_code == 200
         results = _result_list(response)
         assert isinstance(results, list)
 
-    def test_nested_project_progress_scoped(self, api_client, institution,
-                                              researcher_user, report_borrador,
-                                              pi_user, project):
+    def test_nested_project_progress_scoped(
+        self, api_client, institution, researcher_user, report_borrador, pi_user, project
+    ):
         """Nested route returns only reports for the specified project."""
         # Create another report for a different project
         user2, pi2 = pi_user
@@ -909,9 +872,7 @@ class TestNestedProjectProgress:
         other_center = ResearchCenter.objects.create(
             institution=institution, name="Other Center", code="OC002"
         )
-        ResearcherAffiliation.objects.create(
-            researcher=pi2, center=other_center
-        )
+        ResearcherAffiliation.objects.create(researcher=pi2, center=other_center)
         other_project = _make_project(institution, other_center, pi2)
         ProjectMember.objects.create(
             project=other_project, researcher=pi2, role="principal_investigator"
@@ -925,14 +886,14 @@ class TestNestedProjectProgress:
             "cumulative_percentage": "30.00",
             "activities": "Other activities",
         }
-        resp = api_client.post(reverse("progressreport-list"), data,
-                               content_type="application/json")
+        resp = api_client.post(
+            reverse("progressreport-list"), data, content_type="application/json"
+        )
         assert resp.status_code == 201
 
         _login(api_client, researcher_user, institution)
 
-        url = reverse("project-progress-list",
-                      args=[report_borrador.project_id])
+        url = reverse("project-progress-list", args=[report_borrador.project_id])
         response = api_client.get(url)
 
         assert response.status_code == 200

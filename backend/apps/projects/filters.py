@@ -14,6 +14,7 @@ together with SearchFilter and OrderingFilter (configured in views.py).
 Design reference: openspec/changes/projects/design.md — Filtering (RF-039)
 Spec reference:   openspec/changes/projects/spec.md — RF-039
 """
+
 import django_filters
 
 from apps.projects.models import Project, ProjectStatus
@@ -27,15 +28,9 @@ class ProjectFilter(django_filters.FilterSet):
 
     status = django_filters.ChoiceFilter(choices=ProjectStatus.choices)
     center = django_filters.UUIDFilter(field_name="center_id")
-    start_date_after = django_filters.DateFilter(
-        field_name="start_date", lookup_expr="gte"
-    )
-    start_date_before = django_filters.DateFilter(
-        field_name="start_date", lookup_expr="lte"
-    )
-    keywords = django_filters.CharFilter(
-        field_name="keywords", lookup_expr="icontains"
-    )
+    start_date_after = django_filters.DateFilter(field_name="start_date", lookup_expr="gte")
+    start_date_before = django_filters.DateFilter(field_name="start_date", lookup_expr="lte")
+    keywords = django_filters.CharFilter(field_name="keywords", lookup_expr="icontains")
 
     class Meta:
         model = Project

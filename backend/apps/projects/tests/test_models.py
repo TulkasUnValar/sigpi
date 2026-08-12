@@ -9,6 +9,7 @@ Design reference: openspec/changes/projects/design.md
 
 RED PHASE: All tests fail because models are empty stubs.
 """
+
 import datetime
 import uuid
 
@@ -38,7 +39,8 @@ def _make_institution(code="TU"):
     from apps.institutions.models import Institution
 
     return Institution.objects.create(
-        name=f"Test University {code}", code=code,
+        name=f"Test University {code}",
+        code=code,
     )
 
 
@@ -46,7 +48,9 @@ def _make_center(institution, name="AI Lab", code="AI"):
     from apps.institutions.models import ResearchCenter
 
     return ResearchCenter.objects.create(
-        institution=institution, name=name, code=code,
+        institution=institution,
+        name=name,
+        code=code,
     )
 
 
@@ -54,7 +58,10 @@ def _make_group(institution, center, name="NLP Group", code="NLP"):
     from apps.institutions.models import ResearchGroup
 
     return ResearchGroup.objects.create(
-        institution=institution, center=center, name=name, code=code,
+        institution=institution,
+        center=center,
+        name=name,
+        code=code,
     )
 
 
@@ -62,7 +69,10 @@ def _make_line(institution, group, name="Sentiment", code="SA"):
     from apps.institutions.models import ResearchLine
 
     return ResearchLine.objects.create(
-        institution=institution, group=group, name=name, code=code,
+        institution=institution,
+        group=group,
+        name=name,
+        code=code,
     )
 
 
@@ -86,7 +96,9 @@ def _make_affiliation(researcher, center):
     from apps.researchers.models import ResearcherAffiliation
 
     return ResearcherAffiliation.objects.create(
-        researcher=researcher, center=center, is_primary=True,
+        researcher=researcher,
+        center=center,
+        is_primary=True,
     )
 
 
@@ -107,9 +119,18 @@ class TestProjectStatusEnum:
     def test_all_twelve_states_defined(self):
         """All 12 FSM states are present in ProjectStatus."""
         expected = {
-            "borrador", "enviado", "en_revision", "observado",
-            "aprobado", "en_ejecucion", "suspendido", "finalizado",
-            "en_cierre", "cerrado", "rechazado", "cancelado",
+            "borrador",
+            "enviado",
+            "en_revision",
+            "observado",
+            "aprobado",
+            "en_ejecucion",
+            "suspendido",
+            "finalizado",
+            "en_cierre",
+            "cerrado",
+            "rechazado",
+            "cancelado",
         }
         actual = {choice[0] for choice in ProjectStatus.choices}
         assert actual == expected
@@ -203,9 +224,14 @@ class TestProjectFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="AI Research", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="AI Research",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -217,9 +243,14 @@ class TestProjectFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -441,9 +472,7 @@ class TestProjectCheckConstraints:
 
     def test_check_constraints_exist(self):
         """Both CHECK constraints are registered in Meta.constraints."""
-        constraint_names = {
-            c.name for c in Project._meta.constraints
-        }
+        constraint_names = {c.name for c in Project._meta.constraints}
         assert "check_estimated_end_date_gte_start_date" in constraint_names
         assert "check_actual_end_date_gte_start_date" in constraint_names
 
@@ -503,9 +532,14 @@ class TestProjectMemberFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -526,19 +560,28 @@ class TestProjectMemberFields:
         pi = _make_researcher(inst)
         researcher2 = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
         ProjectMember.objects.create(
-            project=project, researcher=researcher2, role="student",
+            project=project,
+            researcher=researcher2,
+            role="student",
         )
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 ProjectMember.objects.create(
-                    project=project, researcher=researcher2, role="collaborator",
+                    project=project,
+                    researcher=researcher2,
+                    role="collaborator",
                 )
 
     def test_role_choices_valid(self, db):
@@ -547,15 +590,22 @@ class TestProjectMemberFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
         for role in ("co_investigator", "student", "seedbed", "collaborator"):
             member = ProjectMember(
-                project=project, researcher=pi, role=role,
+                project=project,
+                researcher=pi,
+                role=role,
             )
             member.full_clean()  # should not raise
 
@@ -565,14 +615,21 @@ class TestProjectMemberFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
         member = ProjectMember(
-            project=project, researcher=pi, role="invalid_role",
+            project=project,
+            researcher=pi,
+            role="invalid_role",
         )
         with pytest.raises(ValidationError):
             member.full_clean()
@@ -583,14 +640,21 @@ class TestProjectMemberFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
         member = ProjectMember.objects.create(
-            project=project, researcher=pi, role="co_investigator",
+            project=project,
+            researcher=pi,
+            role="co_investigator",
         )
         assert str(pi) in str(member)
 
@@ -609,9 +673,14 @@ class TestProjectDocumentFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -633,9 +702,14 @@ class TestProjectDocumentFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -654,9 +728,14 @@ class TestProjectDocumentFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -675,14 +754,21 @@ class TestProjectDocumentFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
         doc = ProjectDocument.objects.create(
-            project=project, name="Proposal.pdf", doc_type="proposal",
+            project=project,
+            name="Proposal.pdf",
+            doc_type="proposal",
             external_url="https://example.com/proposal.pdf",
         )
         assert "Proposal.pdf" in str(doc)
@@ -703,9 +789,14 @@ class TestProjectObservationFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -725,14 +816,20 @@ class TestProjectObservationFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
         obs = ProjectObservation.objects.create(
-            project=project, observation_text="System note.",
+            project=project,
+            observation_text="System note.",
         )
         assert obs.observed_by is None
 
@@ -743,9 +840,14 @@ class TestProjectObservationFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -772,9 +874,14 @@ class TestProjectStateLogFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -798,9 +905,14 @@ class TestProjectStateLogFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -817,9 +929,14 @@ class TestProjectStateLogFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -836,9 +953,14 @@ class TestProjectStateLogFields:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -865,9 +987,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -882,9 +1009,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="enviado",
@@ -899,9 +1031,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="en_revision",
@@ -916,9 +1053,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="en_revision",
@@ -933,9 +1075,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="en_revision",
@@ -950,9 +1097,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="en_revision",
@@ -967,9 +1119,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="observado",
@@ -984,9 +1141,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="observado",
@@ -1001,9 +1163,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="aprobado",
@@ -1018,9 +1185,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="en_ejecucion",
@@ -1035,9 +1207,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="suspendido",
@@ -1052,9 +1229,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="en_ejecucion",
@@ -1069,9 +1251,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="finalizado",
@@ -1086,9 +1273,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="en_cierre",
@@ -1103,9 +1295,14 @@ class TestFsmValidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -1128,9 +1325,14 @@ class TestFsmInvalidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="enviado",
@@ -1144,9 +1346,14 @@ class TestFsmInvalidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -1159,9 +1366,14 @@ class TestFsmInvalidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -1174,9 +1386,14 @@ class TestFsmInvalidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
         )
@@ -1189,9 +1406,14 @@ class TestFsmInvalidTransitions:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="enviado",
@@ -1214,18 +1436,33 @@ class TestFsmTerminalStateBlocking:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="cerrado",
         )
         for method in [
-            "submit", "accept_review", "approve", "observe",
-            "return_to_draft", "reject", "resubmit", "start_execution",
-            "suspend", "resume", "finalize", "initiate_closure",
-            "close", "cancel",
+            "submit",
+            "accept_review",
+            "approve",
+            "observe",
+            "return_to_draft",
+            "reject",
+            "resubmit",
+            "start_execution",
+            "suspend",
+            "resume",
+            "finalize",
+            "initiate_closure",
+            "close",
+            "cancel",
         ]:
             with pytest.raises(TransitionNotAllowed):
                 getattr(project, method)()
@@ -1236,18 +1473,33 @@ class TestFsmTerminalStateBlocking:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="rechazado",
         )
         for method in [
-            "submit", "accept_review", "approve", "observe",
-            "return_to_draft", "reject", "resubmit", "start_execution",
-            "suspend", "resume", "finalize", "initiate_closure",
-            "close", "cancel",
+            "submit",
+            "accept_review",
+            "approve",
+            "observe",
+            "return_to_draft",
+            "reject",
+            "resubmit",
+            "start_execution",
+            "suspend",
+            "resume",
+            "finalize",
+            "initiate_closure",
+            "close",
+            "cancel",
         ]:
             with pytest.raises(TransitionNotAllowed):
                 getattr(project, method)()
@@ -1258,18 +1510,33 @@ class TestFsmTerminalStateBlocking:
         center = _make_center(inst)
         pi = _make_researcher(inst)
         project = Project.objects.create(
-            institution=inst, center=center, principal_investigator=pi,
-            title="Test", abstract="A", objectives="O",
-            methodology="M", expected_results="E",
+            institution=inst,
+            center=center,
+            principal_investigator=pi,
+            title="Test",
+            abstract="A",
+            objectives="O",
+            methodology="M",
+            expected_results="E",
             start_date=datetime.date(2026, 1, 1),
             estimated_end_date=datetime.date(2026, 6, 1),
             status="cancelado",
         )
         for method in [
-            "submit", "accept_review", "approve", "observe",
-            "return_to_draft", "reject", "resubmit", "start_execution",
-            "suspend", "resume", "finalize", "initiate_closure",
-            "close", "cancel",
+            "submit",
+            "accept_review",
+            "approve",
+            "observe",
+            "return_to_draft",
+            "reject",
+            "resubmit",
+            "start_execution",
+            "suspend",
+            "resume",
+            "finalize",
+            "initiate_closure",
+            "close",
+            "cancel",
         ]:
             with pytest.raises(TransitionNotAllowed):
                 getattr(project, method)()

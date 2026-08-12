@@ -14,6 +14,7 @@ Validation:
 Design reference: openspec/changes/products/design.md
 Spec reference: openspec/changes/products/specs/products/spec.md
 """
+
 import datetime
 
 from rest_framework import serializers
@@ -74,9 +75,7 @@ class ResearchProductSerializer(serializers.ModelSerializer):
         if value is not None:
             current_year = datetime.date.today().year
             if value < 1900:
-                raise serializers.ValidationError(
-                    "Publication year must be 1900 or later."
-                )
+                raise serializers.ValidationError("Publication year must be 1900 or later.")
             if value > current_year + 1:
                 raise serializers.ValidationError(
                     f"Publication year must not exceed {current_year + 1}."
@@ -128,6 +127,7 @@ class ProductAuthorSerializer(serializers.ModelSerializer):
 
         if product_id is not None and researcher is not None:
             from apps.products.models import ProductAuthor
+
             # Reject duplicate researcher
             qs = ProductAuthor.objects.filter(product_id=product_id, researcher=researcher)
             if self.instance is not None:

@@ -8,124 +8,236 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('institutions', '0004_alter_facultad_status_alter_institution_status_and_more'),
-        ('projects', '0002_rls_policies'),
+        ("institutions", "0004_alter_facultad_status_alter_institution_status_and_more"),
+        ("projects", "0002_rls_policies"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Call',
+            name="Call",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.TextField()),
-                ('call_type', models.CharField(choices=[('internal', 'Internal'), ('external', 'External')], max_length=20)),
-                ('external_entity', models.CharField(blank=True, default='', max_length=255)),
-                ('submission_start', models.DateField(blank=True, null=True)),
-                ('submission_end', models.DateField(blank=True, null=True)),
-                ('evaluation_start', models.DateField(blank=True, null=True)),
-                ('evaluation_end', models.DateField(blank=True, null=True)),
-                ('status', django_fsm.FSMField(default='borrador', max_length=50)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('institution', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='calls', to='institutions.institution')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.TextField()),
+                (
+                    "call_type",
+                    models.CharField(
+                        choices=[("internal", "Internal"), ("external", "External")], max_length=20
+                    ),
+                ),
+                ("external_entity", models.CharField(blank=True, default="", max_length=255)),
+                ("submission_start", models.DateField(blank=True, null=True)),
+                ("submission_end", models.DateField(blank=True, null=True)),
+                ("evaluation_start", models.DateField(blank=True, null=True)),
+                ("evaluation_end", models.DateField(blank=True, null=True)),
+                ("status", django_fsm.FSMField(default="borrador", max_length=50)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "institution",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="calls",
+                        to="institutions.institution",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Call',
-                'verbose_name_plural': 'Calls',
-                'db_table': 'calls_call',
-                'ordering': ['-created_at'],
+                "verbose_name": "Call",
+                "verbose_name_plural": "Calls",
+                "db_table": "calls_call",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='CallDocument',
+            name="CallDocument",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=255)),
-                ('doc_type', models.CharField(choices=[('convocatoria', 'Convocatoria'), ('anexo', 'Anexo'), ('reglamento', 'Reglamento'), ('resultado', 'Resultado'), ('otro', 'Otro')], max_length=20)),
-                ('external_url', models.URLField(max_length=500)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('call', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='calls.call')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                (
+                    "doc_type",
+                    models.CharField(
+                        choices=[
+                            ("convocatoria", "Convocatoria"),
+                            ("anexo", "Anexo"),
+                            ("reglamento", "Reglamento"),
+                            ("resultado", "Resultado"),
+                            ("otro", "Otro"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("external_url", models.URLField(max_length=500)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "call",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="documents",
+                        to="calls.call",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Call Document',
-                'verbose_name_plural': 'Call Documents',
-                'db_table': 'calls_calldocument',
-                'ordering': ['call', '-created_at'],
+                "verbose_name": "Call Document",
+                "verbose_name_plural": "Call Documents",
+                "db_table": "calls_calldocument",
+                "ordering": ["call", "-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='CallProject',
+            name="CallProject",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('linked_at', models.DateTimeField(auto_now_add=True)),
-                ('call', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='call_projects', to='calls.call')),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='call_associations', to='projects.project')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("linked_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "call",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="call_projects",
+                        to="calls.call",
+                    ),
+                ),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="call_associations",
+                        to="projects.project",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Call Project',
-                'verbose_name_plural': 'Call Projects',
-                'db_table': 'calls_callproject',
-                'ordering': ['call', 'linked_at'],
+                "verbose_name": "Call Project",
+                "verbose_name_plural": "Call Projects",
+                "db_table": "calls_callproject",
+                "ordering": ["call", "linked_at"],
             },
         ),
         migrations.CreateModel(
-            name='CallStateLog',
+            name="CallStateLog",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('from_state', models.CharField(max_length=30)),
-                ('to_state', models.CharField(max_length=30)),
-                ('reason', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('call', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='state_logs', to='calls.call')),
-                ('triggered_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='call_state_logs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("from_state", models.CharField(max_length=30)),
+                ("to_state", models.CharField(max_length=30)),
+                ("reason", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "call",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="state_logs",
+                        to="calls.call",
+                    ),
+                ),
+                (
+                    "triggered_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="call_state_logs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Call State Log',
-                'verbose_name_plural': 'Call State Logs',
-                'db_table': 'calls_callstatelog',
-                'ordering': ['call', '-created_at'],
+                "verbose_name": "Call State Log",
+                "verbose_name_plural": "Call State Logs",
+                "db_table": "calls_callstatelog",
+                "ordering": ["call", "-created_at"],
             },
         ),
         migrations.AddIndex(
-            model_name='call',
-            index=models.Index(fields=['institution', 'status'], name='idx_call_inst_status'),
+            model_name="call",
+            index=models.Index(fields=["institution", "status"], name="idx_call_inst_status"),
         ),
         migrations.AddIndex(
-            model_name='call',
-            index=models.Index(fields=['call_type'], name='idx_call_type'),
+            model_name="call",
+            index=models.Index(fields=["call_type"], name="idx_call_type"),
         ),
         migrations.AddIndex(
-            model_name='call',
-            index=models.Index(fields=['submission_start'], name='idx_call_submission_start'),
+            model_name="call",
+            index=models.Index(fields=["submission_start"], name="idx_call_submission_start"),
         ),
         migrations.AddConstraint(
-            model_name='call',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('call_type', 'internal'), ('external_entity', '')), models.Q(('call_type', 'internal'), _negated=True), _connector='OR'), name='check_internal_no_entity'),
+            model_name="call",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    models.Q(("call_type", "internal"), ("external_entity", "")),
+                    models.Q(("call_type", "internal"), _negated=True),
+                    _connector="OR",
+                ),
+                name="check_internal_no_entity",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='call',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('call_type', 'external'), models.Q(('external_entity', ''), _negated=True)), models.Q(('call_type', 'external'), _negated=True), _connector='OR'), name='check_external_has_entity'),
+            model_name="call",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    models.Q(
+                        ("call_type", "external"), models.Q(("external_entity", ""), _negated=True)
+                    ),
+                    models.Q(("call_type", "external"), _negated=True),
+                    _connector="OR",
+                ),
+                name="check_external_has_entity",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='call',
-            constraint=models.CheckConstraint(condition=models.Q(('submission_end__isnull', True), ('submission_start__isnull', True), ('submission_end__gte', models.F('submission_start')), _connector='OR'), name='check_submission_dates'),
+            model_name="call",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("submission_end__isnull", True),
+                    ("submission_start__isnull", True),
+                    ("submission_end__gte", models.F("submission_start")),
+                    _connector="OR",
+                ),
+                name="check_submission_dates",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='call',
-            constraint=models.CheckConstraint(condition=models.Q(('evaluation_end__isnull', True), ('evaluation_start__isnull', True), ('evaluation_end__gte', models.F('evaluation_start')), _connector='OR'), name='check_evaluation_dates'),
+            model_name="call",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("evaluation_end__isnull", True),
+                    ("evaluation_start__isnull", True),
+                    ("evaluation_end__gte", models.F("evaluation_start")),
+                    _connector="OR",
+                ),
+                name="check_evaluation_dates",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='callproject',
-            constraint=models.UniqueConstraint(fields=('project',), name='unique_call_per_project'),
+            model_name="callproject",
+            constraint=models.UniqueConstraint(fields=("project",), name="unique_call_per_project"),
         ),
         migrations.AddIndex(
-            model_name='callstatelog',
-            index=models.Index(fields=['call', '-created_at'], name='idx_call_statelog_time'),
+            model_name="callstatelog",
+            index=models.Index(fields=["call", "-created_at"], name="idx_call_statelog_time"),
         ),
     ]

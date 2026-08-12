@@ -124,8 +124,7 @@ class TestURLNameCoverage:
 
         names = _collect_names(urls.urlpatterns)
         assert names == self.EXPECTED_NAMES, (
-            f"Missing: {self.EXPECTED_NAMES - names}\n"
-            f"Extra: {names - self.EXPECTED_NAMES}"
+            f"Missing: {self.EXPECTED_NAMES - names}\nExtra: {names - self.EXPECTED_NAMES}"
         )
 
     def test_22_total_url_names(self):

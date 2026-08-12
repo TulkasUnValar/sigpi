@@ -4,15 +4,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0004_rls_policies'),
+        ("accounts", "0004_rls_policies"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='auditevent',
-            name='event_type',
-            field=models.CharField(choices=[('LOGIN', 'Login'), ('LOGOUT', 'Logout'), ('FAILED_LOGIN', 'Failed Login'), ('INSTITUTION_SWITCH', 'Institution Switch'), ('ROLE_CHANGE', 'Role Change'), ('PERMISSION_DENIED', 'Permission Denied'), ('PROGRESS_STATE_CHANGE', 'Progress State Change'), ('REPORT_GENERATED', 'Report Generated'), ('REPORT_APPROVED', 'Report Approved')], db_index=True, max_length=50),
+            model_name="auditevent",
+            name="event_type",
+            field=models.CharField(
+                choices=[
+                    ("LOGIN", "Login"),
+                    ("LOGOUT", "Logout"),
+                    ("FAILED_LOGIN", "Failed Login"),
+                    ("INSTITUTION_SWITCH", "Institution Switch"),
+                    ("ROLE_CHANGE", "Role Change"),
+                    ("PERMISSION_DENIED", "Permission Denied"),
+                    ("PROGRESS_STATE_CHANGE", "Progress State Change"),
+                    ("REPORT_GENERATED", "Report Generated"),
+                    ("REPORT_APPROVED", "Report Approved"),
+                ],
+                db_index=True,
+                max_length=50,
+            ),
         ),
     ]

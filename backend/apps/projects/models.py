@@ -13,6 +13,7 @@ Spec reference:   openspec/changes/projects/spec.md
 
 GREEN PHASE: Full model implementation — tests must pass.
 """
+
 import uuid
 
 from django.core.exceptions import ValidationError
@@ -184,9 +185,7 @@ class Project(models.Model):
 
         # RN-008: center non-null.
         if not self.center_id:
-            errors.setdefault("center", []).append(
-                "Center is required."
-            )
+            errors.setdefault("center", []).append("Center is required.")
 
         # RN-013: date validation.
         if self.start_date and self.estimated_end_date:
@@ -203,16 +202,12 @@ class Project(models.Model):
         # Hierarchy integrity: group must belong to the same center chain.
         if self.group_id and self.center_id:
             if self.group.center_id != self.center_id:
-                errors.setdefault("group", []).append(
-                    "Group must belong to the same center chain."
-                )
+                errors.setdefault("group", []).append("Group must belong to the same center chain.")
 
         # Hierarchy integrity: line must belong to the same center chain.
         if self.line_id and self.center_id:
             if self.line.group.center_id != self.center_id:
-                errors.setdefault("line", []).append(
-                    "Line must belong to the same center chain."
-                )
+                errors.setdefault("line", []).append("Line must belong to the same center chain.")
 
         if errors:
             raise ValidationError(errors)
@@ -227,21 +222,15 @@ class Project(models.Model):
     def submit(self):
         """borrador → enviado."""
 
-    @transition(
-        field=status, source=ProjectStatus.ENVIADO, target=ProjectStatus.EN_REVISION
-    )
+    @transition(field=status, source=ProjectStatus.ENVIADO, target=ProjectStatus.EN_REVISION)
     def accept_review(self):
         """enviado → en_revision."""
 
-    @transition(
-        field=status, source=ProjectStatus.EN_REVISION, target=ProjectStatus.APROBADO
-    )
+    @transition(field=status, source=ProjectStatus.EN_REVISION, target=ProjectStatus.APROBADO)
     def approve(self):
         """en_revision → aprobado."""
 
-    @transition(
-        field=status, source=ProjectStatus.EN_REVISION, target=ProjectStatus.OBSERVADO
-    )
+    @transition(field=status, source=ProjectStatus.EN_REVISION, target=ProjectStatus.OBSERVADO)
     def observe(self):
         """en_revision → observado."""
 
@@ -253,21 +242,15 @@ class Project(models.Model):
     def return_to_draft(self):
         """en_revision | observado → borrador."""
 
-    @transition(
-        field=status, source=ProjectStatus.EN_REVISION, target=ProjectStatus.RECHAZADO
-    )
+    @transition(field=status, source=ProjectStatus.EN_REVISION, target=ProjectStatus.RECHAZADO)
     def reject(self):
         """en_revision → rechazado (terminal)."""
 
-    @transition(
-        field=status, source=ProjectStatus.OBSERVADO, target=ProjectStatus.ENVIADO
-    )
+    @transition(field=status, source=ProjectStatus.OBSERVADO, target=ProjectStatus.ENVIADO)
     def resubmit(self):
         """observado → enviado."""
 
-    @transition(
-        field=status, source=ProjectStatus.APROBADO, target=ProjectStatus.EN_EJECUCION
-    )
+    @transition(field=status, source=ProjectStatus.APROBADO, target=ProjectStatus.EN_EJECUCION)
     def start_execution(self):
         """aprobado → en_ejecucion."""
 
@@ -303,9 +286,7 @@ class Project(models.Model):
     def initiate_closure(self):
         """finalizado → en_cierre."""
 
-    @transition(
-        field=status, source=ProjectStatus.EN_CIERRE, target=ProjectStatus.CERRADO
-    )
+    @transition(field=status, source=ProjectStatus.EN_CIERRE, target=ProjectStatus.CERRADO)
     def close(self):
         """en_cierre → cerrado (terminal)."""
 
