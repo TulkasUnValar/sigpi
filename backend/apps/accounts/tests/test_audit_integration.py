@@ -22,10 +22,11 @@ from django.test import Client
 from django.urls import reverse
 
 from apps.accounts.audit import AuditEvent, AuditEventType
-from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.models import InstitutionMembership, User
 
 # Module-level import so mock paths resolve correctly
 from apps.accounts.tasks import sync_keycloak_roles  # noqa: F401
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution
 
 # ──────────────────────────────────────────────────────────
@@ -48,7 +49,7 @@ def local_user(db):
         password="testpass123",
     )
     inst = Institution.objects.create(name="Universidad Test", code="UTEST")
-    role = Role.objects.get(name="Investigador")
+    role = get_role("Investigador")
     InstitutionMembership.objects.create(
         user=user,
         institution=inst,
@@ -73,7 +74,7 @@ def other_institution(db):
 @pytest.fixture
 def researcher_role(db):
     """The default researcher role."""
-    return Role.objects.get(name="Investigador")
+    return get_role("Investigador")
 
 
 # ──────────────────────────────────────────────────────────

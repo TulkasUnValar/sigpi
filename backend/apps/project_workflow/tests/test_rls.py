@@ -26,6 +26,8 @@ from django.db.migrations.loader import MigrationLoader
 from django.test import Client
 from django.urls import reverse
 
+from apps.accounts.tests._helpers import get_role
+
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
 # ──────────────────────────────────────────────
@@ -251,7 +253,7 @@ class TestApplicationLevelTenantScoping:
     """Verify ViewSet querysets scope by institution even on SQLite."""
 
     def test_template_queryset_scoped_by_institution(self):
-        from apps.accounts.models import InstitutionMembership, Role, User
+        from apps.accounts.models import InstitutionMembership, User
         from apps.institutions.models import Institution
         from apps.project_workflow.models import WorkflowTemplate
 
@@ -262,7 +264,7 @@ class TestApplicationLevelTenantScoping:
         WorkflowTemplate.objects.create(institution=inst_b, name="B-Template")
 
         user = User.objects.create_user(email="u@test.edu", password="p")
-        role = Role.objects.get(name="Admin Institucional")
+        role = get_role("Admin Institucional")
         InstitutionMembership.objects.create(
             user=user, institution=inst_a, role=role, is_active=True
         )
@@ -281,7 +283,7 @@ class TestApplicationLevelTenantScoping:
         assert "B-Template" not in names
 
     def test_instance_queryset_scoped_by_institution(self):
-        from apps.accounts.models import InstitutionMembership, Role, User
+        from apps.accounts.models import InstitutionMembership, User
         from apps.institutions.models import Institution
         from apps.project_workflow.models import WorkflowInstance, WorkflowTemplate
 
@@ -300,7 +302,7 @@ class TestApplicationLevelTenantScoping:
         )
 
         user = User.objects.create_user(email="u2@test.edu", password="p")
-        role = Role.objects.get(name="Director de Centro")
+        role = get_role("Director de Centro")
         InstitutionMembership.objects.create(
             user=user, institution=inst_a, role=role, is_active=True
         )

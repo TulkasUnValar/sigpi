@@ -18,7 +18,8 @@ from apps.accounts.backends import (
     AccountLinkingError,
     SIGPIOIDCBackend,
 )
-from apps.accounts.models import Role, User
+from apps.accounts.models import User
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution, ResearchCenter
 
 # ──────────────────────────────────────────────────────────
@@ -41,9 +42,9 @@ def _make_claims(**overrides) -> dict:
     }
 
 
-def _get_role(name: str) -> Role:
+def _get_role(name: str):
     """Get a seeded role by name."""
-    return Role.objects.get(name=name)
+    return get_role(name)
 
 
 # ──────────────────────────────────────────────────────────

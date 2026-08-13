@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
 from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution, ResearchCenter
 
 # ──────────────────────────────────────────────
@@ -28,7 +29,7 @@ from apps.institutions.models import Institution, ResearchCenter
 
 def _get_role(name: str) -> Role:
     """Get a seeded role by name. Roles are created by seed_roles migration."""
-    return Role.objects.get(name=name)
+    return get_role(name)
 
 
 def _get_or_create_role(name: str, level: int, keycloak_role_name: str = "") -> Role:

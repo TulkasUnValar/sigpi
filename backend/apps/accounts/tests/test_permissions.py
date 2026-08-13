@@ -34,6 +34,7 @@ from apps.accounts.permissions import (
     IsSameInstitution,
     IsSuperAdmin,
 )
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution, ResearchCenter
 
 # ──────────────────────────────────────────────────────────
@@ -48,7 +49,7 @@ def institution(db) -> Institution:
 
 @pytest.fixture
 def researcher_role(db) -> Role:
-    return Role.objects.get(name="Investigador")
+    return get_role("Investigador")
 
 
 @pytest.fixture
@@ -145,7 +146,7 @@ class TestHasRoleLevelOrHigher:
         user = User.objects.create_user(
             email="admin@test.com", auth_source="local", password="pass"
         )
-        role_admin = Role.objects.get(name="Admin Institucional")
+        role_admin = get_role("Admin Institucional")
         membership = make_membership(user, institution, role_admin)
         request = make_mock_request(
             user=user,
@@ -158,7 +159,7 @@ class TestHasRoleLevelOrHigher:
     def test_researcher_cannot_access_admin_level(self, db, institution):
         """Researcher (level 4) cannot access admin level (2)."""
         user = User.objects.create_user(email="res@test.com", auth_source="local", password="pass")
-        role_researcher = Role.objects.get(name="Investigador")
+        role_researcher = get_role("Investigador")
         membership = make_membership(user, institution, role_researcher)
         request = make_mock_request(
             user=user,
@@ -177,7 +178,7 @@ class TestHasRoleLevelOrHigher:
 
     def test_no_institution_returns_false(self, db, user_with_membership):
         """User with membership but no active institution returns false."""
-        _role_admin = Role.objects.get(name="Admin Institucional")
+        _role_admin = get_role("Admin Institucional")
         user = user_with_membership
         # user has researcher membership but no active institution
         request = make_mock_request(user=user, institution_id=None)
@@ -211,7 +212,7 @@ class TestIsSuperAdmin:
     def test_superadmin_role_has_permission(self, db, institution):
         """User with Superadmin role has permission."""
         user = User.objects.create_user(email="sa@test.com", auth_source="local", password="pass")
-        role_sa = Role.objects.get(name="Superadmin")
+        role_sa = get_role("Superadmin")
         membership = make_membership(user, institution, role_sa)
         request = make_mock_request(
             user=user,
@@ -225,7 +226,7 @@ class TestIsSuperAdmin:
         user = User.objects.create_user(
             email="normal@test.com", auth_source="local", password="pass"
         )
-        role_researcher = Role.objects.get(name="Investigador")
+        role_researcher = get_role("Investigador")
         membership = make_membership(user, institution, role_researcher)
         request = make_mock_request(
             user=user,
@@ -253,7 +254,7 @@ class TestIsInstitutionAdmin:
         user = User.objects.create_user(
             email="admin@test.com", auth_source="local", password="pass"
         )
-        role_admin = Role.objects.get(name="Admin Institucional")
+        role_admin = get_role("Admin Institucional")
         membership = make_membership(user, institution, role_admin)
         request = make_mock_request(
             user=user,
@@ -265,7 +266,7 @@ class TestIsInstitutionAdmin:
     def test_superadmin_role_has_permission(self, db, institution):
         """Superadmin (higher role) also has admin permission."""
         user = User.objects.create_user(email="sa@test.com", auth_source="local", password="pass")
-        role_sa = Role.objects.get(name="Superadmin")
+        role_sa = get_role("Superadmin")
         membership = make_membership(user, institution, role_sa)
         request = make_mock_request(
             user=user,
@@ -277,7 +278,7 @@ class TestIsInstitutionAdmin:
     def test_director_denied(self, db, institution):
         """Director de Centro (level 3) is denied admin access."""
         user = User.objects.create_user(email="dir@test.com", auth_source="local", password="pass")
-        role_dir = Role.objects.get(name="Director de Centro")
+        role_dir = get_role("Director de Centro")
         membership = make_membership(user, institution, role_dir)
         request = make_mock_request(
             user=user,
@@ -289,7 +290,7 @@ class TestIsInstitutionAdmin:
     def test_researcher_denied(self, db, institution):
         """Researcher is denied admin access."""
         user = User.objects.create_user(email="res@test.com", auth_source="local", password="pass")
-        role_res = Role.objects.get(name="Investigador")
+        role_res = get_role("Investigador")
         membership = make_membership(user, institution, role_res)
         request = make_mock_request(
             user=user,
@@ -321,7 +322,7 @@ class TestIsCenterDirector:
     def test_director_has_permission(self, db, institution, researcher_role):
         """Director with matching center has object permission."""
         user = User.objects.create_user(email="dir@test.com", auth_source="local", password="pass")
-        role_dir = Role.objects.get(name="Director de Centro")
+        role_dir = get_role("Director de Centro")
         center = ResearchCenter.objects.create(name="Centro A", institution=institution)
         membership = make_membership(user, institution, role_dir, centers=[center])
         request = make_mock_request(
@@ -341,7 +342,7 @@ class TestIsCenterDirector:
     def test_director_wrong_center_denied(self, db, institution):
         """Director assigned to center A cannot access center B."""
         user = User.objects.create_user(email="dir@test.com", auth_source="local", password="pass")
-        role_dir = Role.objects.get(name="Director de Centro")
+        role_dir = get_role("Director de Centro")
         center_a = ResearchCenter.objects.create(
             name="Centro A", code="CA", institution=institution
         )
@@ -365,7 +366,7 @@ class TestIsCenterDirector:
     def test_researcher_denied_director_access(self, db, institution):
         """Researcher cannot access director-level resources."""
         user = User.objects.create_user(email="res@test.com", auth_source="local", password="pass")
-        role_res = Role.objects.get(name="Investigador")
+        role_res = get_role("Investigador")
         center = ResearchCenter.objects.create(name="Centro A", institution=institution)
         membership = make_membership(user, institution, role_res, centers=[center])
         request = make_mock_request(
@@ -395,7 +396,7 @@ class TestIsCenterDirector:
         user = User.objects.create_user(
             email="admin@test.com", auth_source="local", password="pass"
         )
-        role_admin = Role.objects.get(name="Admin Institucional")
+        role_admin = get_role("Admin Institucional")
         membership = make_membership(user, institution, role_admin)
         request = make_mock_request(
             user=user,
@@ -416,7 +417,7 @@ class TestIsResearcher:
     def test_researcher_has_permission(self, db, institution):
         """Researcher role has permission."""
         user = User.objects.create_user(email="res@test.com", auth_source="local", password="pass")
-        role_res = Role.objects.get(name="Investigador")
+        role_res = get_role("Investigador")
         membership = make_membership(user, institution, role_res)
         request = make_mock_request(
             user=user,
@@ -431,7 +432,7 @@ class TestIsResearcher:
         Actually: level 1=highest, so level 4 > level 5.
         So Researcher can do what Evaluador can, but NOT vice versa."""
         user = User.objects.create_user(email="eval@test.com", auth_source="local", password="pass")
-        role_eval = Role.objects.get(name="Evaluador")
+        role_eval = get_role("Evaluador")
         membership = make_membership(user, institution, role_eval)
         request = make_mock_request(
             user=user,
@@ -443,7 +444,7 @@ class TestIsResearcher:
     def test_director_has_researcher_permission(self, db, institution):
         """Director (higher role) also has researcher permission."""
         user = User.objects.create_user(email="dir@test.com", auth_source="local", password="pass")
-        role_dir = Role.objects.get(name="Director de Centro")
+        role_dir = get_role("Director de Centro")
         membership = make_membership(user, institution, role_dir)
         request = make_mock_request(
             user=user,
@@ -455,7 +456,7 @@ class TestIsResearcher:
     def test_assistant_denied_researcher_access(self, db, institution):
         """Assistant (level 6) cannot access researcher-level resources."""
         user = User.objects.create_user(email="asst@test.com", auth_source="local", password="pass")
-        role_asst = Role.objects.get(name="Asistente")
+        role_asst = get_role("Asistente")
         membership = make_membership(user, institution, role_asst)
         request = make_mock_request(
             user=user,
@@ -476,7 +477,7 @@ class TestIsEvaluador:
     def test_evaluador_has_permission(self, db, institution):
         """Evaluador role has permission."""
         user = User.objects.create_user(email="eval@test.com", auth_source="local", password="pass")
-        role_eval = Role.objects.get(name="Evaluador")
+        role_eval = get_role("Evaluador")
         membership = make_membership(user, institution, role_eval)
         request = make_mock_request(
             user=user,
@@ -488,7 +489,7 @@ class TestIsEvaluador:
     def test_researcher_has_evaluador_permission(self, db, institution):
         """Researcher (higher role) also has evaluador permission."""
         user = User.objects.create_user(email="res@test.com", auth_source="local", password="pass")
-        role_res = Role.objects.get(name="Investigador")
+        role_res = get_role("Investigador")
         membership = make_membership(user, institution, role_res)
         request = make_mock_request(
             user=user,
@@ -500,7 +501,7 @@ class TestIsEvaluador:
     def test_assistant_denied(self, db, institution):
         """Assistant cannot access evaluador resources."""
         user = User.objects.create_user(email="asst@test.com", auth_source="local", password="pass")
-        role_asst = Role.objects.get(name="Asistente")
+        role_asst = get_role("Asistente")
         membership = make_membership(user, institution, role_asst)
         request = make_mock_request(
             user=user,
@@ -521,7 +522,7 @@ class TestIsAssistant:
     def test_assistant_has_permission(self, db, institution):
         """Assistant role has permission."""
         user = User.objects.create_user(email="asst@test.com", auth_source="local", password="pass")
-        role_asst = Role.objects.get(name="Asistente")
+        role_asst = get_role("Asistente")
         membership = make_membership(user, institution, role_asst)
         request = make_mock_request(
             user=user,
@@ -533,7 +534,7 @@ class TestIsAssistant:
     def test_auditor_denied(self, db, institution):
         """Auditor (level 7) cannot access assistant resources."""
         user = User.objects.create_user(email="aud@test.com", auth_source="local", password="pass")
-        role_aud = Role.objects.get(name="Auditor")
+        role_aud = get_role("Auditor")
         membership = make_membership(user, institution, role_aud)
         request = make_mock_request(
             user=user,
@@ -545,7 +546,7 @@ class TestIsAssistant:
     def test_evaluador_has_assistant_permission(self, db, institution):
         """Evaluador (higher) has assistant permission."""
         user = User.objects.create_user(email="eval@test.com", auth_source="local", password="pass")
-        role_eval = Role.objects.get(name="Evaluador")
+        role_eval = get_role("Evaluador")
         membership = make_membership(user, institution, role_eval)
         request = make_mock_request(
             user=user,
@@ -566,7 +567,7 @@ class TestIsAuditor:
     def test_auditor_get_has_permission(self, db, institution):
         """Auditor has permission on GET (safe method)."""
         user = User.objects.create_user(email="aud@test.com", auth_source="local", password="pass")
-        role_aud = Role.objects.get(name="Auditor")
+        role_aud = get_role("Auditor")
         membership = make_membership(user, institution, role_aud)
         request = make_mock_request(
             user=user,
@@ -579,7 +580,7 @@ class TestIsAuditor:
     def test_auditor_head_has_permission(self, db, institution):
         """Auditor has permission on HEAD (safe method)."""
         user = User.objects.create_user(email="aud@test.com", auth_source="local", password="pass")
-        role_aud = Role.objects.get(name="Auditor")
+        role_aud = get_role("Auditor")
         membership = make_membership(user, institution, role_aud)
         request = make_mock_request(
             user=user,
@@ -592,7 +593,7 @@ class TestIsAuditor:
     def test_auditor_post_denied(self, db, institution):
         """Auditor is denied on POST (unsafe method)."""
         user = User.objects.create_user(email="aud@test.com", auth_source="local", password="pass")
-        role_aud = Role.objects.get(name="Auditor")
+        role_aud = get_role("Auditor")
         membership = make_membership(user, institution, role_aud)
         request = make_mock_request(
             user=user,
@@ -605,7 +606,7 @@ class TestIsAuditor:
     def test_auditor_put_denied(self, db, institution):
         """Auditor is denied on PUT."""
         user = User.objects.create_user(email="aud@test.com", auth_source="local", password="pass")
-        role_aud = Role.objects.get(name="Auditor")
+        role_aud = get_role("Auditor")
         membership = make_membership(user, institution, role_aud)
         request = make_mock_request(
             user=user,
@@ -618,7 +619,7 @@ class TestIsAuditor:
     def test_auditor_delete_denied(self, db, institution):
         """Auditor is denied on DELETE."""
         user = User.objects.create_user(email="aud@test.com", auth_source="local", password="pass")
-        role_aud = Role.objects.get(name="Auditor")
+        role_aud = get_role("Auditor")
         membership = make_membership(user, institution, role_aud)
         request = make_mock_request(
             user=user,
@@ -631,7 +632,7 @@ class TestIsAuditor:
     def test_researcher_has_auditor_permission(self, db, institution):
         """Researcher (higher role) can read like an auditor."""
         user = User.objects.create_user(email="res@test.com", auth_source="local", password="pass")
-        role_res = Role.objects.get(name="Investigador")
+        role_res = get_role("Investigador")
         membership = make_membership(user, institution, role_res)
         request = make_mock_request(
             user=user,
@@ -820,7 +821,7 @@ class TestRoleHierarchy:
                 password="pass",
             )
             role_name = dict(self.ROLES_BY_LEVEL)[user_level]
-            role = Role.objects.get(name=role_name)
+            role = get_role(role_name)
             membership = make_membership(user, institution, role)
 
         request = make_mock_request(

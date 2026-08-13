@@ -29,7 +29,8 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.models import InstitutionMembership, User
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution, ResearchCenter
 from apps.project_workflow.models import (
     WorkflowAction,
@@ -94,17 +95,17 @@ def center(db, institution):
 
 @pytest.fixture
 def admin_role(db):
-    return Role.objects.get(name="Admin Institucional")
+    return get_role("Admin Institucional")
 
 
 @pytest.fixture
 def director_role(db):
-    return Role.objects.get(name="Director de Centro")
+    return get_role("Director de Centro")
 
 
 @pytest.fixture
 def researcher_role(db):
-    return Role.objects.get(name="Investigador")
+    return get_role("Investigador")
 
 
 @pytest.fixture
@@ -387,7 +388,7 @@ class TestWorkflowInstanceViewSet:
         other_user = User.objects.create_user(
             email="other@test.edu", auth_source="local", password="p"
         )
-        other_role = Role.objects.get(name="Director de Centro")
+        other_role = get_role("Director de Centro")
         other_membership = InstitutionMembership.objects.create(
             user=other_user, institution=institution, role=other_role, is_active=True
         )

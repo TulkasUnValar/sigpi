@@ -219,10 +219,15 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = False
 
 # ──────────────────────────────────────────────────────────
-# Session Configuration (Redis-backed in production, DB in test)
+# Test-only overrides (fast password hashing, DB sessions)
 # ──────────────────────────────────────────────────────────
 if os.environ.get("PYTEST_RUNNING") == "true":
     SESSION_ENGINE = "django.contrib.sessions.backends.db"
+    # Fast password hasher — PBKDF2 (720k iterations) makes create_user()
+    # take ~1s each. MD5 takes ~1ms. Only for tests; never in production.
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
 else:
     SESSION_ENGINE = "django.contrib.sessions.backends.cache"
     SESSION_CACHE_ALIAS = "default"

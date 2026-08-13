@@ -20,7 +20,8 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.models import InstitutionMembership, User
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution, ResearchCenter, ResearchGroup, ResearchLine
 from apps.products.models import ProductAttachment, ProductAuthor, ResearchProduct
 from apps.projects.models import Project
@@ -107,12 +108,12 @@ def line(db, group):
 
 @pytest.fixture
 def researcher_role(db):
-    return Role.objects.get(name="Investigador")
+    return get_role("Investigador")
 
 
 @pytest.fixture
 def admin_role(db):
-    return Role.objects.get(name="Admin Institucional")
+    return get_role("Admin Institucional")
 
 
 @pytest.fixture

@@ -24,10 +24,11 @@ dev = [
     "pytest-asyncio>=0.24",
     "pytest-cov>=5.0",
     "ruff>=0.6",
-    "mypy>=1.11",
+    "pyright>=1.1",
     "factory-boy>=3.3",
     "responses>=0.25",
     "pytest-env>=1.1",
+    "pytest-xdist>=3.6",
 ]
 
 [tool.pytest.ini_options]
@@ -58,8 +59,20 @@ select = ["E", "F", "I", "N", "W", "UP"]
 exclude = ["*/migrations/*"]
 per-file-ignores = { "*/tests/*" = ["E501"] }
 
-[tool.mypy]
-python_version = "3.12"
-strict = false
-ignore_missing_imports = true
-plugins = []
+# NOTE: mypy is temporarily disabled due to an upstream crash with
+# Python 3.14 on Windows (sqlite3 lock error). Use pyright instead.
+# [tool.mypy]
+# python_version = "3.12"
+# strict = false
+# ignore_missing_imports = true
+# plugins = []
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+exclude = ["**/migrations", ".venv-wsl", "**/node_modules"]
+venvPath = "."
+venv = ".venv-wsl"
+reportMissingImports = false
+reportMissingTypeStubs = false
+useLibraryCodeForTypes = true

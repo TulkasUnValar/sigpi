@@ -17,7 +17,8 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.models import InstitutionMembership, User
+from apps.accounts.tests._helpers import get_role
 from apps.calls.models import Call, CallDocument, CallProject, CallStateLog
 from apps.institutions.models import Institution
 
@@ -47,27 +48,27 @@ def institution(db):
 
 @pytest.fixture
 def superadmin_role(db):
-    return Role.objects.get(name="Superadmin")
+    return get_role("Superadmin")
 
 
 @pytest.fixture
 def admin_role(db):
-    return Role.objects.get(name="Admin Institucional")
+    return get_role("Admin Institucional")
 
 
 @pytest.fixture
 def director_role(db):
-    return Role.objects.get(name="Director de Centro")
+    return get_role("Director de Centro")
 
 
 @pytest.fixture
 def researcher_role(db):
-    return Role.objects.get(name="Investigador")
+    return get_role("Investigador")
 
 
 @pytest.fixture
 def auditor_role(db):
-    return Role.objects.get(name="Auditor")
+    return get_role("Auditor")
 
 
 @pytest.fixture

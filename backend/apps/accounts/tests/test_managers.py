@@ -17,7 +17,8 @@ from rest_framework.request import Request
 
 # ── RED: These imports WILL fail until managers.py is created ──
 from apps.accounts.managers import TenantScopedQuerySet
-from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.models import InstitutionMembership, User
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution
 
 # ──────────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ class TestTenantScopedQuerySet:
 
         # Create users in each institution
         user_a = User.objects.create_user(email="a@test.com", auth_source="local", password="pass")
-        role = Role.objects.get(name="Investigador")
+        role = get_role("Investigador")
         InstitutionMembership.objects.create(
             user=user_a, institution=institution, role=role, is_active=True
         )
@@ -88,7 +89,7 @@ class TestTenantScopedQuerySet:
         other_inst = Institution.objects.create(name="Other Inst", code="OTHER")
 
         user_a = User.objects.create_user(email="a@test.com", auth_source="local", password="pass")
-        role = Role.objects.get(name="Investigador")
+        role = get_role("Investigador")
         InstitutionMembership.objects.create(
             user=user_a, institution=institution, role=role, is_active=True
         )
@@ -114,7 +115,7 @@ class TestTenantScopedQuerySet:
         """When no institution_id is set, returns unfiltered queryset."""
         inst = Institution.objects.create(name="Inst", code="INST")
         user = User.objects.create_user(email="u@test.com", auth_source="local", password="pass")
-        role = Role.objects.get(name="Investigador")
+        role = get_role("Investigador")
         InstitutionMembership.objects.create(user=user, institution=inst, role=role, is_active=True)
 
         request = make_request(institution_id=None)
@@ -140,7 +141,7 @@ class TestTenantScopedQuerySet:
         user_in = User.objects.create_user(
             email="in@test.com", auth_source="local", password="pass"
         )
-        role = Role.objects.get(name="Investigador")
+        role = get_role("Investigador")
         InstitutionMembership.objects.create(
             user=user_in, institution=institution, role=role, is_active=True
         )

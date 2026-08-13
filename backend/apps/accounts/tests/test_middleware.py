@@ -17,7 +17,8 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.models import InstitutionMembership, User
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution
 
 # ──────────────────────────────────────────────────────────
@@ -36,8 +37,8 @@ def other_institution(db) -> Institution:
 
 
 @pytest.fixture
-def researcher_role(db) -> Role:
-    return Role.objects.get(name="Investigador")
+def researcher_role(db):
+    return get_role("Investigador")
 
 
 @pytest.fixture

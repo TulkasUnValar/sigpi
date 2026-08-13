@@ -16,7 +16,8 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from apps.accounts.models import InstitutionMembership, Role, User
+from apps.accounts.models import InstitutionMembership, User
+from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution, ResearchCenter
 from apps.projects.models import Project
 from apps.researchers.models import Researcher
@@ -85,7 +86,7 @@ class TestProductsProjectStateGuard:
 
     @pytest.fixture
     def admin_user(self, db, institution):
-        role = Role.objects.get(name="Admin Institucional")
+        role = get_role("Admin Institucional")
         user = User.objects.create_user(email="admin@test.edu", auth_source="local", password="p")
         InstitutionMembership.objects.create(
             user=user, institution=institution, role=role, is_active=True
