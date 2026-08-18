@@ -96,6 +96,13 @@ secrets/
 # ── Frontend coverage ─────────────────────────────────────
 frontend/coverage/
 
+# ── Frontend source dirs named lib/ (the Python `lib/` rule above
+#    is for build artifacts; frontend/lib and its tests are source) ──
+!frontend/lib/
+!frontend/lib/**
+!frontend/__tests__/lib/
+!frontend/__tests__/lib/**
+
 # ── OpenSpec / SDD (archive only — active changes are ephemeral)
 # We keep openspec/ in git, but coverage artifacts inside it are excluded.
 openspec/**/.coverage

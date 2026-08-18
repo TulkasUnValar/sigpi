@@ -1,0 +1,39 @@
+/**
+ * TanStack Query key factories.
+ *
+ * Every server-data key is scoped by the active institution so that
+ * switching institution can invalidate all scoped queries at once.
+ *
+ * Design (server-state): centralized key factories for `projects`,
+ * `advances`, and `dashboard`.
+ */
+
+export const queryKeys = {
+  projects: {
+    all: ["projects"] as const,
+    lists: () => [...queryKeys.projects.all, "list"] as const,
+    list: (institutionId: string | null, filters: Record<string, unknown> = {}) =>
+      [...queryKeys.projects.lists(), institutionId, filters] as const,
+    details: () => [...queryKeys.projects.all, "detail"] as const,
+    detail: (institutionId: string | null, id: string) =>
+      [...queryKeys.projects.details(), institutionId, id] as const,
+  },
+
+  advances: {
+    all: ["advances"] as const,
+    lists: () => [...queryKeys.advances.all, "list"] as const,
+    list: (institutionId: string | null, projectId?: string) =>
+      [...queryKeys.advances.lists(), institutionId, projectId ?? "all"] as const,
+    details: () => [...queryKeys.advances.all, "detail"] as const,
+    detail: (institutionId: string | null, id: string) =>
+      [...queryKeys.advances.details(), institutionId, id] as const,
+  },
+
+  dashboard: {
+    all: ["dashboard"] as const,
+    projects: (institutionId: string | null) =>
+      [...queryKeys.dashboard.all, "projects", institutionId] as const,
+    progress: (institutionId: string | null) =>
+      [...queryKeys.dashboard.all, "progress", institutionId] as const,
+  },
+} as const;
