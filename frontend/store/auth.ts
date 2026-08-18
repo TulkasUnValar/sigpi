@@ -8,6 +8,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as api from "@/lib/api";
+import { getQueryClient } from "@/lib/query-client";
 
 // Re-export types for consumers
 export type { AuthUser, Membership, SwitchInstitutionResponse } from "@/lib/api";
@@ -184,6 +185,10 @@ export const useAuthStore = create<AuthStore>()(
             })),
             isLoading: false,
           });
+
+          // Institution changed — clear all institution-scoped server cache
+          // so the next screens refetch for the new institution.
+          getQueryClient()?.clear();
         } catch (error) {
           set({ isLoading: false });
           throw error;

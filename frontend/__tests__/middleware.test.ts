@@ -92,9 +92,38 @@ describe("middleware", () => {
       const res = middleware(req as never);
       expect(res.status).toBe(307);
     });
+
+    it("redirects /projects to /login", () => {
+      const req = createMockRequest("/projects");
+      const res = middleware(req as never);
+      expect(res.status).toBe(307);
+    });
+
+    it("redirects /projects/new to /login", () => {
+      const req = createMockRequest("/projects/new");
+      const res = middleware(req as never);
+      expect(res.status).toBe(307);
+    });
+
+    it("redirects nested /projects/{id}/advances to /login", () => {
+      const req = createMockRequest("/projects/abc-123/advances");
+      const res = middleware(req as never);
+      expect(res.status).toBe(307);
+    });
   });
 
   describe("protected routes — with session", () => {
+    it("allows /projects with session cookie", () => {
+      const req = createMockRequest("/projects", { sessionid: "abc123" });
+      const res = middleware(req as never);
+      expect(res.status).toBe(200);
+    });
+
+    it("allows nested /projects/{id}/advances with session cookie", () => {
+      const req = createMockRequest("/projects/abc-123/advances", { sessionid: "abc123" });
+      const res = middleware(req as never);
+      expect(res.status).toBe(200);
+    });
     it("allows /me with session cookie", () => {
       const req = createMockRequest("/me", { sessionid: "abc123" });
       const res = middleware(req as never);

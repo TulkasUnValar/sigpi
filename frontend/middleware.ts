@@ -12,7 +12,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /** Paths that require authentication. */
-const PROTECTED_PREFIXES = ["/me", "/switch-institution", "/dashboard"];
+const PROTECTED_PREFIXES = [
+  "/me",
+  "/switch-institution",
+  "/dashboard",
+  "/projects",
+];
 
 /** Paths that are always public (no redirect needed). */
 const PUBLIC_EXACT = ["/", "/login", "/logout"];

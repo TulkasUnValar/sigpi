@@ -1,19 +1,29 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { AppProviders } from "@/components/providers/AppProviders";
+import { Toaster } from "@/components/shared/Toaster";
+import "./globals.css";
+
 export const metadata: Metadata = {
-  title: "SIGPI — Authentication",
-  description: "Sistema de Información para la Gestión de Proyectos de Investigación",
+  title: "SIGPI",
+  description:
+    "Sistema de Información para la Gestión de Proyectos de Investigación",
 };
 
 /**
- * Root layout for the auth section.
- * Wraps all pages with minimal global styles and the auth context.
+ * Root layout — wraps all pages with QueryClientProvider and ThemeProvider
+ * so server data and theme are available across the authenticated shell.
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="es" suppressHydrationWarning>
+      <body>
+        <AppProviders>
+          {children}
+          <Toaster />
+        </AppProviders>
+      </body>
     </html>
   );
 }

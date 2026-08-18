@@ -26,6 +26,15 @@ jest.mock("@/lib/api", () => ({
   API_BASE: "http://localhost:8000",
 }));
 
+// ── Mock the QueryClient cache invalidator ───────────────
+const mockClear = jest.fn();
+jest.mock("@/lib/query-client", () => ({
+  getQueryClient: () => ({
+    clear: mockClear,
+    invalidateQueries: jest.fn(),
+  }),
+}));
+
 import * as api from "@/lib/api";
 
 // ── Fixtures ─────────────────────────────────────────────
@@ -317,6 +326,17 @@ describe("useAuthStore.switchInstitution", () => {
     // State should remain unchanged from login
     expect(getStore().activeInstitution?.id).toBe("inst-1");
     expect(getStore().roles).toEqual(["researcher"]);
+  });
+
+  it("clears the query cache when switching institution", async () => {
+    (api.switchInstitution as jest.Mock).mockResolvedValue(mockSwitchResponse);
+
+    await act(async () => {
+      await getStore().switchInstitution("inst-2");
+    });
+
+    // Switching institution must clear all institution-scoped queries.
+    expect(mockClear).toHaveBeenCalled();
   });
 });
 
