@@ -11,12 +11,17 @@ describe("OIDCButton", () => {
 
   beforeAll(() => {
     // window.location.href is not normally writable in jsdom
-    delete (window as Record<string, unknown>).location;
-    window.location = { href: "" } as Location;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { href: "" } as Location,
+    });
   });
 
   afterAll(() => {
-    window.location = originalLocation;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
   });
 
   beforeEach(() => {

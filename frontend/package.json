@@ -57,5 +57,10 @@
     "tailwindcss-animate": "^1.0.7",
     "ts-jest": "^29.2.0",
     "typescript": "^5.7.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

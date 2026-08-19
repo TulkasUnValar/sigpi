@@ -10,10 +10,6 @@ import {
   useAuthStore,
   type AuthStore,
   type AuthUser,
-  type Membership,
-  type Institution,
-  type Role,
-  type Center,
 } from "@/store/auth";
 
 // ── Mock the API module ──────────────────────────────────

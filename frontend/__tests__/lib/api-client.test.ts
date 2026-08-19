@@ -186,7 +186,7 @@ describe("api error handling", () => {
     mockFetch.mockResolvedValue({
       ok: true,
       status: 204,
-      json: async () => {
+      json: async (): Promise<unknown> => {
         throw new SyntaxError("Unexpected end of JSON input");
       },
       headers: new Headers(),

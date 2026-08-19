@@ -35,7 +35,7 @@ jest.mock("@/components/OIDCButton", () => ({
 import { useAuthStore } from "@/store/auth";
 import LoginPage from "@/app/login/page";
 
-const mockedUseAuthStore = useAuthStore as jest.Mock;
+const mockedUseAuthStore = useAuthStore as unknown as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();

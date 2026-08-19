@@ -31,7 +31,6 @@ function createMockRequest(
 }
 
 // ── Mock next/server BEFORE importing middleware ─────────
-const mockNext = jest.fn();
 const mockRedirect = jest.fn();
 
 jest.mock("next/server", () => ({

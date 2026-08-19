@@ -103,6 +103,9 @@ frontend/coverage/
 !frontend/__tests__/lib/
 !frontend/__tests__/lib/**
 
+# ── Frontend build artifacts ─────────────────────────────
+*.tsbuildinfo
+
 # ── OpenSpec / SDD (archive only — active changes are ephemeral)
 # We keep openspec/ in git, but coverage artifacts inside it are excluded.
 openspec/**/.coverage

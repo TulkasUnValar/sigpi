@@ -9,7 +9,6 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 
 // Mock next/navigation (Link/usePathname) and next/link.
 const mockPush = jest.fn();
@@ -23,7 +22,14 @@ jest.mock("next/navigation", () => ({
 jest.mock("next/link", () => {
   return {
     __esModule: true,
-    default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    default: ({
+      href,
+      children,
+      ...rest
+    }: {
+      href: string | { pathname: string };
+      children: React.ReactNode;
+    }) => (
       <a href={typeof href === "string" ? href : href.pathname} {...rest}>
         {children}
       </a>

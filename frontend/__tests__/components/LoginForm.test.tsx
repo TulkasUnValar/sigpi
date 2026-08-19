@@ -22,7 +22,7 @@ jest.mock("@/store/auth", () => ({
 import { useAuthStore } from "@/store/auth";
 import LoginForm from "@/components/LoginForm";
 
-const mockedUseAuthStore = useAuthStore as jest.Mock;
+const mockedUseAuthStore = useAuthStore as unknown as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();

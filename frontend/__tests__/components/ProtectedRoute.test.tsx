@@ -17,7 +17,7 @@ jest.mock("@/store/auth", () => ({
 import { useAuthStore } from "@/store/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-const mockedStore = useAuthStore as jest.Mock;
+const mockedStore = useAuthStore as unknown as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
