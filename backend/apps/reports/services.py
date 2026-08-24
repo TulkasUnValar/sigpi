@@ -174,12 +174,18 @@ class ReportRenderer:
         members = project.members.all()
         progress_reports = project.progress_reports.order_by("-created_at")
 
+        # RN-022: conditional budget summary (absent/None when no Budget).
+        from apps.budgets.services import BudgetSummaryService
+
+        budget_summary = BudgetSummaryService.for_budget(project)
+
         return {
             "institution": project.institution,
             "report_title": f"Project Report: {project.title}",
             "project": project,
             "members": members,
             "progress_reports": progress_reports,
+            "budget_summary": budget_summary,
             "generated_at": None,  # filled by caller in Phase 3
         }
 
