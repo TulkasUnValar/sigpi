@@ -35,6 +35,7 @@ export interface ProjectListParams {
   line?: string;
   year?: string;
   search?: string;
+  [key: string]: unknown;
 }
 
 function buildQueryString(params: ProjectListParams): string {
