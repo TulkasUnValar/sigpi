@@ -34,12 +34,12 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Core Implementation (PR 2)
 
-- [ ] 2.1 Write RED `tests/test_serializers.py` then `serializers.py` (read-only parent/tenant fields; nested line/source/execution/attachment serializers; external_url required)
-- [ ] 2.2 Write RED `tests/test_filters.py` then `filters.py` (project, institution, status; institution-scoped)
-- [ ] 2.3 Write RED `tests/test_permissions.py` then `permissions.py` (level ≤3 mutate, researcher read-only, director center membership, over-execution auth)
-- [ ] 2.4 Write RED `tests/test_services.py` then `services.py`: `BudgetService` atomic create/update/delete/execution, lock+recheck line, RN-020 (sum ≤ approved unless authorized), emit `BUDGET_CREATED/UPDATED/EXECUTION_ADDED` via AuditEventEmitter; `BudgetSummaryService.for_budget()` → approved/executed/balance or None
-- [ ] 2.5 Write RED `tests/test_views.py` + `tests/test_urls.py` then `views.py` + `urls.py`: Budget ViewSet (GET/POST/PATCH/DELETE + summary @action), nested lines/executions/attachments, `/api/projects/{pid}/funding-sources/`; duplicate budget 409, overrun 400, cross-institution 404
-- [ ] 2.6 Create `admin.py` registering all 5 models (list_display, search, filters)
+- [x] 2.1 Write RED `tests/test_serializers.py` then `serializers.py` (read-only parent/tenant fields; nested line/source/execution/attachment serializers; external_url required)
+- [x] 2.2 Write RED `tests/test_filters.py` then `filters.py` (project, institution, status; institution-scoped)
+- [x] 2.3 Write RED `tests/test_permissions.py` then `permissions.py` (level ≤3 mutate, researcher read-only, director center membership, over-execution auth)
+- [x] 2.4 Write RED `tests/test_services.py` then `services.py`: `BudgetService` atomic create/update/delete/execution, lock+recheck line, RN-020 (sum ≤ approved unless authorized), emit `BUDGET_CREATED/UPDATED/EXECUTION_ADDED` via AuditEventEmitter; `BudgetSummaryService.for_budget()` → approved/executed/balance or None
+- [x] 2.5 Write RED `tests/test_views.py` + `tests/test_urls.py` then `views.py` + `urls.py`: Budget ViewSet (GET/POST/PATCH/DELETE + summary @action), nested lines/executions/attachments, `/api/projects/{pid}/funding-sources/`; duplicate budget 409, overrun 400, cross-institution 404
+- [x] 2.6 Create `admin.py` registering all 5 models (list_display, search, filters)
 
 ## Phase 3: Integration + Reports (PR 3)
 
