@@ -29,6 +29,9 @@ class AuditEventType(models.TextChoices):
     PROGRESS_STATE_CHANGE = "PROGRESS_STATE_CHANGE", "Progress State Change"
     REPORT_GENERATED = "REPORT_GENERATED", "Report Generated"
     REPORT_APPROVED = "REPORT_APPROVED", "Report Approved"
+    BUDGET_CREATED = "BUDGET_CREATED", "Budget Created"
+    BUDGET_UPDATED = "BUDGET_UPDATED", "Budget Updated"
+    BUDGET_EXECUTION_ADDED = "BUDGET_EXECUTION_ADDED", "Budget Execution Added"
 
 
 # ──────────────────────────────────────────────────────────
