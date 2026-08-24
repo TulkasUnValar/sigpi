@@ -140,7 +140,7 @@ describe("NewProjectPage — submit", () => {
     // Step 2: center/group/line.
     const centerSelect = await screen.findByLabelText(/centro/i);
     fireEvent.click(centerSelect);
-    fireEvent.click(await screen.findByText("Centro A"));
+    fireEvent.click(screen.getByRole("option", { name: "Centro A" }));
     fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
 
     // Step 3: team — optional, advance.
