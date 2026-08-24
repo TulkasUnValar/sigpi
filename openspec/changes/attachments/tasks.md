@@ -36,11 +36,11 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Models & Migrations (PR 2)
 
-- [ ] 2.1 `backend/apps/documents/models.py`: DocumentType (12 codes), Document (UUID, institution, nullable entity FKs, doc_type, is_signed), DocumentVersion (unique `(document, version)`, sha256 64-hex), DigitalSignature (unique per version), Minutes (4 acta types); `clean()` immutability guard
-- [ ] 2.2 Seed migration: 12 DocumentType rows
-- [ ] 2.3 Generate `migrations/0001_initial.py` with constraints/indexes
-- [ ] 2.4 `admin.py`: register 5 models; signed docs read-only
-- [ ] 2.5 RED→GREEN `tests/test_models.py`: clean() immutability, sha256 format, version uniqueness, acta_type choices
+- [x] 2.1 `backend/apps/documents/models.py`: DocumentType (12 codes), Document (UUID, institution, nullable entity FKs, doc_type, is_signed), DocumentVersion (unique `(document, version)`, sha256 64-hex), DigitalSignature (unique per version), Minutes (4 acta types); `clean()` immutability guard
+- [x] 2.2 Seed migration: 12 DocumentType rows
+- [x] 2.3 Generate `migrations/0001_initial.py` with constraints/indexes
+- [x] 2.4 `admin.py`: register 5 models; signed docs read-only
+- [x] 2.5 RED→GREEN `tests/test_models.py`: clean() immutability, sha256 format, version uniqueness, acta_type choices
 
 ## Phase 3: RLS & Audit (PR 3)
 
