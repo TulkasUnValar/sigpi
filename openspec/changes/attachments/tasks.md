@@ -58,7 +58,7 @@ Chain strategy: stacked-to-main
 
 ## Phase 5: Views, URLs & Integration (PR 5)
 
-- [ ] 5.1 `views.py`: ViewSets + actions — types, presign, confirm, CRUD (immutable → 409), versions list/re-upload, version detail + GET presign, sign, download; minutes CRUD
-- [ ] 5.2 `urls.py` + `backend/config/urls.py`: mount `/api/documents/`, `/api/minutes/`
-- [ ] 5.3 RED→GREEN API tests: error contract 400/403/404/409/503; presign→confirm→sign flows; `is_signed` filter
-- [ ] 5.4 Integration: Compose MinIO e2e (presign→PUT→confirm→sign→query); coverage ≥80% on `apps.documents`; ruff + mypy clean
+- [x] 5.1 `views.py`: ViewSets + actions — types, presign, confirm, CRUD (immutable → 409), versions list/re-upload, version detail + GET presign, sign, download; minutes CRUD
+- [x] 5.2 `urls.py` + `backend/config/urls.py`: mount `/api/documents/`, `/api/minutes/`
+- [x] 5.3 RED→GREEN API tests: error contract 400/403/404/409/503; presign→confirm→sign flows; `is_signed` filter
+- [x] 5.4 Integration: Compose MinIO e2e (presign→PUT→confirm→sign→query); coverage ≥80% on `apps.documents`; ruff + mypy clean
