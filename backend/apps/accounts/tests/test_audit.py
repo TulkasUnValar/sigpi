@@ -80,6 +80,43 @@ class TestAuditEventType:
         assert "BUDGET_UPDATED" in choice_values
         assert "BUDGET_EXECUTION_ADDED" in choice_values
 
+    def test_document_event_types_defined(self):
+        """Document/Minutes audit event types (SPEC §6.7) are defined."""
+        assert hasattr(AuditEventType, "DOCUMENT_UPLOADED")
+        assert hasattr(AuditEventType, "DOCUMENT_SIGNED")
+        assert hasattr(AuditEventType, "MINUTES_CREATED")
+
+    def test_document_event_type_values_match(self):
+        """Document event type values match the spec (auth delta FR-007)."""
+        assert AuditEventType.DOCUMENT_UPLOADED == "DOCUMENT_UPLOADED"
+        assert AuditEventType.DOCUMENT_SIGNED == "DOCUMENT_SIGNED"
+        assert AuditEventType.MINUTES_CREATED == "MINUTES_CREATED"
+
+    def test_document_event_types_in_choices(self):
+        """Document event types are registered in the TextChoices choices."""
+        choice_values = {value for value, _label in AuditEventType.choices}
+        assert "DOCUMENT_UPLOADED" in choice_values
+        assert "DOCUMENT_SIGNED" in choice_values
+        assert "MINUTES_CREATED" in choice_values
+
+    def test_legacy_event_types_preserved(self):
+        """All prior members remain valid after the extension (auth spec)."""
+        for value in (
+            "LOGIN",
+            "LOGOUT",
+            "FAILED_LOGIN",
+            "INSTITUTION_SWITCH",
+            "ROLE_CHANGE",
+            "PERMISSION_DENIED",
+            "PROGRESS_STATE_CHANGE",
+            "REPORT_GENERATED",
+            "REPORT_APPROVED",
+            "BUDGET_CREATED",
+            "BUDGET_UPDATED",
+            "BUDGET_EXECUTION_ADDED",
+        ):
+            assert value in {v for v, _l in AuditEventType.choices}, value
+
 
 # ──────────────────────────────────────────────────────────
 # Test AuditEvent Model
@@ -340,3 +377,80 @@ class TestAuditEventEmitter:
 
         ip = AuditEventEmitter.extract_ip(request)
         assert ip == "192.168.1.1"
+
+    def test_emit_document_uploaded_event(self, db, institution):
+        """Emitter creates a DOCUMENT_UPLOADED event (SPEC §6.7)."""
+        user = User.objects.create_user(email="u@test.com", auth_source="local", password="pass")
+        emitter = AuditEventEmitter()
+
+        event = emitter.emit(
+            event_type=AuditEventType.DOCUMENT_UPLOADED,
+            user=user,
+            ip_address="10.0.0.1",
+            institution_id=institution.id,
+            details={"document_id": "doc-1", "version": 1},
+        )
+
+        assert event.event_type == "DOCUMENT_UPLOADED"
+        assert event.user == user
+        assert event.details == {"document_id": "doc-1", "version": 1}
+        assert event.institution_id == institution.id
+
+    def test_emit_document_signed_event(self, db, institution):
+        """Emitter creates a DOCUMENT_SIGNED event with hash metadata."""
+        user = User.objects.create_user(email="u@test.com", auth_source="local", password="pass")
+        emitter = AuditEventEmitter()
+
+        event = emitter.emit(
+            event_type=AuditEventType.DOCUMENT_SIGNED,
+            user=user,
+            ip_address="10.0.0.1",
+            institution_id=institution.id,
+            details={"document_id": "doc-1", "version": 2, "sha256": "a" * 64},
+        )
+
+        assert event.event_type == "DOCUMENT_SIGNED"
+        assert event.details["document_id"] == "doc-1"
+        assert event.details["version"] == 2
+        assert event.details["sha256"] == "a" * 64
+
+    def test_emit_minutes_created_event(self, db, institution):
+        """Emitter creates a MINUTES_CREATED event with acta type."""
+        user = User.objects.create_user(email="u@test.com", auth_source="local", password="pass")
+        emitter = AuditEventEmitter()
+
+        event = emitter.emit(
+            event_type=AuditEventType.MINUTES_CREATED,
+            user=user,
+            ip_address="10.0.0.1",
+            institution_id=institution.id,
+            details={"minutes_id": "min-1", "acta_type": "inicio"},
+        )
+
+        assert event.event_type == "MINUTES_CREATED"
+        assert event.details == {"minutes_id": "min-1", "acta_type": "inicio"}
+        assert AuditEvent.objects.count() == 1
+
+    def test_document_events_queryable_by_type(self, db, institution):
+        """DOCUMENT_* events can be filtered from the AuditEvent model."""
+        user = User.objects.create_user(email="u@test.com", auth_source="local", password="pass")
+        emitter = AuditEventEmitter()
+        emitter.emit(
+            event_type=AuditEventType.DOCUMENT_UPLOADED,
+            user=user,
+            institution_id=institution.id,
+        )
+        emitter.emit(
+            event_type=AuditEventType.DOCUMENT_SIGNED,
+            user=user,
+            institution_id=institution.id,
+        )
+        emitter.emit(
+            event_type=AuditEventType.MINUTES_CREATED,
+            user=user,
+            institution_id=institution.id,
+        )
+
+        assert AuditEvent.objects.filter(event_type="DOCUMENT_UPLOADED").count() == 1
+        assert AuditEvent.objects.filter(event_type="DOCUMENT_SIGNED").count() == 1
+        assert AuditEvent.objects.filter(event_type="MINUTES_CREATED").count() == 1
