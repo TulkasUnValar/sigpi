@@ -37,7 +37,6 @@ import {
   classificationStepSchema,
   teamStepSchema,
   documentsStepSchema,
-  type ProjectDraft,
 } from "@/features/projects/schemas";
 import type { CreateProjectPayload, TeamMemberDraft } from "@/features/projects/types";
 

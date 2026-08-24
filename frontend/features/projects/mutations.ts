@@ -12,7 +12,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
-import { queryKeys } from "@/lib/query-keys";
 import { useActiveInstitutionId } from "@/features/projects/queries";
 import type { CreateProjectPayload, ProjectDetail } from "@/features/projects/types";
 
