@@ -47,6 +47,7 @@ LOCAL_APPS = [
     "apps.progress",
     "apps.products",
     "apps.calls",
+    "apps.budgets",
     "apps.reports",
     "apps.project_workflow",
 ]
