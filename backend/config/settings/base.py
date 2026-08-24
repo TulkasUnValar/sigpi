@@ -37,6 +37,7 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "corsheaders",
     "django_filters",
+    "storages",
 ]
 
 LOCAL_APPS = [
@@ -50,6 +51,7 @@ LOCAL_APPS = [
     "apps.budgets",
     "apps.reports",
     "apps.project_workflow",
+    "apps.documents",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -252,6 +254,39 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": os.environ.get("REDIS_URL", "redis://redis:6379/1"),
     }
+}
+
+# ──────────────────────────────────────────────────────────
+# MinIO / S3 Storage (documents module)
+# ──────────────────────────────────────────────────────────
+# Files never transit Django: the backend issues presigned URLs against
+# MinIO (S3 API) and clients upload/download directly. The bucket is
+# private; object-level ACLs stay unset (bucket policy enforces privacy).
+MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://minio:9000")
+MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
+MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "sigpi-documents")
+MINIO_REGION = os.environ.get("MINIO_REGION", "us-east-1")
+# Presigned URL expiry (seconds): PUT <= 30 min, GET <= 15 min per spec.
+MINIO_PRESIGN_PUT_EXPIRY = int(os.environ.get("MINIO_PRESIGN_PUT_EXPIRY", "1800"))
+MINIO_PRESIGN_GET_EXPIRY = int(os.environ.get("MINIO_PRESIGN_GET_EXPIRY", "900"))
+
+STORAGES = {
+    "default": {
+        "BACKEND": "apps.documents.storage.MinIOStorage",
+        "OPTIONS": {
+            "access_key": MINIO_ACCESS_KEY,
+            "secret_key": MINIO_SECRET_KEY,
+            "bucket_name": MINIO_BUCKET_NAME,
+            "endpoint_url": MINIO_ENDPOINT,
+            "region_name": MINIO_REGION,
+            "querystring_auth": True,
+            "querystring_expire": MINIO_PRESIGN_GET_EXPIRY,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
 
 # ──────────────────────────────────────────────────────────
