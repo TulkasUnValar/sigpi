@@ -153,6 +153,7 @@ class BudgetService:
                 institution_id=locked_line.budget.institution_id,
                 details={
                     "line_id": str(locked_line.pk),
+                    "line_name": locked_line.name,
                     "budget_id": str(locked_line.budget_id),
                     "amount": str(amount),
                     "executed_at": executed_at.isoformat(),

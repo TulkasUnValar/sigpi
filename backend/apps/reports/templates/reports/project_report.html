@@ -57,9 +57,20 @@
 {% endif %}
 
 <h2>5. Budget Summary</h2>
+
+{% if budget_summary %}
+<table>
+    <tbody>
+        <tr><td class="label">Approved</td><td>{{ budget_summary.approved|floatformat:2 }}</td></tr>
+        <tr><td class="label">Executed</td><td>{{ budget_summary.executed|floatformat:2 }}</td></tr>
+        <tr><td class="label">Balance</td><td>{{ budget_summary.balance|floatformat:2 }}</td></tr>
+    </tbody>
+</table>
+{% else %}
 <div class="section">
     <div class="empty-state">Budget data not available in this version.</div>
 </div>
+{% endif %}
 
 <h2>6. Results / Expected Results</h2>
 <div class="section">

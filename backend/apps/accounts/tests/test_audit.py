@@ -61,6 +61,25 @@ class TestAuditEventType:
         assert AuditEventType.ROLE_CHANGE == "ROLE_CHANGE"
         assert AuditEventType.PERMISSION_DENIED == "PERMISSION_DENIED"
 
+    def test_budget_event_types_defined(self):
+        """Budget audit event types (RN-021) are defined."""
+        assert hasattr(AuditEventType, "BUDGET_CREATED")
+        assert hasattr(AuditEventType, "BUDGET_UPDATED")
+        assert hasattr(AuditEventType, "BUDGET_EXECUTION_ADDED")
+
+    def test_budget_event_type_values_match(self):
+        """Budget event type values match the spec (auth delta FR-007)."""
+        assert AuditEventType.BUDGET_CREATED == "BUDGET_CREATED"
+        assert AuditEventType.BUDGET_UPDATED == "BUDGET_UPDATED"
+        assert AuditEventType.BUDGET_EXECUTION_ADDED == "BUDGET_EXECUTION_ADDED"
+
+    def test_budget_event_types_in_choices(self):
+        """Budget event types are registered in the TextChoices choices."""
+        choice_values = {value for value, _label in AuditEventType.choices}
+        assert "BUDGET_CREATED" in choice_values
+        assert "BUDGET_UPDATED" in choice_values
+        assert "BUDGET_EXECUTION_ADDED" in choice_values
+
 
 # ──────────────────────────────────────────────────────────
 # Test AuditEvent Model
