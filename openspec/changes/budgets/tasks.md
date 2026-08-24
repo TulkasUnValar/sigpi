@@ -34,6 +34,7 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Core Implementation (PR 2)
 
+<<<<<<< HEAD
 - [x] 2.1 Write RED `tests/test_serializers.py` then `serializers.py` (read-only parent/tenant fields; nested line/source/execution/attachment serializers; external_url required)
 - [x] 2.2 Write RED `tests/test_filters.py` then `filters.py` (project, institution, status; institution-scoped)
 - [x] 2.3 Write RED `tests/test_permissions.py` then `permissions.py` (level ≤3 mutate, researcher read-only, director center membership, over-execution auth)
@@ -43,7 +44,7 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Integration + Reports (PR 3)
 
-- [ ] 3.1 Add `BUDGET_CREATED`, `BUDGET_UPDATED`, `BUDGET_EXECUTION_ADDED` to `AuditEventType` in `backend/apps/accounts/audit.py`
-- [ ] 3.2 In `backend/apps/reports/services.py::_project_context`, add conditional `budget_summary` via `BudgetSummaryService.for_budget(project)` (absent/empty when no Budget); extend report template/context for RN-022
-- [ ] 3.3 Write integration tests: report context includes/excludes budget_summary; summary math; audit payloads; RN-020 authorized/unauthorized + atomic concurrent boundaries
-- [ ] 3.4 Verify ≥90% coverage on `apps.budgets` (`--cov=apps.budgets`); `python manage.py check` + migrate on Postgres
+- [x] 3.1 Add `BUDGET_CREATED`, `BUDGET_UPDATED`, `BUDGET_EXECUTION_ADDED` to `AuditEventType` in `backend/apps/accounts/audit.py`
+- [x] 3.2 In `backend/apps/reports/services.py::_project_context`, add conditional `budget_summary` via `BudgetSummaryService.for_budget(project)` (absent/empty when no Budget); extend report template/context for RN-022
+- [x] 3.3 Write integration tests: report context includes/excludes budget_summary; summary math; audit payloads; RN-020 authorized/unauthorized + atomic concurrent boundaries
+- [x] 3.4 Verify ≥90% coverage on `apps.budgets` (`--cov=apps.budgets`); `python manage.py check` + migrate on Postgres
