@@ -159,7 +159,10 @@ class DocumentService:
 
         storage = _get_storage(storage)
         object_key = storage.build_object_key(institution.id, document.id, 1, filename)
-        upload_url = storage.presign_put(object_key)
+        try:
+            upload_url = storage.presign_put(object_key)
+        except Exception as exc:
+            raise StorageUnavailableError("Storage unavailable") from exc
         return {
             "upload_url": upload_url,
             "object_key": object_key,
@@ -182,7 +185,10 @@ class DocumentService:
         object_key = storage.build_object_key(
             document.institution_id, document.id, next_version, filename
         )
-        upload_url = storage.presign_put(object_key)
+        try:
+            upload_url = storage.presign_put(object_key)
+        except Exception as exc:
+            raise StorageUnavailableError("Storage unavailable") from exc
         return {
             "upload_url": upload_url,
             "object_key": object_key,

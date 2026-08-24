@@ -46,6 +46,7 @@ class TenantMiddleware:
         "/api/calls/",
         "/api/products/",
         "/api/documents/",
+        "/api/minutes/",
         "/api/institutions/",
         "/api/centers/",
         "/api/groups/",
