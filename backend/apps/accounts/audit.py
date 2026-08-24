@@ -32,6 +32,9 @@ class AuditEventType(models.TextChoices):
     BUDGET_CREATED = "BUDGET_CREATED", "Budget Created"
     BUDGET_UPDATED = "BUDGET_UPDATED", "Budget Updated"
     BUDGET_EXECUTION_ADDED = "BUDGET_EXECUTION_ADDED", "Budget Execution Added"
+    DOCUMENT_UPLOADED = "DOCUMENT_UPLOADED", "Document Uploaded"
+    DOCUMENT_SIGNED = "DOCUMENT_SIGNED", "Document Signed"
+    MINUTES_CREATED = "MINUTES_CREATED", "Minutes Created"
 
 
 # ──────────────────────────────────────────────────────────

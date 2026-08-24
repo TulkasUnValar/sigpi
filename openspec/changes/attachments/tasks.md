@@ -44,9 +44,9 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: RLS & Audit (PR 3)
 
-- [ ] 3.1 `migrations/0002_rls_policies.py`: tenant_isolation + superadmin_bypass on Document/Minutes (institution_id); FK-subquery policies on Version/Signature; PG-only
-- [ ] 3.2 `accounts/audit.py`: add DOCUMENT_UPLOADED, DOCUMENT_SIGNED, MINUTES_CREATED + migration 0007
-- [ ] 3.3 RED→GREEN `tests/test_rls.py`: isolation + superadmin bypass (PG CI)
+- [x] 3.1 `migrations/0002_rls_policies.py`: tenant_isolation + superadmin_bypass on Document/Minutes (institution_id); FK-subquery policies on Version/Signature; PG-only
+- [x] 3.2 `accounts/audit.py`: add DOCUMENT_UPLOADED, DOCUMENT_SIGNED, MINUTES_CREATED + migration 0007
+- [x] 3.3 RED→GREEN `tests/test_rls.py`: isolation + superadmin bypass (PG CI)
 
 ## Phase 4: Services, Serializers, Permissions, Filters (PR 4)
 
