@@ -50,11 +50,11 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Services, Serializers, Permissions, Filters (PR 4)
 
-- [ ] 4.1 `services.py`: DocumentService (presign key issue, confirm key-match → 409, version bump, entity institution check, DOCUMENT_UPLOADED); SignatureService (GET→SHA-256→sign→lock; 409 hash mismatch/re-sign; DOCUMENT_SIGNED); MinutesService (acta validate, MINUTES_CREATED)
-- [ ] 4.2 `serializers.py`: Document, DocumentVersion, DigitalSignature, Minutes, DocumentType
-- [ ] 4.3 `permissions.py`: write role level ≤6; reads IsSameInstitution; IsAuditor read-only
-- [ ] 4.4 `filters.py`: DocumentFilter (doc_type, entity, is_signed); MinutesFilter (acta_type, project)
-- [ ] 4.5 RED→GREEN unit tests: services (hash mismatch, re-sign, signed bump → 409), serializers, permissions, filters
+- [x] 4.1 `services.py`: DocumentService (presign key issue, confirm key-match → 409, version bump, entity institution check, DOCUMENT_UPLOADED); SignatureService (GET→SHA-256→sign→lock; 409 hash mismatch/re-sign; DOCUMENT_SIGNED); MinutesService (acta validate, MINUTES_CREATED)
+- [x] 4.2 `serializers.py`: Document, DocumentVersion, DigitalSignature, Minutes, DocumentType
+- [x] 4.3 `permissions.py`: write role level ≤6; reads IsSameInstitution; IsAuditor read-only
+- [x] 4.4 `filters.py`: DocumentFilter (doc_type, entity, is_signed); MinutesFilter (acta_type, project)
+- [x] 4.5 RED→GREEN unit tests: services (hash mismatch, re-sign, signed bump → 409), serializers, permissions, filters
 
 ## Phase 5: Views, URLs & Integration (PR 5)
 
