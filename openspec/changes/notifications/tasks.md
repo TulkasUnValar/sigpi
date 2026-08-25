@@ -62,5 +62,5 @@ Chain strategy: stacked-to-main
 
 ## Phase 5: Integration & Coverage
 
-- [ ] 5.1 `apps/notifications/tests/test_integration.py`: real service boundaries — submit, observe, sign, overrun; rollback/on_commit; no duplicates on resubmit
-- [ ] 5.2 Run full backend suite; enforce ≥80% coverage on `apps.notifications`
+- [x] 5.1 `apps/notifications/tests/test_integration.py`: real service boundaries — submit, observe, sign, overrun; rollback/on_commit; no duplicates on resubmit
+- [x] 5.2 Run full backend suite; enforce ≥80% coverage on `apps.notifications`
