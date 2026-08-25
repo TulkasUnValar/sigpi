@@ -155,6 +155,13 @@ class AuditEventEmitter:
         ip_address: str | None = None,
         institution_id=None,
         details: dict | None = None,
+        *,
+        entity_type: str | None = None,
+        entity_id=None,
+        action: str | None = None,
+        old_values: dict | None = None,
+        new_values: dict | None = None,
+        project_id=None,
     ) -> AuditEvent:
         """Create and persist an AuditEvent.
 
@@ -164,6 +171,16 @@ class AuditEventEmitter:
             ip_address: Client IP (optional).
             institution_id: UUID of active institution (optional).
             details: Extra context dict (optional).
+            entity_type: Type of the tracked entity (e.g. "project").
+            entity_id: UUID of the tracked entity (optional).
+            action: The CRUD action value (CREATE/UPDATE/DELETE/...).
+            old_values: JSON-safe dict of the prior state (optional).
+            new_values: JSON-safe dict of the new state (optional).
+            project_id: UUID of the related project (optional).
+
+        The first five parameters preserve the legacy signature — existing
+        positional/keyword callers keep working unchanged. The traceability
+        fields are keyword-only and forwarded verbatim to AuditEvent.
 
         Returns:
             The created AuditEvent instance.
@@ -174,5 +191,11 @@ class AuditEventEmitter:
             ip_address=ip_address,
             institution_id=institution_id,
             details=details,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            action=action,
+            old_values=old_values,
+            new_values=new_values,
+            project_id=project_id,
         )
         return event
