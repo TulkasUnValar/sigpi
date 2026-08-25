@@ -35,6 +35,11 @@ class AuditEventType(models.TextChoices):
     DOCUMENT_UPLOADED = "DOCUMENT_UPLOADED", "Document Uploaded"
     DOCUMENT_SIGNED = "DOCUMENT_SIGNED", "Document Signed"
     MINUTES_CREATED = "MINUTES_CREATED", "Minutes Created"
+    CREATE = "CREATE", "Created"
+    UPDATE = "UPDATE", "Updated"
+    DELETE = "DELETE", "Deleted"
+    STATE_CHANGE = "STATE_CHANGE", "State Changed"
+    DOCUMENT_DOWNLOADED = "DOCUMENT_DOWNLOADED", "Document Downloaded"
 
 
 # ──────────────────────────────────────────────────────────
@@ -77,6 +82,22 @@ class AuditEvent(models.Model):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     institution_id = models.UUIDField(null=True, blank=True, db_index=True)
     details = models.JSONField(null=True, blank=True)
+    entity_type = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    entity_id = models.UUIDField(null=True, blank=True, db_index=True)
+    action = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    old_values = models.JSONField(null=True, blank=True, default=dict)
+    new_values = models.JSONField(null=True, blank=True, default=dict)
+    project_id = models.UUIDField(null=True, blank=True, db_index=True)
 
     class Meta:
         db_table = "accounts_auditevent"
@@ -86,6 +107,9 @@ class AuditEvent(models.Model):
         indexes = [
             models.Index(fields=["event_type", "-timestamp"]),
             models.Index(fields=["user", "-timestamp"]),
+            models.Index(fields=["entity_type", "entity_id"]),
+            models.Index(fields=["project_id", "-timestamp"]),
+            models.Index(fields=["action", "-timestamp"]),
         ]
 
     def __str__(self) -> str:
