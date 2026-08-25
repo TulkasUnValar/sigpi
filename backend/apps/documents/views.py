@@ -41,6 +41,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from apps.accounts.audit import AuditEventEmitter, AuditEventType
+from apps.audit.context import get_audit_context
 from apps.documents.filters import DocumentFilter, MinutesFilter
 from apps.documents.models import (
     DigitalSignature,
@@ -136,6 +138,28 @@ def _map_service_error(e: DjangoValidationError) -> APIException:
     if IMMUTABLE_MESSAGE in _error_text(e):
         return Conflict(IMMUTABLE_MESSAGE)
     return DRFValidationError(_extract_error(e))
+
+
+def _emit_document_download(document, version: int) -> None:
+    """Emit a DOCUMENT_DOWNLOADED audit event (RF-106 / RF-D09).
+
+    Called immediately after a presigned GET URL is issued (download /
+    version_detail) and before the response is built. Uses the request-scoped
+    audit context (user, IP, institution) populated by TenantMiddleware.
+    Storage failures return 503 before this helper runs, so no event is written.
+    """
+    ctx = get_audit_context()
+    AuditEventEmitter().emit(
+        event_type=AuditEventType.DOCUMENT_DOWNLOADED,
+        user=ctx.user,
+        ip_address=ctx.ip_address,
+        institution_id=ctx.institution_id or document.institution_id,
+        entity_type="document",
+        entity_id=document.id,
+        action="DOWNLOAD",
+        project_id=document.project_id,
+        details={"document_id": str(document.id), "version": version},
+    )
 
 
 # ──────────────────────────────────────────────
@@ -293,6 +317,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             download_url = _get_storage().presign_get(version_obj.object_key)
         except Exception as exc:
             raise ServiceUnavailable("Storage unavailable") from exc
+        _emit_document_download(document, version_obj.version)
         data = DocumentVersionSerializer(version_obj).data
         data["download_url"] = download_url
         data["signature"] = DigitalSignatureSerializer(signature).data if signature else None
@@ -328,6 +353,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             download_url = _get_storage().presign_get(version_obj.object_key)
         except Exception as exc:
             raise ServiceUnavailable("Storage unavailable") from exc
+        _emit_document_download(document, version_obj.version)
         return Response(
             {
                 "download_url": download_url,
