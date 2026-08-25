@@ -39,11 +39,11 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Signal & Receiver Layer
 
-- [ ] 2.1 RED `apps/notifications/tests/test_signals.py` + `test_receivers.py`: filters, recipient cases, dedup, inactive-template skip, no-I/O, missing-recipient warning
-- [ ] 2.2 Create `apps/{progress,documents,budgets}/signals.py` with `progress_state_changed`, `document_signed`, `budget_overrun_attempted`
-- [ ] 2.3 Emit: progress `_log_transition`; `SignatureService.sign` post-atomic-write; unauthorized overrun branch of `BudgetService.add_execution`
-- [ ] 2.4 Create `apps/notifications/resolver.py`: center director, advance author, signer+PI (no-project → signer only), institution admin (Admin 2/Director 3)
-- [ ] 2.5 Create `apps/notifications/receivers.py`; wire in `apps.py ready()` with `dispatch_uid`; `get_or_create` + `transaction.on_commit(dispatch_notification.delay)`
+- [x] 2.1 RED `apps/notifications/tests/test_signals.py` + `test_receivers.py`: filters, recipient cases, dedup, inactive-template skip, no-I/O, missing-recipient warning
+- [x] 2.2 Create `apps/{progress,documents,budgets}/signals.py` with `progress_state_changed`, `document_signed`, `budget_overrun_attempted`
+- [x] 2.3 Emit: progress `_log_transition`; `SignatureService.sign` post-atomic-write; unauthorized overrun branch of `BudgetService.add_execution`
+- [x] 2.4 Create `apps/notifications/resolvers.py` (orchestrator-specified name; design.md says `resolver.py` — verify step must reconcile): center director, advance author, signer+PI (no-project → signer only), institution admin (Admin 2/Director 3)
+- [x] 2.5 Create `apps/notifications/receivers.py`; wire in `apps.py ready()` with `dispatch_uid`; `get_or_create` idempotency (NOTE: `transaction.on_commit(dispatch_notification.delay)` deferred to Phase 3 — the Celery task does not exist yet and PR 2 scope is ORM-only receivers)
 
 ## Phase 3: Celery Dispatch
 
