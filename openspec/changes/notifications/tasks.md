@@ -54,11 +54,11 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: API Layer
 
-- [ ] 4.1 RED `apps/notifications/tests/test_api.py` + `test_permissions.py`: list/detail/unread_count/read/read_all/preferences, filters, pagination 100, idempotency, cross-user 404
-- [ ] 4.2 Create `apps/notifications/serializers.py`: `NotificationSerializer`, `UserPreferenceSerializer`
-- [ ] 4.3 Create `apps/notifications/filters.py` (`is_read`, `event_type`) + `permissions.py` (`IsNotificationOwner|IsAdmin`)
-- [ ] 4.4 Create `apps/notifications/views.py`: `NotificationViewSet` (list/detail/read/read_all/unread_count/preferences) + `UserPreferenceViewSet`; `recipient=request.user` incl. superuser
-- [ ] 4.5 Create `apps/notifications/urls.py`; wire `/api/notifications/` in `config/urls.py`; add prefix to `TENANT_REQUIRED_PREFIXES` (`config/middleware/tenant.py`)
+- [x] 4.1 RED `apps/notifications/tests/test_api.py` + `test_permissions.py`: list/detail/unread_count/read/read_all/preferences, filters, pagination 100, idempotency, cross-user 404
+- [x] 4.2 Create `apps/notifications/serializers.py`: `NotificationSerializer`, `UserPreferenceSerializer`
+- [x] 4.3 Create `apps/notifications/filters.py` (`is_read`, `event_type`) + `permissions.py` (`IsNotificationOwner|IsAdmin`)
+- [x] 4.4 Create `apps/notifications/views.py`: `NotificationViewSet` (list/detail/read/read_all/unread_count/preferences) + `UserPreferenceViewSet`; `recipient=request.user` incl. superuser
+- [x] 4.5 Create `apps/notifications/urls.py`; wire `/api/notifications/` in `config/urls.py`; add prefix to `TENANT_REQUIRED_PREFIXES` (`config/middleware/tenant.py`)
 
 ## Phase 5: Integration & Coverage
 
