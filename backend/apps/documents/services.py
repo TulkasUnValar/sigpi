@@ -25,6 +25,7 @@ from django.db.models import Max
 
 from apps.accounts.audit import AuditEventEmitter
 from apps.documents.models import DigitalSignature, Document, DocumentType, DocumentVersion, Minutes
+from apps.documents.signals import document_signed
 from apps.documents.storage import DOCUMENTS_PREFIX
 
 # ──────────────────────────────────────────────
@@ -310,6 +311,17 @@ class SignatureService:
                 "version": version.version,
                 "sha256": computed,
             },
+        )
+        # Semantic signal for the notifications module (spec delta RN-3).
+        # Emitted after the atomic write so the in-app Notification row
+        # persists with the signing transaction.
+        document_signed.send(
+            sender=DigitalSignature,
+            instance=document,
+            document=document,
+            version=version.version,
+            signer=user,
+            sha256=computed,
         )
         return signature
 
