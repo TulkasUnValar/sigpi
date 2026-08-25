@@ -9,6 +9,10 @@ rows (spec RN-1..RN-4). Contracts (design.md — Receivers):
 - Resilient: missing templates/recipients log a warning; receiver
   errors are logged and swallowed so the sender transaction commits
 - Filter: react only to the documented event state (enviado/observado)
+- Delivery: email dispatch is enqueued via transaction.on_commit once
+  per CREATED row, gated on the recipient's email UserPreference; the
+  on_commit callback runs after commit — never inside the sender
+  transaction (design.md — Data Flow / Channel Semantics)
 
 Signals are connected in apps.notifications.apps.ready() with dispatch_uid.
 """
@@ -17,6 +21,7 @@ import functools
 import logging
 import re
 
+from django.db import transaction
 from django.dispatch import receiver
 
 from apps.budgets.signals import budget_overrun_attempted
@@ -28,6 +33,7 @@ from apps.notifications.resolvers import (
     resolve_project_pi,
     resolve_researcher,
 )
+from apps.notifications.tasks import dispatch_notification, email_channel_enabled
 from apps.progress.signals import progress_state_changed
 from apps.project_workflow.signals import project_state_changed
 
@@ -79,6 +85,26 @@ def _guard(func):
     return wrapper
 
 
+def _enqueue_email_dispatch(notification, recipient):
+    """Schedule log-only email dispatch after the sender transaction commits.
+
+    Spec Channel Semantics: email MUST NOT run inside the sender
+    transaction; on_commit fires only when the transaction commits.
+    Email is skipped when the recipient opted out via UserPreference
+    (the task double-checks the same preference before dispatching).
+    """
+    if not email_channel_enabled(recipient):
+        logger.debug(
+            "Email disabled for %s; not enqueuing dispatch", recipient.email
+        )
+        return
+
+    def _enqueue():
+        dispatch_notification.delay(str(notification.pk))
+
+    transaction.on_commit(_enqueue)
+
+
 def _create_notifications(
     *,
     event_type,
@@ -92,6 +118,9 @@ def _create_notifications(
 
     Skips entirely when the event's template is missing or inactive.
     Missing recipients log a warning and never fail the sender.
+    In-app rows are created unconditionally (sync channel); email
+    dispatch is enqueued once per created row on commit, gated on the
+    recipient's email preference (Phase 3).
     """
     template = NotificationTemplate.objects.filter(
         code=event_type, is_active=True
@@ -107,7 +136,7 @@ def _create_notifications(
         if recipient is None:
             continue
         try:
-            _, was_created = Notification.objects.get_or_create(
+            notification, was_created = Notification.objects.get_or_create(
                 recipient=recipient,
                 event_type=event_type,
                 entity_type=entity_type,
@@ -120,7 +149,9 @@ def _create_notifications(
                     "context": context,
                 },
             )
-            created += int(was_created)
+            if was_created:
+                created += 1
+                _enqueue_email_dispatch(notification, recipient)
         except Exception:
             logger.exception(
                 "Failed to create %s notification for %s", event_type, recipient

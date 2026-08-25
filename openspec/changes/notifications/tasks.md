@@ -47,9 +47,10 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Celery Dispatch
 
-- [ ] 3.1 RED `apps/notifications/tests/test_tasks.py`: preference skip, log status=sent, retry 3× (countdown 60×2^n), `last_error`/`attempt_count`
-- [ ] 3.2 Create `apps/notifications/tasks.py`: `dispatch_notification(notification_id)` — log-only, no SMTP
-- [ ] 3.3 Add retention beat schedule (read 90d, unread 365d, logs 12m) to `backend/config/celery.py`
+- [x] 3.1 RED `apps/notifications/tests/test_tasks.py`: preference skip, log status=sent, retry 3× (countdown 60×2^n), `last_error`/`attempt_count` — plus receiver enqueue on commit, preference-gated enqueue, missing-notification skip, and beat-schedule entry (12 tests)
+- [x] 3.2 Create `apps/notifications/tasks.py`: `dispatch_notification(notification_id)` — log-only, no SMTP; `email_channel_enabled()` helper; retry contract (max 3, countdown 60×2^n, `last_error`/`attempt_count`); `Notification.DoesNotExist` handled gracefully
+- [x] 3.3 Wire receivers to Celery (deferred from 2.5): `transaction.on_commit(dispatch_notification.delay)` once per created row, gated on the recipient's email `UserPreference`; in-app `Notification` rows created unconditionally (no in_app opt-out column in the data model — email-only channel)
+- [x] 3.4 Add retention beat schedule (read 90d, unread 365d, logs 12m) to `backend/config/celery.py` — schedule-only entry `cleanup-old-notifications`; task body deferred
 
 ## Phase 4: API Layer
 
