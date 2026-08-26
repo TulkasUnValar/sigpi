@@ -1,0 +1,64 @@
+# SIGPI — Pre-commit hooks
+# Run locally before each commit to enforce code quality.
+# Install:  cd backend && source .venv-wsl/bin/activate && pre-commit install
+# Update:   pre-commit autoupdate
+# Run all:  pre-commit run --all-files
+
+repos:
+  # ── Basic file hygiene ──────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+
+  # ── Backend — Python (Ruff) ─────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        name: ruff linter
+        args: ['--fix']
+        files: ^backend/
+      - id: ruff-format
+        name: ruff formatter
+        files: ^backend/
+
+  # ── Backend — Python (Pyright) ──────────────────────────────
+  # Local hook because pyright needs the project's venv (.venv-wsl)
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright type checker
+        entry: cd backend && pyright
+        language: system
+        types: [python]
+        files: ^backend/
+        pass_filenames: false
+
+  # ── Frontend — JavaScript / TypeScript (ESLint) ─────────────
+  # Local hook because ESLint plugins are in frontend/node_modules
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: bash -c 'cd frontend && npx eslint . --ext .ts,.tsx'
+        language: system
+        types_or: [javascript, jsx, ts, tsx]
+        files: ^frontend/
+        pass_filenames: false
+
+  # ── Frontend — Formatting (Prettier) ────────────────────────
+  # Local hook because Prettier is in frontend/node_modules
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: bash -c 'cd frontend && npx prettier --check "**/*.{ts,tsx,json,css,md}"'
+        language: system
+        types_or: [javascript, jsx, ts, tsx, json, css, markdown]
+        files: ^frontend/
+        pass_filenames: false
