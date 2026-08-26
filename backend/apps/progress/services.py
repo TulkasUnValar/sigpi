@@ -22,6 +22,7 @@ from apps.progress.models import (
     ProgressStateLog,
     ProgressStatus,
 )
+from apps.progress.signals import progress_state_changed
 
 # ── Guard helpers ───────────────────────────────────────
 
@@ -208,9 +209,12 @@ class ProgressService:
         """Create ProgressStateLog + emit AuditEvent(PROGRESS_STATE_CHANGE).
 
         Private helper called by every FSM orchestration method.
-        Two side-effects per RN-P04:
+        Three side-effects per RN-P04:
         1. Write a ProgressStateLog row (domain audit).
         2. Emit an AuditEvent via AuditEventEmitter (global audit).
+        3. Emit the semantic progress_state_changed signal once per
+           transition (notifications spec delta RN-2) — inside the
+           sender's transaction, no I/O.
         """
         ProgressStateLog.objects.create(
             progress_report=report,
@@ -230,6 +234,17 @@ class ProgressService:
                 "to_state": to_state,
                 "triggered_by": user.email if user else None,
             },
+        )
+        progress_state_changed.send(
+            sender=ProgressReport,
+            instance=report,
+            progress_report=report,
+            old_status=from_state,
+            new_status=to_state,
+            from_state=from_state,
+            to_state=to_state,
+            user=user,
+            triggered_by=user,
         )
 
 

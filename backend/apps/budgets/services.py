@@ -13,6 +13,7 @@ Design reference: openspec/changes/budgets/design.md — Services, Audit and Rep
 Spec reference:   openspec/changes/budgets/specs/budgets/spec.md — RF-B01/B04/B07
 """
 
+import logging
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -26,12 +27,33 @@ from apps.budgets.models import (
     BudgetLine,
     BudgetStatus,
 )
+from apps.budgets.signals import budget_overrun_attempted
+
+logger = logging.getLogger(__name__)
 
 ZERO = Decimal("0.00")
 
 
 class DuplicateBudgetError(ValidationError):
     """Raised when a project already has a budget (RF-B01 → HTTP 409)."""
+
+
+class _UnauthorizedOverrunError(ValidationError):
+    """Internal marker: over-limit execution rejected without authorization.
+
+    Carries the rejected attempt out of the atomic block so the
+    budget_overrun_attempted signal (RN-4) can be emitted AFTER the
+    block — a Notification insert inside the block would be rolled
+    back together with the rejected execution.
+    """
+
+    def __init__(self, line, amount, user):
+        self.line = line
+        self.amount = amount
+        self.user = user
+        super().__init__(
+            "Execution exceeds the line's approved amount and requires authorization."
+        )
 
 
 # ──────────────────────────────────────────────
@@ -119,50 +141,64 @@ class BudgetService:
 
         Locks the line (select_for_update), rechecks the cumulative sum,
         and rejects over-execution unless both authorization fields are set.
-        Emits BUDGET_EXECUTION_ADDED.
+        Emits BUDGET_EXECUTION_ADDED; a rejected unauthorized overrun also
+        emits budget_overrun_attempted (RN-4) before re-raising.
         """
-        with transaction.atomic():
-            locked_line = BudgetLine.objects.select_for_update().get(pk=line.pk)
-            current_sum = (
-                BudgetExecution.objects.filter(line=locked_line).aggregate(
-                    total=Sum("amount")
-                )["total"]
-                or ZERO
-            )
+        try:
+            with transaction.atomic():
+                locked_line = BudgetLine.objects.select_for_update().get(pk=line.pk)
+                current_sum = (
+                    BudgetExecution.objects.filter(line=locked_line).aggregate(
+                        total=Sum("amount")
+                    )["total"]
+                    or ZERO
+                )
 
-            overrun = (current_sum + amount) > locked_line.approved_amount
-            if overrun:
-                if not (authorized_by and authorized_at):
-                    raise ValidationError(
-                        "Execution exceeds the line's approved amount and requires authorization."
-                    )
+                overrun = (current_sum + amount) > locked_line.approved_amount
+                if overrun:
+                    if not (authorized_by and authorized_at):
+                        raise _UnauthorizedOverrunError(locked_line, amount, user)
 
-            execution = BudgetExecution(
-                line=locked_line,
-                amount=amount,
-                executed_at=executed_at,
-                authorized_by=authorized_by,
-                authorized_at=authorized_at,
-            )
-            execution.full_clean()
-            execution.save()
+                execution = BudgetExecution(
+                    line=locked_line,
+                    amount=amount,
+                    executed_at=executed_at,
+                    authorized_by=authorized_by,
+                    authorized_at=authorized_at,
+                )
+                execution.full_clean()
+                execution.save()
 
-            AuditEventEmitter().emit(
-                event_type="BUDGET_EXECUTION_ADDED",
-                user=user,
-                institution_id=locked_line.budget.institution_id,
-                details={
-                    "line_id": str(locked_line.pk),
-                    "line_name": locked_line.name,
-                    "budget_id": str(locked_line.budget_id),
-                    "amount": str(amount),
-                    "executed_at": executed_at.isoformat(),
-                    "authorized_by": (
-                        str(authorized_by.pk) if authorized_by else None
-                    ),
-                },
-            )
-            return execution
+                AuditEventEmitter().emit(
+                    event_type="BUDGET_EXECUTION_ADDED",
+                    user=user,
+                    institution_id=locked_line.budget.institution_id,
+                    details={
+                        "line_id": str(locked_line.pk),
+                        "line_name": locked_line.name,
+                        "budget_id": str(locked_line.budget_id),
+                        "amount": str(amount),
+                        "executed_at": executed_at.isoformat(),
+                        "authorized_by": (
+                            str(authorized_by.pk) if authorized_by else None
+                        ),
+                    },
+                )
+                return execution
+        except _UnauthorizedOverrunError as exc:
+            try:
+                budget_overrun_attempted.send(
+                    sender=BudgetExecution,
+                    instance=exc.line,
+                    budget_line=exc.line,
+                    attempted_amount=exc.amount,
+                    approved_amount=exc.line.approved_amount,
+                    requested_by=exc.user,
+                    institution=exc.line.budget.institution,
+                )
+            except Exception:  # pragma: no cover — receivers must never raise
+                logger.exception("budget_overrun_attempted receiver failed")
+            raise
 
 
 # ──────────────────────────────────────────────

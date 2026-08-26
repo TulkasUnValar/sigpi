@@ -74,7 +74,8 @@ The system MUST create a new `DocumentVersion` row and increment the version int
 
 ### Requirement: RF-D04 — Digital Signing (RF-063, RF-064)
 
-The system MUST sign a document version by fetching its bytes from MinIO, computing SHA-256 server-side, and persisting signer, date, document, and hash.
+The system MUST sign a document version by fetching its bytes from MinIO, computing SHA-256 server-side, and persisting signer, date, document, and hash. On successful signing, the system SHALL additionally emit a `document_signed` Django signal (distinct from the `DOCUMENT_SIGNED` audit event) carrying `document`, `version`, `signer`, and `sha256`, for the notifications module (RN-3).
+(Previously: signing persisted signature data and emitted only the `DOCUMENT_SIGNED` audit event; no semantic `document_signed` signal existed.)
 
 #### Scenario: Sign a version
 - GIVEN an unsigned document version and a user with sign permission
@@ -91,6 +92,15 @@ The system MUST sign a document version by fetching its bytes from MinIO, comput
 - WHEN POST sign is attempted again
 - THEN the system returns 409
 
+#### Scenario: Signal emitted on sign
+- GIVEN a sign operation succeeds
+- WHEN the signing transaction commits
+- THEN a `document_signed` signal is dispatched with `document`, `version`, `signer`, `sha256`
+
+#### Scenario: No signal on failed sign
+- GIVEN a sign attempt fails (hash mismatch or re-sign)
+- WHEN the operation returns 409
+- THEN no `document_signed` signal is emitted
 ### Requirement: RF-D05 — Signed Document Queries (RF-065)
 
 The system MUST allow querying signed documents with their signature metadata.
@@ -191,26 +201,7 @@ The system MUST expose the 12 document types from SPEC §6.7 as the authoritativ
 
 ## Audit Requirements
 
-The system MUST emit, via `AuditEventEmitter`: `DOCUMENT_UPLOADED` (user, document_id, version), `DOCUMENT_SIGNED` (signer, document_id, version, sha256), `MINUTES_CREATED` (user, minutes_id, acta_type), and `DOCUMENT_DOWNLOADED` (user, document_id, version) on presigned GET issuance per RF-D09. See the audit spec for the `AuditEventType` extension.
-
-### Requirement: RF-D09 — Sensitive Download Auditing (RF-106)
-
-The system MUST emit a `DOCUMENT_DOWNLOADED` audit event (`action=DOWNLOAD`, `event_type=DOCUMENT_DOWNLOADED`) whenever a presigned GET URL is issued via the `download` or `version_detail` document actions, capturing the acting user, `document_id`, `version`, and institution.
-
-#### Scenario: Latest-version download
-- GIVEN an authorized user requests `GET /api/documents/{id}/download/`
-- WHEN the presigned GET URL is issued
-- THEN an AuditEvent `DOCUMENT_DOWNLOADED` is emitted with `document_id`, `version`, `user`, and `institution_id`
-
-#### Scenario: Version-detail download
-- GIVEN a user requests `GET /api/documents/{id}/versions/{v}/`
-- WHEN the presigned GET URL is issued
-- THEN a `DOCUMENT_DOWNLOADED` event is emitted for that `version`
-
-#### Scenario: Storage failure (no event)
-- GIVEN MinIO is unreachable
-- WHEN `download`/`version_detail` returns 503
-- THEN no `DOCUMENT_DOWNLOADED` event is emitted (no download was issued)
+The system MUST emit, via `AuditEventEmitter`: `DOCUMENT_UPLOADED` (user, document_id, version), `DOCUMENT_SIGNED` (signer, document_id, version, sha256), and `MINUTES_CREATED` (user, minutes_id, acta_type). See the auth delta spec for the `AuditEventType` extension.
 
 ## RLS Requirements
 
