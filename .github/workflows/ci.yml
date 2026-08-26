@@ -1,0 +1,165 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Backend — Lint, Type-check, Test
+  # ─────────────────────────────────────────────────────────────
+  backend:
+    name: Backend (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: sigpi
+          POSTGRES_USER: sigpi
+          POSTGRES_PASSWORD: sigpi
+        options: >-
+          --health-cmd "pg_isready -U sigpi -d sigpi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.base
+      DJANGO_SECRET_KEY: ci-secret-key-not-for-production
+      POSTGRES_DB: sigpi
+      POSTGRES_USER: sigpi
+      POSTGRES_PASSWORD: sigpi
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://localhost:6379/0
+      PYTEST_RUNNING: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Create virtual environment (.venv-wsl)
+        # pyproject.toml hardcodes venvPath="." and venv=".venv-wsl"
+        run: |
+          python -m venv .venv-wsl
+          source .venv-wsl/bin/activate
+          python -m pip install --upgrade pip
+          pip install -e "./backend[dev]"
+
+      - name: Run Ruff linter
+        run: |
+          source .venv-wsl/bin/activate
+          cd backend && ruff check apps/
+
+      - name: Check Ruff formatting
+        run: |
+          source .venv-wsl/bin/activate
+          cd backend && ruff format --check apps/
+
+      - name: Run Pyright type checker
+        run: |
+          source .venv-wsl/bin/activate
+          cd backend && pyright
+
+      - name: Run Django system checks
+        run: |
+          source .venv-wsl/bin/activate
+          cd backend && python manage.py check --deploy --fail-level ERROR
+        env:
+          DATABASE_URL: postgres://sigpi:sigpi@localhost:5432/sigpi
+          DJANGO_DEBUG: false
+
+      - name: Run backend tests with coverage
+        run: |
+          source .venv-wsl/bin/activate
+          cd backend && pytest \
+            -c pyproject.toml \
+            --cov=apps \
+            --cov-report=xml \
+            --cov-report=term-missing:skip-covered \
+            --tb=short \
+            -v
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.12'
+        with:
+          files: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+
+  # ─────────────────────────────────────────────────────────────
+  # Frontend — Lint, Type-check, Test
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run TypeScript compiler check
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
+      - name: Run frontend tests
+        run: |
+          cd frontend
+          npm test -- --coverage --ci
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: matrix.node-version == '20'
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false

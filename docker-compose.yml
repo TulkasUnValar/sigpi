@@ -1,5 +1,5 @@
 # SIGPI — Docker Compose (development)
-# Stack: Django 5.1 + PostgreSQL 16 + Redis 7 + Keycloak 26 + MinIO
+# Stack: Django 5.1 + PostgreSQL 16 + Redis 7 + Keycloak 26 + MinIO + Meilisearch 1.53
 version: "3.9"
 
 services:
@@ -35,12 +35,16 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET_NAME=sigpi-documents
+      - MEILISEARCH_URL=http://meilisearch:7700
+      - MEILISEARCH_API_KEY=masterKey
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
       minio:
+        condition: service_healthy
+      meilisearch:
         condition: service_healthy
     networks:
       - sigpi-net
@@ -73,6 +77,28 @@ services:
       - "6379:6379"
     volumes:
       - redisdata:/data
+    networks:
+      - sigpi-net
+
+  # ── Meilisearch 1.53 ────────────────────────────────────
+  # Full-text search engine (RNF-014). Master key matches the
+  # dev default baked into backend MEILISEARCH_API_KEY.
+  meilisearch:
+    image: getmeili/meilisearch:v1.53
+    container_name: sigpi-meilisearch
+    environment:
+      - MEILI_ENV=development
+      - MEILI_MASTER_KEY=masterKey
+      - MEILI_NO_ANALYTICS=true
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilidata:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - sigpi-net
 
@@ -144,6 +170,7 @@ volumes:
   redisdata:
   kcpgdata:
   miniodata:
+  meilidata:
 
 networks:
   sigpi-net:
