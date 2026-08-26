@@ -95,7 +95,8 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 # Use in-memory SQLite during testing (PYTEST_RUNNING=true)
-if os.environ.get("PYTEST_RUNNING") == "true":
+# unless POSTGRES_HOST is explicitly provided (CI / Docker).
+if os.environ.get("PYTEST_RUNNING") == "true" and not os.environ.get("POSTGRES_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
