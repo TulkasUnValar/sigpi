@@ -42,6 +42,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "apps.accounts",
+    "apps.audit",
     "apps.institutions",
     "apps.researchers",
     "apps.projects",
@@ -150,6 +151,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
     ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
 }
@@ -255,6 +259,12 @@ CACHES = {
         "LOCATION": os.environ.get("REDIS_URL", "redis://redis:6379/1"),
     }
 }
+
+# ──────────────────────────────────────────────────────────
+# Celery (Redis broker & backend)
+# ──────────────────────────────────────────────────────────
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379/2")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379/3")
 
 # ──────────────────────────────────────────────────────────
 # MinIO / S3 Storage (documents module)
