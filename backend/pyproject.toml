@@ -17,6 +17,7 @@ dependencies = [
     "weasyprint>=62.0",
     "boto3>=1.34",
     "django-storages>=1.14",
+    "meilisearch-python-sdk>=7.0,<8.0",
 ]
 
 [project.optional-dependencies]

@@ -54,6 +54,7 @@ LOCAL_APPS = [
     "apps.reports",
     "apps.project_workflow",
     "apps.documents",
+    "apps.search",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -266,6 +267,14 @@ CACHES = {
 # ──────────────────────────────────────────────────────────
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379/2")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379/3")
+
+# ──────────────────────────────────────────────────────────
+# Meilisearch (search module)
+# ──────────────────────────────────────────────────────────
+# Full-text search engine (RNF-014). Dev defaults match the
+# docker-compose service; production values come from env.
+MEILISEARCH_URL = os.environ.get("MEILISEARCH_URL", "http://localhost:7700")
+MEILISEARCH_API_KEY = os.environ.get("MEILISEARCH_API_KEY", "masterKey")
 
 # ──────────────────────────────────────────────────────────
 # MinIO / S3 Storage (documents module)
