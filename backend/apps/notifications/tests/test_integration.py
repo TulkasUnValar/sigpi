@@ -489,13 +489,15 @@ class TestEmailEnqueueEndToEnd:
         with mock.patch(
             "apps.notifications.receivers.transaction.on_commit",
             side_effect=lambda fn: fn(),
-        ) as on_commit, mock.patch(
+        ), mock.patch(
             "apps.notifications.receivers.dispatch_notification.delay"
         ) as delay:
             ProjectService.submit(project, pi_user)
 
         delay.assert_not_called()
-        on_commit.assert_not_called()
+        # NOTE: no global on_commit call-count assertion here — the search
+        # module also registers on_commit callbacks during saves (its own
+        # receivers are tested in apps/search/tests/test_signals.py).
         # In-app delivery is unaffected by the email opt-out.
         assert Notification.objects.filter(recipient=director).count() == 1
 
@@ -506,11 +508,13 @@ class TestEmailEnqueueEndToEnd:
         with mock.patch(
             "apps.notifications.receivers.transaction.on_commit",
             side_effect=lambda fn: fn(),
-        ) as on_commit, mock.patch(
+        ), mock.patch(
             "apps.notifications.receivers.dispatch_notification.delay"
         ) as delay:
             ProjectService.submit(project, pi_user)
 
         notification = Notification.objects.get(recipient=director)
-        on_commit.assert_called_once()
+        # NOTE: on_commit is called by other apps too (search receivers
+        # register on every indexed save) — assert the notifications
+        # dispatch was enqueued exactly once, which is the contract here.
         delay.assert_called_once_with(str(notification.pk))

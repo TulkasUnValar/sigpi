@@ -7,6 +7,6 @@ class SearchConfig(AppConfig):
     verbose_name = "Search"
 
     def ready(self):
-        # Signals (post_save/post_delete receivers) land in PR 3 —
-        # this stub keeps the app wiring in place for the foundation.
-        pass
+        # Importing the receivers module connects every @receiver with a
+        # dispatch_uid — ORM save/delete → on_commit → Celery enqueue.
+        from apps.search import signals  # noqa: F401
