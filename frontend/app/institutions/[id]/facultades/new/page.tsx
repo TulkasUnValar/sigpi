@@ -18,7 +18,7 @@ import { RoleGuard } from "@/components/shell/RoleGuard";
 import { getErrorMessage } from "@/lib/errors";
 import { EntityForm } from "@/features/institutions/EntityForm";
 import { facultadConfig, type FacultadFormValues } from "@/features/institutions/schemas";
-import { useFacultades, useSedes } from "@/features/institutions/queries";
+import { useSedes } from "@/features/institutions/queries";
 import { useCreateFacultad } from "@/features/institutions/mutations";
 import type { EntityFieldOption } from "@/features/institutions/types";
 

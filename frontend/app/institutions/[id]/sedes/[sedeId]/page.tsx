@@ -20,7 +20,7 @@ import { useSedeTransition } from "@/features/institutions/mutations";
 
 export default function SedeDetailPage() {
   const params = useParams<{ id: string; sedeId: string }>();
-  const { id, sedeId } = params;
+  const { sedeId } = params;
 
   const detailQuery = useSedeDetail(sedeId);
   const transition = useSedeTransition();

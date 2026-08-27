@@ -14,6 +14,10 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
 
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
+
 jest.mock("next/link", () => {
   return {
     __esModule: true,
@@ -38,6 +42,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
+import { ApiError } from "@/lib/errors";
 import {
   InstitutionTree,
   flattenVisibleNodes,
@@ -522,5 +527,300 @@ describe("InstitutionTree — action menu", () => {
       );
     });
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+});
+
+// ── PR2: lazy child loading + per-kind actions ──────────────────────────
+
+const sedeRow = {
+  id: "sede-1",
+  institution: "inst-1",
+  institution_name: "Universidad Nacional",
+  code: "S-BOG",
+  name: "Sede Bogotá",
+  description: "Campus principal.",
+  status: "active",
+  is_active: true,
+  created_at: "2026-01-10T09:00:00Z",
+  updated_at: "2026-02-01T09:00:00Z",
+};
+
+const facultadRow = {
+  id: "fac-1",
+  institution: "inst-1",
+  institution_name: "Universidad Nacional",
+  sede: "sede-1",
+  code: "F-ING",
+  name: "Facultad de Ingeniería",
+  description: "",
+  status: "active",
+  is_active: true,
+  created_at: "2026-01-10T09:00:00Z",
+  updated_at: "2026-02-01T09:00:00Z",
+};
+
+const centerRow = {
+  id: "center-1",
+  institution: "inst-1",
+  institution_name: "Universidad Nacional",
+  sede: "sede-1",
+  facultad: "fac-1",
+  code: "C-IA",
+  name: "Centro de Inteligencia Artificial",
+  description: "",
+  contact_email: "",
+  contact_phone: "",
+  status: "active",
+  is_active: true,
+  created_at: "2026-01-10T09:00:00Z",
+  updated_at: "2026-02-01T09:00:00Z",
+};
+
+function pageOf<T>(results: T[]) {
+  return { count: results.length, next: null, previous: null, results };
+}
+
+/** Mock the three child list endpoints with one row each. */
+function mockChildLists() {
+  (api.api.get as jest.Mock).mockImplementation((url: string) => {
+    if (url.includes("/sedes/")) return Promise.resolve(pageOf([sedeRow]));
+    if (url.includes("/facultades/")) return Promise.resolve(pageOf([facultadRow]));
+    if (url.includes("/centers/")) return Promise.resolve(pageOf([centerRow]));
+    return Promise.resolve(undefined);
+  });
+}
+
+/** A single institution with no static children (PR2 lazy loading). */
+function renderLazyTree(roles: string[] = ["admin"]) {
+  useAuthStore.setState({
+    roles,
+    isAuthenticated: true,
+    isLoading: false,
+    activeInstitution: { id: "inst-1", name: "Universidad Nacional" },
+    institutions: [],
+    centers: [],
+  });
+
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
+
+  const nodes: InstitutionTreeNode[] = [
+    {
+      id: "inst-1",
+      kind: "institution",
+      name: "Universidad Nacional",
+      code: "UNAL",
+      status: "active",
+      is_active: true,
+      children: [],
+    },
+  ];
+
+  const utils = render(
+    <QueryClientProvider client={qc}>
+      <InstitutionTree nodes={nodes} />
+    </QueryClientProvider>,
+  );
+  return { qc, invalidateSpy, ...utils };
+}
+
+async function expandInstitution() {
+  fireEvent.click(screen.getByRole("button", { name: "Expandir Universidad Nacional" }));
+  await screen.findByText("Sede Bogotá");
+  await screen.findByText("Facultad de Ingeniería");
+  await screen.findByText("Centro de Inteligencia Artificial");
+}
+
+describe("InstitutionTree — lazy child loading (PR2)", () => {
+  it("fetches and renders sedes, facultades and centers on expand", async () => {
+    mockChildLists();
+    renderLazyTree();
+
+    await expandInstitution();
+
+    expect(api.api.get).toHaveBeenCalledWith("/api/institutions/inst-1/sedes/", {
+      sendInstitutionId: false,
+    });
+    expect(api.api.get).toHaveBeenCalledWith("/api/institutions/inst-1/facultades/", {
+      sendInstitutionId: false,
+    });
+    expect(api.api.get).toHaveBeenCalledWith("/api/institutions/inst-1/centers/", {
+      sendInstitutionId: false,
+    });
+  });
+
+  it("renders an expand toggle on institutions even without static children", () => {
+    mockChildLists();
+    renderLazyTree();
+
+    expect(
+      screen.getByRole("button", { name: "Expandir Universidad Nacional" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("treeitem", { name: /universidad nacional/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("renders lazy children as treeitems with aria-level 2", async () => {
+    mockChildLists();
+    const { container } = renderLazyTree();
+
+    await expandInstitution();
+
+    const levelTwo = treeitems(container).filter((i) => i.getAttribute("aria-level") === "2");
+    const sedeItem = levelTwo.find((i) => i.textContent?.includes("Sede Bogotá"));
+    const facultadItem = levelTwo.find((i) => i.textContent?.includes("Facultad de Ingeniería"));
+    const centerItem = levelTwo.find((i) => i.textContent?.includes("Centro de Inteligencia"));
+    expect(sedeItem).toBeDefined();
+    expect(facultadItem).toBeDefined();
+    expect(centerItem).toBeDefined();
+  });
+
+  it("keyboard navigation reaches lazily loaded children", async () => {
+    mockChildLists();
+    const { container } = renderLazyTree();
+
+    await expandInstitution();
+
+    const items = treeitems(container);
+    const levelTwo = items.filter((i) => i.getAttribute("aria-level") === "2");
+    expect(levelTwo.map((i) => i.textContent)).toEqual([
+      "Sede BogotáS-BOGActiva",
+      "Facultad de IngenieríaF-INGActiva",
+      "Centro de Inteligencia ArtificialC-IAActiva",
+    ]);
+
+    fireEvent.click(items[0] as HTMLElement);
+    fireEvent.keyDown(screen.getByRole("tree"), { key: "ArrowDown" });
+
+    await waitFor(() => {
+      const after = treeitems(container);
+      expect(after[1]).toHaveFocus();
+      expect(after[1]?.textContent).toContain("Sede Bogotá");
+    });
+  });
+
+  it("keeps loaded children when collapsing and re-expanding", async () => {
+    mockChildLists();
+    renderLazyTree();
+
+    await expandInstitution();
+    fireEvent.click(screen.getByRole("button", { name: "Contraer Universidad Nacional" }));
+    expect(screen.queryByText("Sede Bogotá")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Expandir Universidad Nacional" }));
+    expect(await screen.findByText("Sede Bogotá")).toBeInTheDocument();
+    expect(screen.getByText("Facultad de Ingeniería")).toBeInTheDocument();
+  });
+});
+
+describe("InstitutionTree — per-kind child actions (PR2)", () => {
+  it("links child nodes to the nested detail and edit routes", async () => {
+    const user = userEvent.setup();
+    mockChildLists();
+    renderLazyTree();
+
+    await expandInstitution();
+    await user.click(screen.getByRole("button", { name: "Acciones de Sede Bogotá" }));
+
+    const detail = await screen.findByRole("menuitem", { name: /ver detalle/i });
+    const edit = screen.getByRole("menuitem", { name: /editar/i });
+    expect(detail).toHaveAttribute("href", "/institutions/inst-1/sedes/sede-1");
+    expect(edit).toHaveAttribute("href", "/institutions/inst-1/sedes/sede-1/edit");
+  });
+
+  it("shows FSM actions for an admin on a child node (RF-F05)", async () => {
+    const user = userEvent.setup();
+    mockChildLists();
+    renderLazyTree(["admin"]);
+
+    await expandInstitution();
+    await user.click(screen.getByRole("button", { name: "Acciones de Sede Bogotá" }));
+
+    expect(await screen.findByRole("menuitem", { name: /desactivar/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /archivar/i })).toBeInTheDocument();
+  });
+
+  it("hides child FSM actions for a director", async () => {
+    const user = userEvent.setup();
+    mockChildLists();
+    renderLazyTree(["director"]);
+
+    await expandInstitution();
+    await user.click(screen.getByRole("button", { name: "Acciones de Sede Bogotá" }));
+
+    expect(await screen.findByRole("menuitem", { name: /ver detalle/i })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /desactivar/i })).not.toBeInTheDocument();
+  });
+
+  it("deletes a child through its own endpoint", async () => {
+    const user = userEvent.setup();
+    mockChildLists();
+    const { invalidateSpy } = renderLazyTree();
+    (api.api.delete as jest.Mock).mockResolvedValue(undefined);
+
+    await expandInstitution();
+    await user.click(screen.getByRole("button", { name: "Acciones de Sede Bogotá" }));
+    await user.click(await screen.findByRole("menuitem", { name: /eliminar/i }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: /eliminar/i }));
+
+    await waitFor(() => {
+      expect(api.api.delete).toHaveBeenCalledWith("/api/sedes/sede-1/", {
+        sendInstitutionId: false,
+      });
+    });
+    await waitFor(() => {
+      const calls = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey);
+      expect(calls).toContainEqual(["institutions"]);
+    });
+  });
+
+  it("surfaces the 409 delete-with-children guard without invalidation", async () => {
+    const user = userEvent.setup();
+    mockChildLists();
+    const { invalidateSpy } = renderLazyTree();
+    const toastModule = jest.requireMock("sonner") as { toast: { error: jest.Mock } };
+    (api.api.delete as jest.Mock).mockRejectedValue(
+      new ApiError("Deactivate or archive children first.", 409),
+    );
+
+    await expandInstitution();
+    await user.click(screen.getByRole("button", { name: "Acciones de Sede Bogotá" }));
+    await user.click(await screen.findByRole("menuitem", { name: /eliminar/i }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: /eliminar/i }));
+
+    await waitFor(() => {
+      expect(toastModule.toast.error).toHaveBeenCalledWith(
+        "Deactivate or archive children first.",
+      );
+    });
+    expect(invalidateSpy).not.toHaveBeenCalled();
+  });
+
+  it("runs a child FSM transition through its own endpoint", async () => {
+    const user = userEvent.setup();
+    mockChildLists();
+    renderLazyTree(["admin"]);
+    (api.api.post as jest.Mock).mockResolvedValue({ ...sedeRow, status: "deactivated" });
+
+    await expandInstitution();
+    await user.click(screen.getByRole("button", { name: "Acciones de Sede Bogotá" }));
+    await user.click(await screen.findByRole("menuitem", { name: /desactivar/i }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: /desactivar/i }));
+
+    await waitFor(() => {
+      expect(api.api.post).toHaveBeenCalledWith(
+        "/api/sedes/sede-1/deactivate/",
+        {},
+        { sendInstitutionId: false },
+      );
+    });
   });
 });
