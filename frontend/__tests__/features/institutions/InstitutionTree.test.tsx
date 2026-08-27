@@ -31,7 +31,9 @@ jest.mock("next/link", () => {
 
 jest.mock("@/lib/api", () => ({
   api: {
-    get: jest.fn(),
+    // Default: empty pages so lazy child queries resolve cleanly in PR1
+    // tests; PR2 tests override per URL via mockChildLists().
+    get: jest.fn().mockResolvedValue({ count: 0, next: null, previous: null, results: [] }),
     post: jest.fn(),
     patch: jest.fn(),
     delete: jest.fn(),
