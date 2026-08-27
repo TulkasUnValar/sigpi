@@ -25,6 +25,7 @@ import { ChevronRight, MoreHorizontal, Pencil, Trash2, ExternalLink } from "luci
 
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,15 +37,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getErrorMessage } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth";
-import { useFacultades, useResearchCenters, useSedes } from "@/features/institutions/queries";
+import {
+  useFacultades,
+  useResearchCenters,
+  useResearchGroups,
+  useResearchLines,
+  useSedes,
+} from "@/features/institutions/queries";
 import {
   useDeleteCenter,
   useDeleteFacultad,
   useDeleteInstitution,
+  useDeleteResearchGroup,
+  useDeleteResearchLine,
   useDeleteSede,
   useCenterTransition,
   useFacultadTransition,
   useInstitutionTransition,
+  useResearchGroupTransition,
+  useResearchLineTransition,
   useSedeTransition,
 } from "@/features/institutions/mutations";
 import {
@@ -120,24 +131,64 @@ const KIND_META: Record<EntityKind, { label: string; deletedLabel: string; minRo
   },
 };
 
-/** Detail route of a node, derived from its kind and the root institution id. */
-function detailUrl(kind: EntityKind, nodeId: string, institutionId: string): string {
-  switch (kind) {
+/**
+ * Detail route of a node, derived from its kind and the ancestor chain
+ * (ids from the root institution down to the direct parent).
+ *   - group: /institutions/{inst}/centers/{center}/groups/{group}
+ *   - line:  /institutions/{inst}/centers/{center}/groups/{group}/lines/{line}
+ */
+function detailUrl(node: InstitutionTreeNode, ancestors: string[]): string {
+  switch (node.kind) {
     case "sede":
-      return `/institutions/${institutionId}/sedes/${nodeId}`;
+      return `/institutions/${ancestors[0]}/sedes/${node.id}`;
     case "facultad":
-      return `/institutions/${institutionId}/facultades/${nodeId}`;
+      return `/institutions/${ancestors[0]}/facultades/${node.id}`;
     case "center":
-      return `/institutions/${institutionId}/centers/${nodeId}`;
+      return `/institutions/${ancestors[0]}/centers/${node.id}`;
+    case "group":
+      return `/institutions/${ancestors[0]}/centers/${ancestors[1]}/groups/${node.id}`;
+    case "line":
+      return `/institutions/${ancestors[0]}/centers/${ancestors[1]}/groups/${ancestors[2]}/lines/${node.id}`;
     default:
-      return `/institutions/${nodeId}`;
+      return `/institutions/${node.id}`;
   }
+}
+
+/** Per-level empty copy shown when an expanded level has no children. */
+const LEVEL_EMPTY_COPY: Partial<Record<EntityKind, { title: string; description: string }>> = {
+  institution: {
+    title: "No hay dependencias",
+    description: "Crea una sede, facultad o centro para esta institución.",
+  },
+  center: {
+    title: "No hay grupos de investigación",
+    description: "Crea el primer grupo de investigación de este centro.",
+  },
+  group: {
+    title: "No hay líneas de investigación",
+    description: "Crea la primera línea de investigación de este grupo.",
+  },
+};
+
+/** Recursively merge lazily fetched children into the node's subtree. */
+function mergeLazyChildren(
+  node: InstitutionTreeNode,
+  lazyChildren: Record<string, InstitutionTreeNode[]>,
+): InstitutionTreeNode {
+  const lazy = lazyChildren[node.id];
+  const children = lazy ? [...node.children, ...lazy] : node.children;
+  return {
+    ...node,
+    children: children.map((child) => mergeLazyChildren(child, lazyChildren)),
+  };
 }
 
 export function InstitutionTree({ nodes }: InstitutionTreeProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [lazyChildren, setLazyChildren] = useState<Record<string, InstitutionTreeNode[]>>({});
+  /** Levels whose lazy queries already resolved (drives per-level empty states). */
+  const [loadedLevels, setLoadedLevels] = useState<Record<string, boolean>>({});
   const nodeRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   /** Lift lazily fetched children up so keyboard nav sees them. */
@@ -153,16 +204,12 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
       }
       return { ...prev, [parentId]: children };
     });
+    setLoadedLevels((prev) => (prev[parentId] ? prev : { ...prev, [parentId]: true }));
   }, []);
 
-  /** Merge lazy children under institution nodes; static children stay. */
+  /** Merge lazy children recursively at every level of the tree. */
   const mergedNodes = useMemo(
-    () =>
-      nodes.map((node) =>
-        node.kind === "institution"
-          ? { ...node, children: [...node.children, ...(lazyChildren[node.id] ?? [])] }
-          : node,
-      ),
+    () => nodes.map((node) => mergeLazyChildren(node, lazyChildren)),
     [nodes, lazyChildren],
   );
 
@@ -274,10 +321,11 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
           key={node.id}
           node={node}
           depth={0}
-          institutionId={node.id}
+          ancestors={[]}
           tabIndex={focusedId === null ? (index === 0 ? 0 : -1) : focusedId === node.id ? 0 : -1}
           expandedIds={expandedIds}
           focusedId={focusedId}
+          loadedLevels={loadedLevels}
           onToggle={toggle}
           onFocus={setFocusedId}
           registerRef={registerRef}
@@ -291,12 +339,14 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
 interface TreeNodeProps {
   node: InstitutionTreeNode;
   depth: number;
-  /** Root institution id — used to build child detail/edit URLs. */
-  institutionId: string;
+  /** Ancestor ids from the root institution down to this node's direct parent. */
+  ancestors: string[];
   /** Roving-focus tabIndex: 0 for the active node, -1 otherwise. */
   tabIndex: number;
   expandedIds: Set<string>;
   focusedId: string | null;
+  /** Levels whose lazy queries resolved (drives per-level empty states). */
+  loadedLevels: Record<string, boolean>;
   onToggle: (id: string) => void;
   onFocus: (id: string) => void;
   registerRef: (id: string, el: HTMLElement | null) => void;
@@ -306,19 +356,26 @@ interface TreeNodeProps {
 function TreeNode({
   node,
   depth,
-  institutionId,
+  ancestors,
   tabIndex,
   expandedIds,
   focusedId,
+  loadedLevels,
   onToggle,
   onFocus,
   registerRef,
   onLazyChildren,
 }: TreeNodeProps) {
   const isExpanded = expandedIds.has(node.id);
-  // Institution nodes can always have children (lazily loaded); other
-  // kinds expand only when static children exist.
-  const canExpand = node.kind === "institution" || node.children.length > 0;
+  // Institution/center/group nodes lazy-load their children on expand;
+  // other kinds expand only when static children exist. Lines are leaves.
+  const canExpand =
+    node.kind === "institution" ||
+    node.kind === "center" ||
+    node.kind === "group" ||
+    node.children.length > 0;
+  const nodeHref = detailUrl(node, ancestors);
+  const emptyCopy = LEVEL_EMPTY_COPY[node.kind];
 
   return (
     <li
@@ -355,7 +412,7 @@ function TreeNode({
         )}
 
         <Link
-          href={detailUrl(node.kind, node.id, institutionId)}
+          href={nodeHref}
           onClick={(e) => e.stopPropagation()}
           className="font-medium hover:underline"
         >
@@ -363,112 +420,167 @@ function TreeNode({
         </Link>
         <span className="text-xs text-muted-foreground">{node.code}</span>
         <StatusBadge status={node.status} />
-        <NodeActions node={node} institutionId={institutionId} />
+        <NodeActions node={node} nodeHref={nodeHref} />
       </div>
 
       {canExpand && isExpanded ? (
-        <ul role="group">
-          {node.kind === "institution" ? (
-            <LazyChildrenLoader
-              institutionId={node.id}
-              expanded={isExpanded}
-              onLoaded={onLazyChildren}
-            />
+        <>
+          <ul role="group">
+            {node.kind === "institution" || node.kind === "center" || node.kind === "group" ? (
+              <LazyChildrenLoader node={node} expanded={isExpanded} onLoaded={onLazyChildren} />
+            ) : null}
+            {node.children.map((child) => (
+              <TreeNode
+                key={child.id}
+                node={child}
+                depth={depth + 1}
+                ancestors={[...ancestors, node.id]}
+                tabIndex={focusedId === child.id ? 0 : -1}
+                expandedIds={expandedIds}
+                focusedId={focusedId}
+                loadedLevels={loadedLevels}
+                onToggle={onToggle}
+                onFocus={onFocus}
+                registerRef={registerRef}
+                onLazyChildren={onLazyChildren}
+              />
+            ))}
+          </ul>
+          {emptyCopy && loadedLevels[node.id] && node.children.length === 0 ? (
+            <div className="py-2 pl-8 pr-2">
+              <EmptyState title={emptyCopy.title} description={emptyCopy.description} />
+            </div>
           ) : null}
-          {node.children.map((child) => (
-            <TreeNode
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              institutionId={institutionId}
-              tabIndex={focusedId === child.id ? 0 : -1}
-              expandedIds={expandedIds}
-              focusedId={focusedId}
-              onToggle={onToggle}
-              onFocus={onFocus}
-              registerRef={registerRef}
-              onLazyChildren={onLazyChildren}
-            />
-          ))}
-        </ul>
+        </>
       ) : null}
     </li>
   );
 }
 
 /**
- * Fetches the sedes/facultades/centers of an expanded institution and
- * reports them up to the tree root. Renders nothing; the root merges the
- * results into the node's children so keyboard nav sees them.
+ * Fetches the children of an expanded node per kind and reports them up
+ * to the tree root. Renders nothing; the root merges the results into the
+ * node's children so keyboard nav sees them.
+ *
+ *   - institution → sedes + facultades + centers
+ *   - center     → groups
+ *   - group      → lines (leaf level)
+ *
+ * All five hooks are registered unconditionally and gated by kind so the
+ * hook order stays stable across renders; only the enabled hook fetches.
  */
 function LazyChildrenLoader({
-  institutionId,
+  node,
   expanded,
   onLoaded,
 }: {
-  institutionId: string;
+  node: InstitutionTreeNode;
   expanded: boolean;
   onLoaded: (parentId: string, children: InstitutionTreeNode[]) => void;
 }) {
-  const sedesQuery = useSedes(institutionId, expanded);
-  const facultadesQuery = useFacultades(institutionId, undefined, expanded);
-  const centersQuery = useResearchCenters(institutionId, "institution", null, expanded);
+  const isInstitution = node.kind === "institution";
+  const isCenter = node.kind === "center";
+  const isGroup = node.kind === "group";
+
+  const sedesQuery = useSedes(node.id, expanded && isInstitution);
+  const facultadesQuery = useFacultades(node.id, undefined, expanded && isInstitution);
+  const centersQuery = useResearchCenters(node.id, "institution", null, expanded && isInstitution);
+  const groupsQuery = useResearchGroups(node.id, expanded && isCenter);
+  const linesQuery = useResearchLines(node.id, expanded && isGroup);
 
   useEffect(() => {
-    const children: InstitutionTreeNode[] = [
-      ...(sedesQuery.data?.results ?? []).map((s) => ({
-        id: s.id,
-        kind: "sede" as const,
-        name: s.name,
-        code: s.code,
-        status: s.status,
-        is_active: s.is_active,
-        children: [] as InstitutionTreeNode[],
-      })),
-      ...(facultadesQuery.data?.results ?? []).map((f) => ({
-        id: f.id,
-        kind: "facultad" as const,
-        name: f.name,
-        code: f.code,
-        status: f.status,
-        is_active: f.is_active,
-        children: [] as InstitutionTreeNode[],
-      })),
-      ...(centersQuery.data?.results ?? []).map((c) => ({
-        id: c.id,
-        kind: "center" as const,
-        name: c.name,
-        code: c.code,
-        status: c.status,
-        is_active: c.is_active,
-        children: [] as InstitutionTreeNode[],
-      })),
-    ];
-    onLoaded(institutionId, children);
-  }, [institutionId, expanded, sedesQuery.data, facultadesQuery.data, centersQuery.data, onLoaded]);
+    const children: InstitutionTreeNode[] = [];
+    if (isInstitution) {
+      children.push(
+        ...(sedesQuery.data?.results ?? []).map((s) => ({
+          id: s.id,
+          kind: "sede" as const,
+          name: s.name,
+          code: s.code,
+          status: s.status,
+          is_active: s.is_active,
+          children: [] as InstitutionTreeNode[],
+        })),
+        ...(facultadesQuery.data?.results ?? []).map((f) => ({
+          id: f.id,
+          kind: "facultad" as const,
+          name: f.name,
+          code: f.code,
+          status: f.status,
+          is_active: f.is_active,
+          children: [] as InstitutionTreeNode[],
+        })),
+        ...(centersQuery.data?.results ?? []).map((c) => ({
+          id: c.id,
+          kind: "center" as const,
+          name: c.name,
+          code: c.code,
+          status: c.status,
+          is_active: c.is_active,
+          children: [] as InstitutionTreeNode[],
+        })),
+      );
+    } else if (isCenter) {
+      children.push(
+        ...(groupsQuery.data?.results ?? []).map((g) => ({
+          id: g.id,
+          kind: "group" as const,
+          name: g.name,
+          code: g.code,
+          status: g.status,
+          is_active: g.is_active,
+          children: [] as InstitutionTreeNode[],
+        })),
+      );
+    } else if (isGroup) {
+      children.push(
+        ...(linesQuery.data?.results ?? []).map((l) => ({
+          id: l.id,
+          kind: "line" as const,
+          name: l.name,
+          code: l.code,
+          status: l.status,
+          is_active: l.is_active,
+          children: [] as InstitutionTreeNode[],
+        })),
+      );
+    }
+    onLoaded(node.id, children);
+  }, [
+    node.id,
+    node.kind,
+    expanded,
+    isInstitution,
+    isCenter,
+    isGroup,
+    sedesQuery.data,
+    facultadesQuery.data,
+    centersQuery.data,
+    groupsQuery.data,
+    linesQuery.data,
+    onLoaded,
+  ]);
 
   return null;
 }
 
 /** Per-node action menu: detail/edit links, FSM transitions, delete. */
-function NodeActions({
-  node,
-  institutionId,
-}: {
-  node: InstitutionTreeNode;
-  institutionId: string;
-}) {
+function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: string }) {
   const roles = useAuthStore((s) => s.roles);
-  // All four transition/delete hooks are registered unconditionally and
+  // All transition/delete hooks are registered unconditionally and
   // selected by kind — keeps hook order stable across renders.
   const institutionTransition = useInstitutionTransition();
   const sedeTransition = useSedeTransition();
   const facultadTransition = useFacultadTransition();
   const centerTransition = useCenterTransition();
+  const groupTransition = useResearchGroupTransition();
+  const lineTransition = useResearchLineTransition();
   const deleteInstitution = useDeleteInstitution();
   const deleteSede = useDeleteSede();
   const deleteFacultad = useDeleteFacultad();
   const deleteCenter = useDeleteCenter();
+  const deleteGroup = useDeleteResearchGroup();
+  const deleteLine = useDeleteResearchLine();
   const [confirm, setConfirm] = useState<ConfirmState>(null);
 
   const meta = KIND_META[node.kind] ?? KIND_META.institution;
@@ -481,7 +593,11 @@ function NodeActions({
         ? facultadTransition
         : node.kind === "center"
           ? centerTransition
-          : institutionTransition;
+          : node.kind === "group"
+            ? groupTransition
+            : node.kind === "line"
+              ? lineTransition
+              : institutionTransition;
 
   const remove =
     node.kind === "sede"
@@ -490,7 +606,11 @@ function NodeActions({
         ? deleteFacultad
         : node.kind === "center"
           ? deleteCenter
-          : deleteInstitution;
+          : node.kind === "group"
+            ? deleteGroup
+            : node.kind === "line"
+              ? deleteLine
+              : deleteInstitution;
 
   function runFsm(action: FsmAction) {
     transition.mutate(
@@ -516,8 +636,6 @@ function NodeActions({
       },
     });
   }
-
-  const nodeHref = detailUrl(node.kind, node.id, institutionId);
 
   return (
     <>
