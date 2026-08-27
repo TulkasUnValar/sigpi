@@ -20,7 +20,7 @@ import { useFacultadTransition } from "@/features/institutions/mutations";
 
 export default function FacultadDetailPage() {
   const params = useParams<{ id: string; facultadId: string }>();
-  const { id, facultadId } = params;
+  const { facultadId } = params;
 
   const detailQuery = useFacultadDetail(facultadId);
   const transition = useFacultadTransition();

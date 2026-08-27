@@ -20,7 +20,7 @@ import { useCenterTransition } from "@/features/institutions/mutations";
 
 export default function CenterDetailPage() {
   const params = useParams<{ id: string; centerId: string }>();
-  const { id, centerId } = params;
+  const { centerId } = params;
 
   const detailQuery = useCenterDetail(centerId);
   const transition = useCenterTransition();
