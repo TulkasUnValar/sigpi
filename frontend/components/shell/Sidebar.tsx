@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderKanban, LayoutDashboard } from "lucide-react";
+import { Building2, FolderKanban, LayoutDashboard } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
@@ -18,19 +18,28 @@ const NAV_ITEMS = [
   { href: "/projects", label: "Proyectos", icon: FolderKanban },
 ];
 
+/** "Estructura institucional" — institutions module, role-gated (RF-F06). */
+const INSTITUTIONS_NAV = {
+  href: "/institutions",
+  label: "Estructura institucional",
+  icon: Building2,
+};
+
+/** Roles that may manage the institutional hierarchy (PR1: superadmin/admin). */
+const INSTITUTION_ADMIN_ROLES = ["superadmin", "admin"];
+
 export function Sidebar() {
   const pathname = usePathname();
   const { roles } = useAuthStore();
 
-  const isDirector =
-    roles.includes("director") || roles.includes("admin");
+  const isDirector = roles.includes("director") || roles.includes("admin");
+  const canManageInstitutions = roles.some((r) => INSTITUTION_ADMIN_ROLES.includes(r));
+
+  const items = canManageInstitutions ? [...NAV_ITEMS, INSTITUTIONS_NAV] : NAV_ITEMS;
 
   return (
-    <nav
-      aria-label="Navegación principal"
-      className="flex h-full flex-col gap-1 p-4"
-    >
-      {NAV_ITEMS.map((item) => {
+    <nav aria-label="Navegación principal" className="flex h-full flex-col gap-1 p-4">
+      {items.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
