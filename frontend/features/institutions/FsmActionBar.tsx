@@ -36,7 +36,7 @@ export interface FsmTransitionLike {
   mutate: (
     variables: { id: string; action: string },
     options?: {
-      onSuccess?: (data: never) => void;
+      onSuccess?: (data: unknown) => void;
       onError?: (error: unknown) => void;
     },
   ) => void;

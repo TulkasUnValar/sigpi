@@ -84,9 +84,7 @@ describe("getEntityActions — config completeness", () => {
 
 describe("getEntityActions — write-role threshold (RF-F05)", () => {
   it("admins see child-entity actions when minRoles includes admin", () => {
-    const names = getEntityActions("active", ["admin"], ["admin", "superadmin"]).map(
-      (a) => a.name,
-    );
+    const names = getEntityActions("active", ["admin"], ["admin", "superadmin"]).map((a) => a.name);
     expect(names).toContain("deactivate");
     expect(names).toContain("archive");
   });

@@ -43,6 +43,43 @@ const INSTITUTION_FSM: Record<string, string> = {
   archive: "archived",
 };
 
+// ── Child entity stores (Sede / Facultad / ResearchCenter) ──────────────
+// Seeded from fixtures; nested CRUD + FSM behave like the DRF backend.
+
+let sedesStore = fixtureSedes.map((s) => ({ ...s }));
+let facultadesStore = fixtureFacultades.map((f) => ({ ...f }));
+let centersStore = fixtureCenters.map((c) => ({ ...c }));
+
+/** FSM target states shared by all child entities. */
+const CHILD_FSM: Record<string, string> = {
+  activate: "active",
+  deactivate: "deactivated",
+  archive: "archived",
+};
+
+/** Apply a child entity FSM transition, mirroring the backend guard. */
+function applyChildTransition<
+  T extends { id: string; status: string; is_active: boolean; updated_at: string },
+>(store: T[], id: string, action: string): { ok: true; entity: T } | { ok: false; detail: string } {
+  const entity = store.find((e) => e.id === id);
+  if (!entity) return { ok: false, detail: "No encontrado." };
+  const target = CHILD_FSM[action];
+  if (!target) return { ok: false, detail: "Transición no permitida." };
+  if (action === "archive" && entity.status === "archived") {
+    return { ok: false, detail: "La entidad ya está archivada." };
+  }
+  if (action === "activate" && entity.status !== "deactivated") {
+    return { ok: false, detail: "Solo se puede activar una entidad desactivada." };
+  }
+  if (action === "deactivate" && entity.status !== "active") {
+    return { ok: false, detail: "Solo se puede desactivar una entidad activa." };
+  }
+  entity.status = target;
+  entity.is_active = target === "active";
+  entity.updated_at = new Date().toISOString();
+  return { ok: true, entity };
+}
+
 /** Apply an institution FSM transition, mirroring the backend guard. */
 function applyInstitutionTransition(
   id: string,
@@ -215,42 +252,6 @@ export const handlers = [
     }
     return HttpResponse.json(result.inst);
   }),
-  // ── Child entity stores (Sede / Facultad / ResearchCenter) ────────────
-  // Seeded from fixtures; nested CRUD + FSM behave like the DRF backend.
-
-  let sedesStore = fixtureSedes.map((s) => ({ ...s }));
-  let facultadesStore = fixtureFacultades.map((f) => ({ ...f }));
-  let centersStore = fixtureCenters.map((c) => ({ ...c }));
-
-  const CHILD_FSM: Record<string, string> = {
-    activate: "active",
-    deactivate: "deactivated",
-    archive: "archived",
-  };
-
-  function applyChildTransition<T extends { id: string; status: string; is_active: boolean }>(
-    store: T[],
-    id: string,
-    action: string,
-  ): { ok: true; entity: T } | { ok: false; detail: string } {
-    const entity = store.find((e) => e.id === id);
-    if (!entity) return { ok: false, detail: "No encontrado." };
-    const target = CHILD_FSM[action];
-    if (!target) return { ok: false, detail: "Transición no permitida." };
-    if (action === "archive" && entity.status === "archived") {
-      return { ok: false, detail: "La entidad ya está archivada." };
-    }
-    if (action === "activate" && entity.status !== "deactivated") {
-      return { ok: false, detail: "Solo se puede activar una entidad desactivada." };
-    }
-    if (action === "deactivate" && entity.status !== "active") {
-      return { ok: false, detail: "Solo se puede desactivar una entidad activa." };
-    }
-    entity.status = target;
-    entity.is_active = target === "active";
-    (entity as { updated_at: string }).updated_at = new Date().toISOString();
-    return { ok: true, entity };
-  }
 
   // Sedes
   http.get("http://localhost:8000/api/institutions/:id/sedes/", ({ params }) =>
@@ -363,11 +364,7 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
   http.post("http://localhost:8000/api/facultades/:id/:action/", ({ params }) => {
-    const result = applyChildTransition(
-      facultadesStore,
-      String(params.id),
-      String(params.action),
-    );
+    const result = applyChildTransition(facultadesStore, String(params.id), String(params.action));
     if (!result.ok) return HttpResponse.json({ detail: result.detail }, { status: 409 });
     return HttpResponse.json(result.entity);
   }),

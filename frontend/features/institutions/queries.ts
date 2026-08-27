@@ -119,15 +119,13 @@ export function useResearchCenters(
   parentId?: string | null,
   enabled = true,
 ) {
-  const filter =
-    parentType && parentId ? `?parent_type=${parentType}&parent=${parentId}` : "";
+  const filter = parentType && parentId ? `?parent_type=${parentType}&parent=${parentId}` : "";
   return useQuery({
     queryKey: queryKeys.institutions.list(institutionId, "center", parentId ?? null),
     queryFn: () =>
-      api.get<Page<ResearchCenter>>(
-        `/api/institutions/${institutionId}/centers/${filter}`,
-        { sendInstitutionId: false },
-      ),
+      api.get<Page<ResearchCenter>>(`/api/institutions/${institutionId}/centers/${filter}`, {
+        sendInstitutionId: false,
+      }),
     enabled: Boolean(institutionId) && enabled,
   });
 }
