@@ -64,13 +64,13 @@ PR3: PR2 → 3.1 queries → 3.2 mutations → 3.3 configs/forms → 3.4 routes 
 
 ## PR 3 — ResearchGroup/ResearchLine + Polish (RF-F03 leaf; RNF completion)
 
-- [ ] 3.1 [M] Extend `queries.ts`: group/line hooks (`/api/centers/{pk}/groups/`, `/api/groups/{pk}/lines/`).
-- [ ] 3.2 [M] Extend `mutations.ts`: group/line CRUD; invalidate `institutions.all`.
-- [ ] 3.3 [M] Add group/line configs (director threshold) + leaf form/detail fields.
-- [ ] 3.4 [M] Create routes `.../centers/[centerId]/groups/**` and `.../groups/[groupId]/lines/**`.
-- [ ] 3.5 [M] Tree polish: leaf render, unknown-status badge fallback, per-level EmptyState, axe pass (RNF-01).
-- [ ] 3.6 [L] RED tests: leaf CRUD, 3-level keyboard nav, archived terminal; aggregate ≥80%.
-- [ ] 3.7 [S] Gate: full suite (`eslint`, `tsc`, `jest --coverage`) green.
+- [x] 3.1 [M] Extend `queries.ts`: group/line hooks (`/api/centers/{pk}/groups/`, `/api/groups/{pk}/lines/`).
+- [x] 3.2 [M] Extend `mutations.ts`: group/line CRUD; invalidate `institutions.all`.
+- [x] 3.3 [M] Add group/line configs (director threshold) + leaf form/detail fields.
+- [x] 3.4 [M] Create routes `.../centers/[centerId]/groups/**` and `.../groups/[groupId]/lines/**`.
+- [x] 3.5 [M] Tree polish: leaf render, unknown-status badge fallback, per-level EmptyState, axe pass (RNF-01).
+- [x] 3.6 [L] RED tests: leaf CRUD, 3-level keyboard nav, archived terminal; aggregate ≥80%.
+- [x] 3.7 [S] Gate: full suite (`eslint`, `tsc`, `jest --coverage`) green.
 
 ## Risk Assessment
 
