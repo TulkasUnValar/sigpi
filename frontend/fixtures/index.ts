@@ -16,6 +16,20 @@ import {
   type FixtureAdvance,
   type FixtureAdvanceDetail,
 } from "@/fixtures/advances";
+import {
+  fixtureInstitutions,
+  fixtureSedes,
+  fixtureFacultades,
+  fixtureCenters,
+  fixtureGroups,
+  fixtureLines,
+  type FixtureInstitution,
+  type FixtureSede,
+  type FixtureFacultad,
+  type FixtureResearchCenter,
+  type FixtureResearchGroup,
+  type FixtureResearchLine,
+} from "@/fixtures/institutions";
 
 /** Lightweight project shape consumed by the dashboard selectors. */
 export interface SeedProjectSummary {
@@ -77,3 +91,19 @@ export function seedAdapter(): SeedState {
 
 export { fixtureProjects, fixtureAdvances, fixtureAdvanceDetails };
 export type { FixtureProject, FixtureAdvance, FixtureAdvanceDetail };
+export {
+  fixtureInstitutions,
+  fixtureSedes,
+  fixtureFacultades,
+  fixtureCenters,
+  fixtureGroups,
+  fixtureLines,
+};
+export type {
+  FixtureInstitution,
+  FixtureSede,
+  FixtureFacultad,
+  FixtureResearchCenter,
+  FixtureResearchGroup,
+  FixtureResearchLine,
+};

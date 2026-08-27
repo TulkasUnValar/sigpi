@@ -29,6 +29,16 @@ export const queryKeys = {
       [...queryKeys.advances.details(), institutionId, id] as const,
   },
 
+  institutions: {
+    all: ["institutions"] as const,
+    lists: () => [...queryKeys.institutions.all, "list"] as const,
+    list: (scope: string | null, kind: string, parentId?: string | null) =>
+      [...queryKeys.institutions.lists(), scope, kind, parentId ?? null] as const,
+    details: () => [...queryKeys.institutions.all, "detail"] as const,
+    detail: (scope: string | null, kind: string, id: string) =>
+      [...queryKeys.institutions.details(), scope, kind, id] as const,
+  },
+
   dashboard: {
     all: ["dashboard"] as const,
     projects: (institutionId: string | null) =>

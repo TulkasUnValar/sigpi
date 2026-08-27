@@ -91,6 +91,32 @@ describe("Sidebar", () => {
     const projectsLink = screen.getByRole("link", { name: "Proyectos" });
     expect(projectsLink).toHaveAttribute("aria-current", "page");
   });
+
+  it("shows the institutions nav item for superadmin (RF-F06)", () => {
+    setRoles(["superadmin"]);
+    render(<Sidebar />);
+
+    expect(
+      screen.getByRole("link", { name: "Estructura institucional" }),
+    ).toHaveAttribute("href", "/institutions");
+  });
+
+  it("shows the institutions nav item for admin", () => {
+    setRoles(["admin"]);
+    render(<Sidebar />);
+
+    expect(
+      screen.getByRole("link", { name: "Estructura institucional" }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the institutions nav item for director and researcher", () => {
+    setRoles(["director"]);
+    render(<Sidebar />);
+    expect(
+      screen.queryByRole("link", { name: "Estructura institucional" }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("Topbar", () => {
@@ -99,9 +125,7 @@ describe("Topbar", () => {
     render(<Topbar />);
 
     // Theme toggle button
-    expect(
-      screen.getByRole("button", { name: /tema|theme/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /tema|theme/i })).toBeInTheDocument();
   });
 });
 
