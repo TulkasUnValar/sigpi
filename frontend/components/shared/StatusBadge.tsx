@@ -10,6 +10,11 @@ export interface StatusMeta {
 }
 
 const STATUS_META: Record<string, StatusMeta> = {
+  // Institution hierarchy statuses (institutions feature)
+  active: { label: "Activa", variant: "success" },
+  deactivated: { label: "Desactivada", variant: "warning" },
+  archived: { label: "Archivada", variant: "secondary" },
+  // Project / advance statuses
   borrador: { label: "Borrador", variant: "secondary" },
   enviado: { label: "Enviado", variant: "info" },
   en_revision: { label: "En revisión", variant: "warning" },
