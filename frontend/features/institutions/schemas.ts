@@ -78,7 +78,7 @@ export const centerSchema = z.object({
 
 export type CenterFormValues = z.infer<typeof centerSchema>;
 
-/** ResearchGroup form schema (basic fields). */
+/** ResearchGroup form schema (basic fields; parent center from URL). */
 export const groupSchema = z.object({
   code: z
     .string()
@@ -88,7 +88,9 @@ export const groupSchema = z.object({
   description: z.string().optional().default(""),
 });
 
-/** ResearchLine form schema (basic fields). */
+export type GroupFormValues = z.infer<typeof groupSchema>;
+
+/** ResearchLine form schema (basic fields; parent group from URL). */
 export const lineSchema = z.object({
   code: z
     .string()
@@ -97,6 +99,8 @@ export const lineSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   description: z.string().optional().default(""),
 });
+
+export type LineFormValues = z.infer<typeof lineSchema>;
 
 /**
  * Institution entity config — drives EntityForm fields, endpoints and
@@ -188,4 +192,44 @@ export const centerConfig: EntityConfig<CenterFormValues> = {
     { name: "contact_phone", label: "Teléfono de contacto", type: "text" },
   ],
   minRoles: ["admin", "superadmin"],
+};
+
+/**
+ * ResearchGroup entity config — child of a center (parent from URL).
+ * Write threshold: director, admin or superadmin (RF-F05).
+ */
+export const groupConfig: EntityConfig<GroupFormValues> = {
+  kind: "group",
+  label: "Grupo de investigación",
+  pluralLabel: "Grupos de investigación",
+  listPath: "/api/centers/{pk}/groups/",
+  detailPath: (id) => `/api/groups/${id}/`,
+  fsmPath: (id, action) => `/api/groups/${id}/${action}/`,
+  schema: groupSchema,
+  fields: [
+    { name: "code", label: "Código", type: "text" },
+    { name: "name", label: "Nombre", type: "text" },
+    { name: "description", label: "Descripción", type: "textarea" },
+  ],
+  minRoles: ["director", "admin", "superadmin"],
+};
+
+/**
+ * ResearchLine entity config — child of a group (parent from URL).
+ * Leaf level. Write threshold: director, admin or superadmin (RF-F05).
+ */
+export const lineConfig: EntityConfig<LineFormValues> = {
+  kind: "line",
+  label: "Línea de investigación",
+  pluralLabel: "Líneas de investigación",
+  listPath: "/api/groups/{pk}/lines/",
+  detailPath: (id) => `/api/lines/${id}/`,
+  fsmPath: (id, action) => `/api/lines/${id}/${action}/`,
+  schema: lineSchema,
+  fields: [
+    { name: "code", label: "Código", type: "text" },
+    { name: "name", label: "Nombre", type: "text" },
+    { name: "description", label: "Descripción", type: "textarea" },
+  ],
+  minRoles: ["director", "admin", "superadmin"],
 };

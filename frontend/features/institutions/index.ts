@@ -29,6 +29,10 @@ export type {
   UpdateFacultadPayload,
   CreateCenterPayload,
   UpdateCenterPayload,
+  CreateResearchGroupPayload,
+  UpdateResearchGroupPayload,
+  CreateResearchLinePayload,
+  UpdateResearchLinePayload,
 } from "@/features/institutions/types";
 
 // Schemas
@@ -43,10 +47,14 @@ export {
   sedeConfig,
   facultadConfig,
   centerConfig,
+  groupConfig,
+  lineConfig,
   type InstitutionFormValues,
   type SedeFormValues,
   type FacultadFormValues,
   type CenterFormValues,
+  type GroupFormValues,
+  type LineFormValues,
 } from "@/features/institutions/schemas";
 
 // FSM
@@ -68,6 +76,10 @@ export {
   useSedeDetail,
   useFacultadDetail,
   useCenterDetail,
+  useResearchGroups,
+  useResearchGroupDetail,
+  useResearchLines,
+  useResearchLineDetail,
 } from "@/features/institutions/queries";
 
 // Mutations
@@ -88,6 +100,14 @@ export {
   useUpdateCenter,
   useDeleteCenter,
   useCenterTransition,
+  useCreateResearchGroup,
+  useUpdateResearchGroup,
+  useDeleteResearchGroup,
+  useResearchGroupTransition,
+  useCreateResearchLine,
+  useUpdateResearchLine,
+  useDeleteResearchLine,
+  useResearchLineTransition,
 } from "@/features/institutions/mutations";
 
 // Components
