@@ -29,9 +29,14 @@ const STATUS_META: Record<string, StatusMeta> = {
   cancelado: { label: "Cancelado", variant: "destructive" },
 };
 
-/** Resolve a DRF status value into label + badge variant (Spanish copy). */
+/**
+ * Resolve a DRF status value into label + badge variant (Spanish copy).
+ * Unknown statuses fall back to a neutral "Estado desconocido" badge
+ * (institutions-ui: status values are consumed verbatim; badge mapping
+ * covers known values with a fallback for unknown ones).
+ */
 export function getStatusMeta(status: string): StatusMeta {
-  return STATUS_META[status] ?? { label: status, variant: "secondary" };
+  return STATUS_META[status] ?? { label: "Estado desconocido", variant: "secondary" };
 }
 
 interface StatusBadgeProps {

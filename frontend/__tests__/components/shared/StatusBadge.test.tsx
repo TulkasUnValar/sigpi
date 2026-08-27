@@ -29,8 +29,9 @@ describe("getStatusMeta", () => {
     expect(getStatusMeta("en_ejecucion").variant).toBe("success");
   });
 
-  it("falls back to the raw status for unknown values", () => {
-    expect(getStatusMeta("estado_desconocido").label).toBe("estado_desconocido");
+  it("falls back to a Spanish label for unknown values", () => {
+    expect(getStatusMeta("estado_desconocido").label).toBe("Estado desconocido");
+    expect(getStatusMeta("estado_desconocido").variant).toBe("secondary");
   });
 });
 
@@ -46,8 +47,8 @@ describe("StatusBadge", () => {
     expect(badge).toBeInTheDocument();
   });
 
-  it("renders the raw status when unknown", () => {
+  it("renders the Spanish fallback label when the status is unknown", () => {
     render(<StatusBadge status="weird_state" />);
-    expect(screen.getByText("weird_state")).toBeInTheDocument();
+    expect(screen.getByText("Estado desconocido")).toBeInTheDocument();
   });
 });

@@ -824,3 +824,265 @@ describe("InstitutionTree — per-kind child actions (PR2)", () => {
     });
   });
 });
+
+// ── PR3: leaf levels (groups/lines), unknown status, empty states ───────
+
+const groupRow = {
+  id: "group-1",
+  institution: "inst-1",
+  institution_name: "Universidad Nacional",
+  center: "center-1",
+  code: "G-ML",
+  name: "Grupo de Machine Learning",
+  description: "",
+  status: "active",
+  is_active: true,
+  created_at: "2026-01-10T09:00:00Z",
+  updated_at: "2026-02-01T09:00:00Z",
+};
+
+const lineRow = {
+  id: "line-1",
+  institution: "inst-1",
+  institution_name: "Universidad Nacional",
+  group: "group-1",
+  code: "L-DL",
+  name: "Línea de Deep Learning",
+  description: "",
+  status: "active",
+  is_active: true,
+  created_at: "2026-01-10T09:00:00Z",
+  updated_at: "2026-02-01T09:00:00Z",
+};
+
+/**
+ * Mock the whole hierarchy: sedes/facultades/centers under the institution,
+ * groups under center-1, lines under group-1. Order matters: more specific
+ * URL fragments (/lines/, /groups/) must be matched before /centers/.
+ */
+function mockFullTree() {
+  (api.api.get as jest.Mock).mockImplementation((url: string) => {
+    if (url.includes("/sedes/")) return Promise.resolve(pageOf([sedeRow]));
+    if (url.includes("/facultades/")) return Promise.resolve(pageOf([facultadRow]));
+    if (url.includes("/lines/")) return Promise.resolve(pageOf([lineRow]));
+    if (url.includes("/groups/")) return Promise.resolve(pageOf([groupRow]));
+    if (url.includes("/centers/")) return Promise.resolve(pageOf([centerRow]));
+    return Promise.resolve(undefined);
+  });
+}
+
+/** Expand institution → center → group so the whole chain is visible. */
+async function expandFullChain() {
+  fireEvent.click(screen.getByRole("button", { name: "Expandir Universidad Nacional" }));
+  await screen.findByText("Centro de Inteligencia Artificial");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Expandir Centro de Inteligencia Artificial" }),
+  );
+  await screen.findByText("Grupo de Machine Learning");
+  fireEvent.click(screen.getByRole("button", { name: "Expandir Grupo de Machine Learning" }));
+  await screen.findByText("Línea de Deep Learning");
+}
+
+describe("InstitutionTree — leaf levels (PR3)", () => {
+  it("expanding a center lazily loads and renders its groups", async () => {
+    mockFullTree();
+    renderLazyTree();
+
+    fireEvent.click(screen.getByRole("button", { name: "Expandir Universidad Nacional" }));
+    await screen.findByText("Centro de Inteligencia Artificial");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expandir Centro de Inteligencia Artificial" }),
+    );
+
+    expect(await screen.findByText("Grupo de Machine Learning")).toBeInTheDocument();
+    expect(api.api.get).toHaveBeenCalledWith("/api/centers/center-1/groups/", {
+      sendInstitutionId: false,
+    });
+  });
+
+  it("expanding a group lazily loads and renders its lines (leaf level)", async () => {
+    mockFullTree();
+    renderLazyTree();
+
+    fireEvent.click(screen.getByRole("button", { name: "Expandir Universidad Nacional" }));
+    await screen.findByText("Centro de Inteligencia Artificial");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expandir Centro de Inteligencia Artificial" }),
+    );
+    await screen.findByText("Grupo de Machine Learning");
+    fireEvent.click(screen.getByRole("button", { name: "Expandir Grupo de Machine Learning" }));
+
+    expect(await screen.findByText("Línea de Deep Learning")).toBeInTheDocument();
+    expect(api.api.get).toHaveBeenCalledWith("/api/groups/group-1/lines/", {
+      sendInstitutionId: false,
+    });
+  });
+
+  it("renders group and line treeitems at aria-levels 3 and 4", async () => {
+    mockFullTree();
+    const { container } = renderLazyTree();
+    await expandFullChain();
+
+    // Use each treeitem's own link text: expanded nodes include their
+    // descendants' text in textContent.
+    const ownLink = (item: HTMLElement) => item.querySelector("a")?.textContent;
+    const items = treeitems(container);
+    const groupItem = items.find((i) => ownLink(i) === "Grupo de Machine Learning");
+    const lineItem = items.find((i) => ownLink(i) === "Línea de Deep Learning");
+    expect(groupItem).toHaveAttribute("aria-level", "3");
+    expect(lineItem).toHaveAttribute("aria-level", "4");
+  });
+
+  it("leaf lines expose no expand button and no aria-expanded", async () => {
+    mockFullTree();
+    const { container } = renderLazyTree();
+    await expandFullChain();
+
+    const ownLink = (item: HTMLElement) => item.querySelector("a")?.textContent;
+    const lineItem = treeitems(container).find((i) => ownLink(i) === "Línea de Deep Learning");
+    expect(lineItem).not.toHaveAttribute("aria-expanded");
+    expect(
+      screen.queryByRole("button", { name: "Expandir Línea de Deep Learning" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reaches the line level through keyboard navigation (3 levels deep)", async () => {
+    mockFullTree();
+    const { container } = renderLazyTree();
+    await expandFullChain();
+
+    // Visible order: inst-1, sede-1, fac-1, center-1, group-1, line-1.
+    const ownLink = (item: HTMLElement) => item.querySelector("a")?.textContent;
+    const items = treeitems(container);
+    expect(items.map((i) => ownLink(i))).toEqual([
+      "Universidad Nacional",
+      "Sede Bogotá",
+      "Facultad de Ingeniería",
+      "Centro de Inteligencia Artificial",
+      "Grupo de Machine Learning",
+      "Línea de Deep Learning",
+    ]);
+
+    fireEvent.click(items[0] as HTMLElement);
+    for (let step = 0; step < 4; step += 1) {
+      fireEvent.keyDown(screen.getByRole("tree"), { key: "ArrowDown" });
+    }
+    await waitFor(() => {
+      expect(treeitems(container)[4]).toHaveFocus();
+      expect(ownLink(treeitems(container)[4] as HTMLElement)).toBe("Grupo de Machine Learning");
+    });
+
+    fireEvent.keyDown(screen.getByRole("tree"), { key: "ArrowDown" });
+    await waitFor(() => {
+      expect(treeitems(container)[5]).toHaveFocus();
+      expect(ownLink(treeitems(container)[5] as HTMLElement)).toBe("Línea de Deep Learning");
+    });
+  });
+
+  it("renders the unknown-status fallback badge", async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const unknownNodes: InstitutionTreeNode[] = [
+      {
+        id: "inst-9",
+        kind: "institution",
+        name: "Institución Rara",
+        code: "RAR",
+        status: "weird_state",
+        is_active: false,
+        children: [],
+      },
+    ];
+
+    render(
+      <QueryClientProvider client={qc}>
+        <InstitutionTree nodes={unknownNodes} />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Estado desconocido")).toBeInTheDocument();
+  });
+
+  it("shows no FSM actions for an archived group (terminal state)", async () => {
+    const user = userEvent.setup();
+    (api.api.get as jest.Mock).mockImplementation((url: string) => {
+      if (url.includes("/sedes/")) return Promise.resolve(pageOf([]));
+      if (url.includes("/facultades/")) return Promise.resolve(pageOf([]));
+      if (url.includes("/lines/")) return Promise.resolve(pageOf([]));
+      if (url.includes("/groups/"))
+        return Promise.resolve(pageOf([{ ...groupRow, id: "group-9", status: "archived" }]));
+      if (url.includes("/centers/")) return Promise.resolve(pageOf([centerRow]));
+      return Promise.resolve(undefined);
+    });
+    renderLazyTree(["director"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Expandir Universidad Nacional" }));
+    await screen.findByText("Centro de Inteligencia Artificial");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expandir Centro de Inteligencia Artificial" }),
+    );
+    await screen.findByText("Grupo de Machine Learning");
+
+    await user.click(screen.getByRole("button", { name: "Acciones de Grupo de Machine Learning" }));
+
+    expect(await screen.findByRole("menuitem", { name: /ver detalle/i })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /activar|desactivar|archivar/i })).toBeNull();
+  });
+
+  it("shows FSM actions on an active group for a director (RF-F05)", async () => {
+    const user = userEvent.setup();
+    mockFullTree();
+    renderLazyTree(["director"]);
+
+    await expandFullChain();
+    await user.click(screen.getByRole("button", { name: "Acciones de Grupo de Machine Learning" }));
+
+    expect(await screen.findByRole("menuitem", { name: /desactivar/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /archivar/i })).toBeInTheDocument();
+  });
+
+  it("links group and line nodes to their nested detail routes", async () => {
+    const user = userEvent.setup();
+    mockFullTree();
+    renderLazyTree();
+
+    await expandFullChain();
+    await user.click(screen.getByRole("button", { name: "Acciones de Grupo de Machine Learning" }));
+
+    expect(await screen.findByRole("menuitem", { name: /ver detalle/i })).toHaveAttribute(
+      "href",
+      "/institutions/inst-1/centers/center-1/groups/group-1",
+    );
+    expect(screen.getByRole("menuitem", { name: /editar/i })).toHaveAttribute(
+      "href",
+      "/institutions/inst-1/centers/center-1/groups/group-1/edit",
+    );
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Acciones de Línea de Deep Learning" }));
+
+    expect(await screen.findByRole("menuitem", { name: /ver detalle/i })).toHaveAttribute(
+      "href",
+      "/institutions/inst-1/centers/center-1/groups/group-1/lines/line-1",
+    );
+  });
+
+  it("shows a per-level empty state when a center has no groups", async () => {
+    (api.api.get as jest.Mock).mockImplementation((url: string) => {
+      if (url.includes("/sedes/")) return Promise.resolve(pageOf([]));
+      if (url.includes("/facultades/")) return Promise.resolve(pageOf([]));
+      if (url.includes("/lines/")) return Promise.resolve(pageOf([]));
+      if (url.includes("/groups/")) return Promise.resolve(pageOf([]));
+      if (url.includes("/centers/")) return Promise.resolve(pageOf([centerRow]));
+      return Promise.resolve(undefined);
+    });
+    renderLazyTree();
+
+    fireEvent.click(screen.getByRole("button", { name: "Expandir Universidad Nacional" }));
+    await screen.findByText("Centro de Inteligencia Artificial");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expandir Centro de Inteligencia Artificial" }),
+    );
+
+    expect(await screen.findByText("No hay grupos de investigación")).toBeInTheDocument();
+  });
+});
