@@ -1,28 +1,40 @@
 "use client";
 
 /**
- * EntityDetail — institution detail view with StatusBadge + FsmActionBar.
+ * EntityDetail — generic detail layout with StatusBadge + optional FsmActionBar.
  *
  * Spec (institutions-ui RF-F02/RF-F04):
- *   - Detail MUST load without an active institution (root entity).
- *   - Renders the raw DRF status through StatusBadge and exposes the
- *     lifecycle transitions through the generic FsmActionBar.
+ *   - Detail renders the entity name, its raw DRF status via StatusBadge,
+ *     and the lifecycle transitions through the generic FsmActionBar.
  *
- * Design (institutions): shared detail layout for the root entity;
- * child-entity detail views reuse the same field-list pattern.
+ * Design (institutions): one shared detail layout for every entity level;
+ * the root institution page and the child entity pages feed label/value
+ * field pairs, so the field-list pattern stays identical everywhere.
  */
 
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { FsmActionBar } from "@/features/institutions/FsmActionBar";
-import type { Institution } from "@/features/institutions/types";
+import type { ReactNode } from "react";
+
+/** Label/value pair shown in the detail grid. */
+export interface DetailField {
+  label: string;
+  value: string;
+}
 
 interface EntityDetailProps {
-  institution: Institution;
+  /** Entity display name (heading). */
+  title: string;
+  /** Raw DRF status value rendered through StatusBadge. */
+  status: string;
+  /** Label/value field pairs shown in the card. */
+  fields: DetailField[];
+  /** Optional action bar (FsmActionBar for the entity kind). */
+  actionBar?: ReactNode;
 }
 
 /** Label/value pair shown in the detail grid. */
-function Field({ label, value }: { label: string; value: string }) {
+function Field({ label, value }: DetailField) {
   return (
     <div>
       <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
@@ -31,30 +43,23 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function EntityDetail({ institution }: EntityDetailProps) {
+export function EntityDetail({ title, status, fields, actionBar }: EntityDetailProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">{institution.name}</h1>
-          <StatusBadge status={institution.status} />
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          <StatusBadge status={status} />
         </div>
       </div>
 
-      <div>
-        <FsmActionBar entityId={institution.id} state={institution.status} />
-      </div>
+      {actionBar ? <div>{actionBar}</div> : null}
 
       <Card>
         <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
-          <Field label="Código" value={institution.code} />
-          <Field label="Descripción" value={institution.description} />
-          <Field label="Dirección" value={institution.address} />
-          <Field label="Correo de contacto" value={institution.contact_email} />
-          <Field label="Teléfono de contacto" value={institution.contact_phone} />
-          <Field label="URL del logo" value={institution.logo_url} />
-          <Field label="Creada" value={institution.created_at} />
-          <Field label="Actualizada" value={institution.updated_at} />
+          {fields.map((field) => (
+            <Field key={field.label} label={field.label} value={field.value} />
+          ))}
         </CardContent>
       </Card>
     </div>

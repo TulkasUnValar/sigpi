@@ -20,8 +20,15 @@ export type {
   FsmAction,
   EntityConfig,
   EntityField,
+  EntityFieldOption,
   CreateInstitutionPayload,
   UpdateInstitutionPayload,
+  CreateSedePayload,
+  UpdateSedePayload,
+  CreateFacultadPayload,
+  UpdateFacultadPayload,
+  CreateCenterPayload,
+  UpdateCenterPayload,
 } from "@/features/institutions/types";
 
 // Schemas
@@ -33,7 +40,13 @@ export {
   groupSchema,
   lineSchema,
   institutionConfig,
+  sedeConfig,
+  facultadConfig,
+  centerConfig,
   type InstitutionFormValues,
+  type SedeFormValues,
+  type FacultadFormValues,
+  type CenterFormValues,
 } from "@/features/institutions/schemas";
 
 // FSM
@@ -49,6 +62,12 @@ export {
   fetchAllPages,
   useInstitutionsList,
   useInstitutionDetail,
+  useSedes,
+  useFacultades,
+  useResearchCenters,
+  useSedeDetail,
+  useFacultadDetail,
+  useCenterDetail,
 } from "@/features/institutions/queries";
 
 // Mutations
@@ -57,12 +76,24 @@ export {
   useUpdateInstitution,
   useDeleteInstitution,
   useInstitutionTransition,
+  useCreateSede,
+  useUpdateSede,
+  useDeleteSede,
+  useSedeTransition,
+  useCreateFacultad,
+  useUpdateFacultad,
+  useDeleteFacultad,
+  useFacultadTransition,
+  useCreateCenter,
+  useUpdateCenter,
+  useDeleteCenter,
+  useCenterTransition,
 } from "@/features/institutions/mutations";
 
 // Components
 export { EntityForm } from "@/features/institutions/EntityForm";
-export { FsmActionBar } from "@/features/institutions/FsmActionBar";
-export { EntityDetail } from "@/features/institutions/EntityDetail";
+export { FsmActionBar, type FsmTransitionLike } from "@/features/institutions/FsmActionBar";
+export { EntityDetail, type DetailField } from "@/features/institutions/EntityDetail";
 export {
   InstitutionTree,
   flattenVisibleNodes,
