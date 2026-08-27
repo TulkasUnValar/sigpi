@@ -26,7 +26,8 @@ export default function InstitutionsPage() {
   const listQuery = useInstitutionsList();
   const institutions = listQuery.data?.results ?? [];
 
-  // PR1 renders root institutions; children arrive in PR2/PR3.
+  // Root nodes only — child levels (sedes/facultades/centers) are fetched
+  // lazily by the tree when a node expands (PR2, RF-F03).
   const nodes: InstitutionTreeNode[] = institutions.map((inst) => ({
     id: inst.id,
     kind: "institution",

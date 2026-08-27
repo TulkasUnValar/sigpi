@@ -11,11 +11,14 @@
  *     (collapse, or focus parent), Home/End, Enter/Space (toggle).
  *   - Each node shows name, code, StatusBadge and an action menu.
  *
- * PR1 renders root institutions (children arrive in PR2/PR3), but the
- * component is fully recursive — the page just passes root nodes.
+ * PR2 (RF-F03): expanding an institution lazily fetches its sedes,
+ * facultades and centers (useQuery gated by `enabled: isExpanded`) and
+ * renders them as children. Each child node carries per-kind actions
+ * (detail/edit links, FSM transitions, delete) with the admin write
+ * threshold (RF-F05).
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ChevronRight, MoreHorizontal, Pencil, Trash2, ExternalLink } from "lucide-react";
@@ -33,13 +36,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getErrorMessage } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth";
-import { useDeleteInstitution, useInstitutionTransition } from "@/features/institutions/mutations";
+import { useFacultades, useResearchCenters, useSedes } from "@/features/institutions/queries";
+import {
+  useDeleteCenter,
+  useDeleteFacultad,
+  useDeleteInstitution,
+  useDeleteSede,
+  useCenterTransition,
+  useFacultadTransition,
+  useInstitutionTransition,
+  useSedeTransition,
+} from "@/features/institutions/mutations";
 import {
   getEntityActions,
   isDestructiveEntityAction,
   type FsmAction,
 } from "@/features/institutions/fsm";
-import type { InstitutionTreeNode } from "@/features/institutions/types";
+import type { EntityKind, InstitutionTreeNode } from "@/features/institutions/types";
 
 /** Flatten visible nodes in document order (recursive, expansion-aware). */
 export function flattenVisibleNodes(
@@ -76,12 +89,71 @@ type ConfirmState =
   | { kind: "fsm"; node: InstitutionTreeNode; action: FsmAction }
   | null;
 
+/** Per-kind UI metadata: label, write-role threshold (RF-F05). */
+const KIND_META: Record<EntityKind, { label: string; deletedLabel: string; minRoles: string[] }> = {
+  institution: { label: "Institución", deletedLabel: "Institución eliminada.", minRoles: ["superadmin"] },
+  sede: { label: "Sede", deletedLabel: "Sede eliminada.", minRoles: ["admin", "superadmin"] },
+  facultad: { label: "Facultad", deletedLabel: "Facultad eliminada.", minRoles: ["admin", "superadmin"] },
+  center: {
+    label: "Centro de investigación",
+    deletedLabel: "Centro de investigación eliminado.",
+    minRoles: ["admin", "superadmin"],
+  },
+  // PR3: groups/lines are directed by directors.
+  group: { label: "Grupo", deletedLabel: "Grupo eliminado.", minRoles: ["director", "admin", "superadmin"] },
+  line: { label: "Línea", deletedLabel: "Línea eliminada.", minRoles: ["director", "admin", "superadmin"] },
+};
+
+/** Detail route of a node, derived from its kind and the root institution id. */
+function detailUrl(kind: EntityKind, nodeId: string, institutionId: string): string {
+  switch (kind) {
+    case "sede":
+      return `/institutions/${institutionId}/sedes/${nodeId}`;
+    case "facultad":
+      return `/institutions/${institutionId}/facultades/${nodeId}`;
+    case "center":
+      return `/institutions/${institutionId}/centers/${nodeId}`;
+    default:
+      return `/institutions/${nodeId}`;
+  }
+}
+
 export function InstitutionTree({ nodes }: InstitutionTreeProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [lazyChildren, setLazyChildren] = useState<Record<string, InstitutionTreeNode[]>>({});
   const nodeRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-  const visible = flattenVisibleNodes(nodes, expandedIds);
+  /** Lift lazily fetched children up so keyboard nav sees them. */
+  const handleLazyChildren = useCallback(
+    (parentId: string, children: InstitutionTreeNode[]) => {
+      setLazyChildren((prev) => {
+        const current = prev[parentId];
+        if (
+          current &&
+          current.length === children.length &&
+          current.every((c, i) => c.id === children[i]?.id)
+        ) {
+          return prev;
+        }
+        return { ...prev, [parentId]: children };
+      });
+    },
+    [],
+  );
+
+  /** Merge lazy children under institution nodes; static children stay. */
+  const mergedNodes = useMemo(
+    () =>
+      nodes.map((node) =>
+        node.kind === "institution"
+          ? { ...node, children: [...node.children, ...(lazyChildren[node.id] ?? [])] }
+          : node,
+      ),
+    [nodes, lazyChildren],
+  );
+
+  const visible = flattenVisibleNodes(mergedNodes, expandedIds);
   const focusedIndex = visible.findIndex((n) => n.id === focusedId);
 
   // Roving focus: keep the focused node's DOM element focused.
@@ -147,7 +219,7 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
         if (node.children.length > 0 && expandedIds.has(node.id)) {
           toggle(node.id);
         } else {
-          const parentId = findParentId(nodes, node.id);
+          const parentId = findParentId(mergedNodes, node.id);
           if (parentId) {
             const idx = visible.findIndex((n) => n.id === parentId);
             if (idx !== -1) moveFocus(idx);
@@ -175,7 +247,7 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
     }
   }
 
-  if (nodes.length === 0) return null;
+  if (mergedNodes.length === 0) return null;
 
   return (
     <ul
@@ -184,17 +256,19 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
       onKeyDown={handleKeyDown}
       className="space-y-1"
     >
-      {nodes.map((node, index) => (
+      {mergedNodes.map((node, index) => (
         <TreeNode
           key={node.id}
           node={node}
           depth={0}
+          institutionId={node.id}
           tabIndex={focusedId === null ? (index === 0 ? 0 : -1) : focusedId === node.id ? 0 : -1}
           expandedIds={expandedIds}
           focusedId={focusedId}
           onToggle={toggle}
           onFocus={setFocusedId}
           registerRef={registerRef}
+          onLazyChildren={handleLazyChildren}
         />
       ))}
     </ul>
@@ -204,6 +278,8 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
 interface TreeNodeProps {
   node: InstitutionTreeNode;
   depth: number;
+  /** Root institution id — used to build child detail/edit URLs. */
+  institutionId: string;
   /** Roving-focus tabIndex: 0 for the active node, -1 otherwise. */
   tabIndex: number;
   expandedIds: Set<string>;
@@ -211,26 +287,31 @@ interface TreeNodeProps {
   onToggle: (id: string) => void;
   onFocus: (id: string) => void;
   registerRef: (id: string, el: HTMLElement | null) => void;
+  onLazyChildren: (parentId: string, children: InstitutionTreeNode[]) => void;
 }
 
 function TreeNode({
   node,
   depth,
+  institutionId,
   tabIndex,
   expandedIds,
   focusedId,
   onToggle,
   onFocus,
   registerRef,
+  onLazyChildren,
 }: TreeNodeProps) {
   const isExpanded = expandedIds.has(node.id);
-  const hasChildren = node.children.length > 0;
+  // Institution nodes can always have children (lazily loaded); other
+  // kinds expand only when static children exist.
+  const canExpand = node.kind === "institution" || node.children.length > 0;
 
   return (
     <li
       role="treeitem"
       aria-level={depth + 1}
-      aria-expanded={hasChildren ? isExpanded : undefined}
+      aria-expanded={canExpand ? isExpanded : undefined}
       aria-selected={focusedId === node.id}
       tabIndex={tabIndex}
       ref={(el) => registerRef(node.id, el)}
@@ -241,7 +322,7 @@ function TreeNode({
         className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
         style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
       >
-        {hasChildren ? (
+        {canExpand ? (
           <button
             type="button"
             aria-label={isExpanded ? `Contraer ${node.name}` : `Expandir ${node.name}`}
@@ -261,7 +342,7 @@ function TreeNode({
         )}
 
         <Link
-          href={`/institutions/${node.id}`}
+          href={detailUrl(node.kind, node.id, institutionId)}
           onClick={(e) => e.stopPropagation()}
           className="font-medium hover:underline"
         >
@@ -269,22 +350,31 @@ function TreeNode({
         </Link>
         <span className="text-xs text-muted-foreground">{node.code}</span>
         <StatusBadge status={node.status} />
-        <NodeActions node={node} />
+        <NodeActions node={node} institutionId={institutionId} />
       </div>
 
-      {hasChildren && isExpanded ? (
+      {canExpand && isExpanded ? (
         <ul role="group">
+          {node.kind === "institution" ? (
+            <LazyChildrenLoader
+              institutionId={node.id}
+              expanded={isExpanded}
+              onLoaded={onLazyChildren}
+            />
+          ) : null}
           {node.children.map((child) => (
             <TreeNode
               key={child.id}
               node={child}
               depth={depth + 1}
+              institutionId={institutionId}
               tabIndex={focusedId === child.id ? 0 : -1}
               expandedIds={expandedIds}
               focusedId={focusedId}
               onToggle={onToggle}
               onFocus={onFocus}
               registerRef={registerRef}
+              onLazyChildren={onLazyChildren}
             />
           ))}
         </ul>
@@ -293,21 +383,115 @@ function TreeNode({
   );
 }
 
+/**
+ * Fetches the sedes/facultades/centers of an expanded institution and
+ * reports them up to the tree root. Renders nothing; the root merges the
+ * results into the node's children so keyboard nav sees them.
+ */
+function LazyChildrenLoader({
+  institutionId,
+  expanded,
+  onLoaded,
+}: {
+  institutionId: string;
+  expanded: boolean;
+  onLoaded: (parentId: string, children: InstitutionTreeNode[]) => void;
+}) {
+  const sedesQuery = useSedes(institutionId, expanded);
+  const facultadesQuery = useFacultades(institutionId, undefined, expanded);
+  const centersQuery = useResearchCenters(institutionId, "institution", null, expanded);
+
+  useEffect(() => {
+    const children: InstitutionTreeNode[] = [
+      ...(sedesQuery.data?.results ?? []).map((s) => ({
+        id: s.id,
+        kind: "sede" as const,
+        name: s.name,
+        code: s.code,
+        status: s.status,
+        is_active: s.is_active,
+        children: [] as InstitutionTreeNode[],
+      })),
+      ...(facultadesQuery.data?.results ?? []).map((f) => ({
+        id: f.id,
+        kind: "facultad" as const,
+        name: f.name,
+        code: f.code,
+        status: f.status,
+        is_active: f.is_active,
+        children: [] as InstitutionTreeNode[],
+      })),
+      ...(centersQuery.data?.results ?? []).map((c) => ({
+        id: c.id,
+        kind: "center" as const,
+        name: c.name,
+        code: c.code,
+        status: c.status,
+        is_active: c.is_active,
+        children: [] as InstitutionTreeNode[],
+      })),
+    ];
+    onLoaded(institutionId, children);
+  }, [
+    institutionId,
+    expanded,
+    sedesQuery.data,
+    facultadesQuery.data,
+    centersQuery.data,
+    onLoaded,
+  ]);
+
+  return null;
+}
+
 /** Per-node action menu: detail/edit links, FSM transitions, delete. */
-function NodeActions({ node }: { node: InstitutionTreeNode }) {
+function NodeActions({
+  node,
+  institutionId,
+}: {
+  node: InstitutionTreeNode;
+  institutionId: string;
+}) {
   const roles = useAuthStore((s) => s.roles);
-  const transition = useInstitutionTransition();
-  const remove = useDeleteInstitution();
+  // All four transition/delete hooks are registered unconditionally and
+  // selected by kind — keeps hook order stable across renders.
+  const institutionTransition = useInstitutionTransition();
+  const sedeTransition = useSedeTransition();
+  const facultadTransition = useFacultadTransition();
+  const centerTransition = useCenterTransition();
+  const deleteInstitution = useDeleteInstitution();
+  const deleteSede = useDeleteSede();
+  const deleteFacultad = useDeleteFacultad();
+  const deleteCenter = useDeleteCenter();
   const [confirm, setConfirm] = useState<ConfirmState>(null);
 
-  const fsmActions = getEntityActions(node.status, roles);
+  const meta = KIND_META[node.kind] ?? KIND_META.institution;
+  const fsmActions = getEntityActions(node.status, roles, meta.minRoles);
+
+  const transition =
+    node.kind === "sede"
+      ? sedeTransition
+      : node.kind === "facultad"
+        ? facultadTransition
+        : node.kind === "center"
+          ? centerTransition
+          : institutionTransition;
+
+  const remove =
+    node.kind === "sede"
+      ? deleteSede
+      : node.kind === "facultad"
+        ? deleteFacultad
+        : node.kind === "center"
+          ? deleteCenter
+          : deleteInstitution;
 
   function runFsm(action: FsmAction) {
     transition.mutate(
       { id: node.id, action: action.name },
       {
         onSuccess: () => {
-          toast.success(`Institución ${action.label.toLowerCase()}.`);
+          toast.success(`${meta.label} ${action.label.toLowerCase()}.`);
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
@@ -319,13 +503,15 @@ function NodeActions({ node }: { node: InstitutionTreeNode }) {
   function runDelete() {
     remove.mutate(node.id, {
       onSuccess: () => {
-        toast.success("Institución eliminada.");
+        toast.success(meta.deletedLabel);
       },
       onError: (error) => {
         toast.error(getErrorMessage(error));
       },
     });
   }
+
+  const nodeHref = detailUrl(node.kind, node.id, institutionId);
 
   return (
     <>
@@ -344,13 +530,13 @@ function NodeActions({ node }: { node: InstitutionTreeNode }) {
           <DropdownMenuLabel>{node.name}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href={`/institutions/${node.id}`}>
+            <Link href={nodeHref}>
               <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
               Ver detalle
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href={`/institutions/${node.id}/edit`}>
+            <Link href={`${nodeHref}/edit`}>
               <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
               Editar
             </Link>
@@ -393,7 +579,7 @@ function NodeActions({ node }: { node: InstitutionTreeNode }) {
           onOpenChange={(open) => {
             if (!open) setConfirm(null);
           }}
-          title="¿Eliminar institución?"
+          title={`¿Eliminar ${meta.label.toLowerCase()}?`}
           description="Esta acción no se puede deshacer."
           confirmLabel="Eliminar"
           cancelLabel="Cancelar"
