@@ -20,9 +20,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import type {
+  CreateCenterPayload,
+  CreateFacultadPayload,
   CreateInstitutionPayload,
+  CreateSedePayload,
+  Facultad,
   Institution,
+  ResearchCenter,
+  Sede,
+  UpdateCenterPayload,
+  UpdateFacultadPayload,
   UpdateInstitutionPayload,
+  UpdateSedePayload,
 } from "@/features/institutions/types";
 
 /** Invalidate every query derived from the institutions resource. */
@@ -77,6 +86,177 @@ export function useInstitutionTransition() {
     mutationFn: ({ id, action }: { id: string; action: string }) =>
       api.post<Institution>(
         `/api/institutions/${id}/${action}/`,
+        {},
+        {
+          sendInstitutionId: false,
+        },
+      ),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+// ──────────────────────────────────────────────────────────
+// Child entity mutations (RF-F03) — Sede / Facultad / ResearchCenter
+//
+// The parent (institution) id comes from the URL; it is NEVER sent in the
+// body. Optional references (sede/facultad) ARE body fields. Every call
+// omits the X-Institution-ID header and invalidates `institutions.all`
+// only on success.
+// ──────────────────────────────────────────────────────────
+
+// ── Sede ──────────────────────────────────────────────────
+
+/** Create a sede under an institution — POST /api/institutions/{pk}/sedes/. */
+export function useCreateSede(institutionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateSedePayload) =>
+      api.post<Sede>(`/api/institutions/${institutionId}/sedes/`, payload, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Update a sede — PATCH /api/sedes/{id}/. */
+export function useUpdateSede() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateSedePayload }) =>
+      api.patch<Sede>(`/api/sedes/${id}/`, payload, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Delete a sede — DELETE /api/sedes/{id}/. */
+export function useDeleteSede() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.delete<void>(`/api/sedes/${id}/`, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Sede FSM transition — POST /api/sedes/{id}/{action}/. */
+export function useSedeTransition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: string }) =>
+      api.post<Sede>(
+        `/api/sedes/${id}/${action}/`,
+        {},
+        {
+          sendInstitutionId: false,
+        },
+      ),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+// ── Facultad ──────────────────────────────────────────────
+
+/** Create a facultad under an institution — POST /api/institutions/{pk}/facultades/. */
+export function useCreateFacultad(institutionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateFacultadPayload) =>
+      api.post<Facultad>(`/api/institutions/${institutionId}/facultades/`, payload, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Update a facultad — PATCH /api/facultades/{id}/. */
+export function useUpdateFacultad() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateFacultadPayload }) =>
+      api.patch<Facultad>(`/api/facultades/${id}/`, payload, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Delete a facultad — DELETE /api/facultades/{id}/. */
+export function useDeleteFacultad() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.delete<void>(`/api/facultades/${id}/`, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Facultad FSM transition — POST /api/facultades/{id}/{action}/. */
+export function useFacultadTransition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: string }) =>
+      api.post<Facultad>(
+        `/api/facultades/${id}/${action}/`,
+        {},
+        {
+          sendInstitutionId: false,
+        },
+      ),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+// ── ResearchCenter ────────────────────────────────────────
+
+/** Create a center under an institution — POST /api/institutions/{pk}/centers/. */
+export function useCreateCenter(institutionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateCenterPayload) =>
+      api.post<ResearchCenter>(`/api/institutions/${institutionId}/centers/`, payload, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Update a center — PATCH /api/centers/{id}/. */
+export function useUpdateCenter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateCenterPayload }) =>
+      api.patch<ResearchCenter>(`/api/centers/${id}/`, payload, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Delete a center — DELETE /api/centers/{id}/. */
+export function useDeleteCenter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.delete<void>(`/api/centers/${id}/`, {
+        sendInstitutionId: false,
+      }),
+    onSuccess: () => invalidateInstitutions(qc),
+  });
+}
+
+/** Center FSM transition — POST /api/centers/{id}/{action}/. */
+export function useCenterTransition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: string }) =>
+      api.post<ResearchCenter>(
+        `/api/centers/${id}/${action}/`,
         {},
         {
           sendInstitutionId: false,

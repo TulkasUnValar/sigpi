@@ -16,14 +16,22 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type {
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 import type { DefaultValues, FieldValues, Path } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/errors";
-import type { EntityConfig, EntityField } from "@/features/institutions/types";
+import type {
+  EntityConfig,
+  EntityField,
+  EntityFieldOption,
+} from "@/features/institutions/types";
 
 interface EntityFormProps<TForm extends FieldValues> {
   /** Entity configuration (schema + Spanish field labels). */
@@ -40,15 +48,22 @@ interface EntityFormProps<TForm extends FieldValues> {
   onSubmit: (values: TForm) => Promise<void>;
   /** Receives non-400 errors (409 detail, network, …). */
   onError?: (error: unknown) => void;
+  /**
+   * Dynamic options for select fields (child reference pickers, e.g.
+   * sedes/facultades lists). Keyed by the field name.
+   */
+  fieldOptions?: Record<string, EntityFieldOption[]>;
 }
 
 /** Renders one EntityField using the type-specific control. */
 function FieldInput({
   field,
+  options,
   ...props
 }: {
   field: EntityField;
-} & InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>) {
+  options?: EntityFieldOption[];
+} & InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
   const baseClassName =
     "min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
@@ -60,6 +75,23 @@ function FieldInput({
       />
     );
   }
+
+  if (field.type === "select") {
+    return (
+      <select
+        {...(props as SelectHTMLAttributes<HTMLSelectElement>)}
+        className={baseClassName}
+      >
+        <option value="">—</option>
+        {(options ?? []).map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
   return <Input type={field.type} {...(props as InputHTMLAttributes<HTMLInputElement>)} />;
 }
 
@@ -69,6 +101,7 @@ export function EntityForm<TForm extends FieldValues>({
   submitLabel,
   onSubmit,
   onError,
+  fieldOptions,
 }: EntityFormProps<TForm>) {
   const {
     register,
@@ -111,6 +144,7 @@ export function EntityForm<TForm extends FieldValues>({
             <div className="mt-1">
               <FieldInput
                 field={field}
+                options={fieldOptions?.[field.name]}
                 id={`entity-${field.name}`}
                 aria-label={field.label}
                 aria-invalid={error ? true : undefined}

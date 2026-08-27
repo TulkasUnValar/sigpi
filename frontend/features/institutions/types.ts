@@ -133,11 +133,17 @@ export interface FsmAction {
   fromStates: string[];
 }
 
+/** Option of a select field (child reference pickers). */
+export interface EntityFieldOption {
+  value: string;
+  label: string;
+}
+
 /** Form field descriptor driven by the entity config. */
 export interface EntityField {
   name: string;
   label: string;
-  type: "text" | "textarea" | "email" | "url";
+  type: "text" | "textarea" | "email" | "url" | "select";
   placeholder?: string;
 }
 
@@ -175,3 +181,42 @@ export interface CreateInstitutionPayload {
 
 /** Writable payload for PATCH /api/institutions/{id}/. */
 export type UpdateInstitutionPayload = Partial<CreateInstitutionPayload>;
+
+/** Writable payload for POST /api/institutions/{pk}/sedes/ (parent from URL). */
+export interface CreateSedePayload {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+/** Writable payload for PATCH /api/sedes/{id}/. */
+export type UpdateSedePayload = Partial<CreateSedePayload>;
+
+/** Writable payload for POST /api/institutions/{pk}/facultades/ — optional sede ref. */
+export interface CreateFacultadPayload {
+  sede?: string | null;
+  code: string;
+  name: string;
+  description?: string;
+}
+
+/** Writable payload for PATCH /api/facultades/{id}/. */
+export type UpdateFacultadPayload = Partial<CreateFacultadPayload>;
+
+/**
+ * Writable payload for POST /api/institutions/{pk}/centers/ — the parent is
+ * the URL institution; optional sede/facultad refs select the nesting level
+ * (parent_type: institution | sede | facultad).
+ */
+export interface CreateCenterPayload {
+  sede?: string | null;
+  facultad?: string | null;
+  code: string;
+  name: string;
+  description?: string;
+  contact_email?: string;
+  contact_phone?: string;
+}
+
+/** Writable payload for PATCH /api/centers/{id}/. */
+export type UpdateCenterPayload = Partial<CreateCenterPayload>;
