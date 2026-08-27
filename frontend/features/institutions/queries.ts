@@ -21,6 +21,8 @@ import type {
   Institution,
   Page,
   ResearchCenter,
+  ResearchGroup,
+  ResearchLine,
   Sede,
 } from "@/features/institutions/types";
 
@@ -160,6 +162,66 @@ export function useCenterDetail(id: string) {
     queryKey: queryKeys.institutions.detail(null, "center", id),
     queryFn: () =>
       api.get<ResearchCenter>(`/api/centers/${id}/`, {
+        sendInstitutionId: false,
+      }),
+    enabled: Boolean(id),
+  });
+}
+
+// ──────────────────────────────────────────────────────────
+// Leaf entity hooks (RF-F03) — ResearchGroup / ResearchLine
+//
+// The parent id comes from the URL (center for groups, group for lines).
+// All calls omit the X-Institution-ID header. `enabled` gates lazy
+// loading in the tree; the hooks stay disabled without a parent id.
+// ──────────────────────────────────────────────────────────
+
+/**
+ * Research groups of a center — GET /api/centers/{id}/groups/.
+ */
+export function useResearchGroups(centerId: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.institutions.list(centerId, "group", null),
+    queryFn: () =>
+      api.get<Page<ResearchGroup>>(`/api/centers/${centerId}/groups/`, {
+        sendInstitutionId: false,
+      }),
+    enabled: Boolean(centerId) && enabled,
+  });
+}
+
+/**
+ * Research lines of a group — GET /api/groups/{id}/lines/. Leaf level.
+ */
+export function useResearchLines(groupId: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.institutions.list(groupId, "line", null),
+    queryFn: () =>
+      api.get<Page<ResearchLine>>(`/api/groups/${groupId}/lines/`, {
+        sendInstitutionId: false,
+      }),
+    enabled: Boolean(groupId) && enabled,
+  });
+}
+
+/** ResearchGroup detail — GET /api/groups/{id}/. */
+export function useResearchGroupDetail(id: string) {
+  return useQuery({
+    queryKey: queryKeys.institutions.detail(null, "group", id),
+    queryFn: () =>
+      api.get<ResearchGroup>(`/api/groups/${id}/`, {
+        sendInstitutionId: false,
+      }),
+    enabled: Boolean(id),
+  });
+}
+
+/** ResearchLine detail — GET /api/lines/{id}/. */
+export function useResearchLineDetail(id: string) {
+  return useQuery({
+    queryKey: queryKeys.institutions.detail(null, "line", id),
+    queryFn: () =>
+      api.get<ResearchLine>(`/api/lines/${id}/`, {
         sendInstitutionId: false,
       }),
     enabled: Boolean(id),

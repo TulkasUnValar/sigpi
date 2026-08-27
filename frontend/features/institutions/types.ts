@@ -220,3 +220,23 @@ export interface CreateCenterPayload {
 
 /** Writable payload for PATCH /api/centers/{id}/. */
 export type UpdateCenterPayload = Partial<CreateCenterPayload>;
+
+/** Writable payload for POST /api/centers/{pk}/groups/ (parent from URL). */
+export interface CreateResearchGroupPayload {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+/** Writable payload for PATCH /api/groups/{id}/. */
+export type UpdateResearchGroupPayload = Partial<CreateResearchGroupPayload>;
+
+/** Writable payload for POST /api/groups/{pk}/lines/ (parent from URL). */
+export interface CreateResearchLinePayload {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+/** Writable payload for PATCH /api/lines/{id}/. */
+export type UpdateResearchLinePayload = Partial<CreateResearchLinePayload>;
