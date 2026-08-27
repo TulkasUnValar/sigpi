@@ -14,7 +14,7 @@ import { useAuthStore } from "@/store/auth";
 
 const mockPush = jest.fn();
 let mockParams: Record<string, string> = { id: "inst-1" };
-let mockSearchParams: Record<string, string | undefined> = {};
+let mockSearchParams: Record<string, string> = {};
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/institutions/inst-1/centers",

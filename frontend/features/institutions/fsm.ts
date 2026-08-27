@@ -56,11 +56,7 @@ const TERMINAL_STATES = new Set(["archived"]);
  * root institution stays superadmin-only. When omitted the per-action
  * `allowedRoles` from the config table applies.
  */
-export function getEntityActions(
-  state: string,
-  roles: string[],
-  minRoles?: string[],
-): FsmAction[] {
+export function getEntityActions(state: string, roles: string[], minRoles?: string[]): FsmAction[] {
   if (TERMINAL_STATES.has(state)) return [];
 
   const roleSet = new Set(roles);
