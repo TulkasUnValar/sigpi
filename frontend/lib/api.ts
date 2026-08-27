@@ -27,13 +27,19 @@ const FALLBACK_ERROR = "Unknown error";
  */
 export function getCSRFToken(): string {
   const match = document.cookie.match(/csrftoken=([^;]+)/);
-  return match ? match[1] ?? "" : "";
+  return match ? (match[1] ?? "") : "";
 }
 
 /** Options accepted by every request method. */
 export interface RequestOptions {
   /** Active institution id — sent as X-Institution-ID when present. */
   institutionId?: string | null;
+  /**
+   * Opt out of the X-Institution-ID header (default true). The
+   * institutions feature sends no tenant header — the root entity is
+   * not institution-scoped.
+   */
+  sendInstitutionId?: boolean;
   /** Abort signal forwarded to fetch. */
   signal?: AbortSignal;
 }
@@ -64,10 +70,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
  * - X-CSRFToken on mutating requests when the cookie exists.
  * - X-Institution-ID when an institution scope is provided.
  */
-function buildHeaders(
-  init: RequestInit,
-  options: RequestOptions,
-): Record<string, string> {
+function buildHeaders(init: RequestInit, options: RequestOptions): Record<string, string> {
   const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
   const headers: Record<string, string> = {};
   if (!isFormData) {
@@ -78,7 +81,7 @@ function buildHeaders(
   if (csrf) {
     headers["X-CSRFToken"] = csrf;
   }
-  if (options.institutionId) {
+  if (options.institutionId && options.sendInstitutionId !== false) {
     headers["X-Institution-ID"] = options.institutionId;
   }
   return headers;
@@ -185,10 +188,7 @@ export interface SwitchInstitutionResponse {
  * Log in with email and password (local auth).
  * Returns the authenticated user on success, throws ApiError on failure.
  */
-export async function login(
-  email: string,
-  password: string,
-): Promise<AuthUser> {
+export async function login(email: string, password: string): Promise<AuthUser> {
   const data = await request<{ user: AuthUser }>("/auth/login/", {
     method: "POST",
     body: JSON.stringify({ email, password }),
@@ -210,9 +210,7 @@ export async function getMe(): Promise<AuthUser> {
  * Switch the active institution for the current session.
  * Returns the updated user, institution, role, and centers.
  */
-export async function switchInstitution(
-  institutionId: string,
-): Promise<SwitchInstitutionResponse> {
+export async function switchInstitution(institutionId: string): Promise<SwitchInstitutionResponse> {
   return request<SwitchInstitutionResponse>("/auth/switch-institution/", {
     method: "POST",
     body: JSON.stringify({ institution_id: institutionId }),
