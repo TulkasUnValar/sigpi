@@ -98,13 +98,11 @@ describe("EntityForm — server errors", () => {
   it("maps 400 field errors into the form and keeps values", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderForm({
-      onSubmit: jest
-        .fn()
-        .mockRejectedValue(
-          new ApiError("Ya existe una institución con este código.", 400, {
-            code: ["Ya existe una institución con este código."],
-          }),
-        ),
+      onSubmit: jest.fn().mockRejectedValue(
+        new ApiError("Ya existe una institución con este código.", 400, {
+          code: ["Ya existe una institución con este código."],
+        }),
+      ),
     });
 
     await user.click(screen.getByRole("button", { name: "Crear institución" }));
@@ -170,7 +168,9 @@ describe("EntityForm — select fields (child references)", () => {
     ],
   };
 
-  function renderSelectForm(overrides?: { onSubmit?: (v: { sede: string; name: string }) => Promise<void> }) {
+  function renderSelectForm(overrides?: {
+    onSubmit?: (v: { sede: string; name: string }) => Promise<void>;
+  }) {
     const onSubmit = overrides?.onSubmit ?? jest.fn(async () => undefined);
     const utils = render(
       <EntityForm<{ sede: string; name: string }>

@@ -91,17 +91,33 @@ type ConfirmState =
 
 /** Per-kind UI metadata: label, write-role threshold (RF-F05). */
 const KIND_META: Record<EntityKind, { label: string; deletedLabel: string; minRoles: string[] }> = {
-  institution: { label: "Institución", deletedLabel: "Institución eliminada.", minRoles: ["superadmin"] },
+  institution: {
+    label: "Institución",
+    deletedLabel: "Institución eliminada.",
+    minRoles: ["superadmin"],
+  },
   sede: { label: "Sede", deletedLabel: "Sede eliminada.", minRoles: ["admin", "superadmin"] },
-  facultad: { label: "Facultad", deletedLabel: "Facultad eliminada.", minRoles: ["admin", "superadmin"] },
+  facultad: {
+    label: "Facultad",
+    deletedLabel: "Facultad eliminada.",
+    minRoles: ["admin", "superadmin"],
+  },
   center: {
     label: "Centro de investigación",
     deletedLabel: "Centro de investigación eliminado.",
     minRoles: ["admin", "superadmin"],
   },
   // PR3: groups/lines are directed by directors.
-  group: { label: "Grupo", deletedLabel: "Grupo eliminado.", minRoles: ["director", "admin", "superadmin"] },
-  line: { label: "Línea", deletedLabel: "Línea eliminada.", minRoles: ["director", "admin", "superadmin"] },
+  group: {
+    label: "Grupo",
+    deletedLabel: "Grupo eliminado.",
+    minRoles: ["director", "admin", "superadmin"],
+  },
+  line: {
+    label: "Línea",
+    deletedLabel: "Línea eliminada.",
+    minRoles: ["director", "admin", "superadmin"],
+  },
 };
 
 /** Detail route of a node, derived from its kind and the root institution id. */
@@ -125,22 +141,19 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
   const nodeRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   /** Lift lazily fetched children up so keyboard nav sees them. */
-  const handleLazyChildren = useCallback(
-    (parentId: string, children: InstitutionTreeNode[]) => {
-      setLazyChildren((prev) => {
-        const current = prev[parentId];
-        if (
-          current &&
-          current.length === children.length &&
-          current.every((c, i) => c.id === children[i]?.id)
-        ) {
-          return prev;
-        }
-        return { ...prev, [parentId]: children };
-      });
-    },
-    [],
-  );
+  const handleLazyChildren = useCallback((parentId: string, children: InstitutionTreeNode[]) => {
+    setLazyChildren((prev) => {
+      const current = prev[parentId];
+      if (
+        current &&
+        current.length === children.length &&
+        current.every((c, i) => c.id === children[i]?.id)
+      ) {
+        return prev;
+      }
+      return { ...prev, [parentId]: children };
+    });
+  }, []);
 
   /** Merge lazy children under institution nodes; static children stay. */
   const mergedNodes = useMemo(
@@ -432,14 +445,7 @@ function LazyChildrenLoader({
       })),
     ];
     onLoaded(institutionId, children);
-  }, [
-    institutionId,
-    expanded,
-    sedesQuery.data,
-    facultadesQuery.data,
-    centersQuery.data,
-    onLoaded,
-  ]);
+  }, [institutionId, expanded, sedesQuery.data, facultadesQuery.data, centersQuery.data, onLoaded]);
 
   return null;
 }

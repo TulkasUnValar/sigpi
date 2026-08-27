@@ -16,22 +16,14 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type {
-  InputHTMLAttributes,
-  SelectHTMLAttributes,
-  TextareaHTMLAttributes,
-} from "react";
+import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import type { DefaultValues, FieldValues, Path } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/errors";
-import type {
-  EntityConfig,
-  EntityField,
-  EntityFieldOption,
-} from "@/features/institutions/types";
+import type { EntityConfig, EntityField, EntityFieldOption } from "@/features/institutions/types";
 
 interface EntityFormProps<TForm extends FieldValues> {
   /** Entity configuration (schema + Spanish field labels). */
@@ -78,10 +70,7 @@ function FieldInput({
 
   if (field.type === "select") {
     return (
-      <select
-        {...(props as SelectHTMLAttributes<HTMLSelectElement>)}
-        className={baseClassName}
-      >
+      <select {...(props as SelectHTMLAttributes<HTMLSelectElement>)} className={baseClassName}>
         <option value="">—</option>
         {(options ?? []).map((option) => (
           <option key={option.value} value={option.value}>

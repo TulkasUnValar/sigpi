@@ -795,9 +795,7 @@ describe("InstitutionTree — per-kind child actions (PR2)", () => {
     await user.click(within(dialog).getByRole("button", { name: /eliminar/i }));
 
     await waitFor(() => {
-      expect(toastModule.toast.error).toHaveBeenCalledWith(
-        "Deactivate or archive children first.",
-      );
+      expect(toastModule.toast.error).toHaveBeenCalledWith("Deactivate or archive children first.");
     });
     expect(invalidateSpy).not.toHaveBeenCalled();
   });

@@ -29,9 +29,9 @@ describe("child entity configs", () => {
     expect(facultadConfig.minRoles).toEqual(["admin", "superadmin"]);
     const names = facultadConfig.fields.map((f) => f.name);
     expect(names).toContain("sede");
-    expect(facultadConfig.schema.safeParse({ sede: "sede-1", code: "F1", name: "Facultad" }).success).toBe(
-      true,
-    );
+    expect(
+      facultadConfig.schema.safeParse({ sede: "sede-1", code: "F1", name: "Facultad" }).success,
+    ).toBe(true);
   });
 
   it("centerConfig exposes sede + facultad references (parent_type nesting)", () => {
@@ -51,5 +51,15 @@ describe("child entity configs", () => {
 
   it("keeps the institution config superadmin-only", () => {
     expect(institutionConfig.minRoles).toEqual(["superadmin"]);
+  });
+
+  it("exposes endpoint builders per kind (detail + FSM paths)", () => {
+    expect(sedeConfig.detailPath("sede-1")).toBe("/api/sedes/sede-1/");
+    expect(sedeConfig.fsmPath("sede-1", "deactivate")).toBe("/api/sedes/sede-1/deactivate/");
+    expect(facultadConfig.detailPath("fac-1")).toBe("/api/facultades/fac-1/");
+    expect(facultadConfig.fsmPath("fac-1", "archive")).toBe("/api/facultades/fac-1/archive/");
+    expect(centerConfig.detailPath("center-1")).toBe("/api/centers/center-1/");
+    expect(centerConfig.fsmPath("center-1", "activate")).toBe("/api/centers/center-1/activate/");
+    expect(institutionConfig.detailPath("inst-1")).toBe("/api/institutions/inst-1/");
   });
 });

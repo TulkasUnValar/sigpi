@@ -121,9 +121,9 @@ describe("useSedes", () => {
     const { qc } = renderHookWith(() => useSedes("inst-1"));
 
     await waitFor(() => {
-      const data = qc.getQueryData(
-        queryKeys.institutions.list("inst-1", "sede", null),
-      ) as { results: unknown[] } | undefined;
+      const data = qc.getQueryData(queryKeys.institutions.list("inst-1", "sede", null)) as
+        | { results: unknown[] }
+        | undefined;
       expect(data?.results).toHaveLength(1);
     });
   });
@@ -171,10 +171,9 @@ describe("useFacultades", () => {
     const { result } = renderHookWith(() => useFacultades("inst-1", "sede-1"));
 
     await waitFor(() => {
-      expect(api.api.get).toHaveBeenCalledWith(
-        "/api/institutions/inst-1/facultades/?sede=sede-1",
-        { sendInstitutionId: false },
-      );
+      expect(api.api.get).toHaveBeenCalledWith("/api/institutions/inst-1/facultades/?sede=sede-1", {
+        sendInstitutionId: false,
+      });
     });
     await waitFor(() => {
       expect(result.current.data?.results).toHaveLength(1);

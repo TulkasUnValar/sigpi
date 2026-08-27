@@ -188,7 +188,7 @@ describe("FsmActionBar — child entities (RF-F03/RF-F05)", () => {
           transition={{
             mutate: jest.fn((vars, opts) => {
               if (opts?.onSuccess) opts.onSuccess({ id: "sede-1", status: "deactivated" });
-            }) as unknown as FsmTransitionLike,
+            }) as unknown as FsmTransitionLike["mutate"],
             isPending: false,
           }}
           entityLabel="Sede"
