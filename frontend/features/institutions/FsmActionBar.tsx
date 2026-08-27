@@ -27,24 +27,56 @@ import {
   type FsmAction,
 } from "@/features/institutions/fsm";
 
+/**
+ * Shape of a mutation hook usable by the action bar. Child entities
+ * (sede/facultad/center) pass their own transition hook via `transition`;
+ * the root institution uses the default.
+ */
+export interface FsmTransitionLike {
+  mutate: (
+    variables: { id: string; action: string },
+    options?: {
+      onSuccess?: (data: never) => void;
+      onError?: (error: unknown) => void;
+    },
+  ) => void;
+  isPending: boolean;
+}
+
 interface FsmActionBarProps {
   entityId: string;
   state: string;
+  /**
+   * Transition mutation. Defaults to the institution transition; child
+   * pages pass useSedeTransition/useFacultadTransition/useCenterTransition.
+   */
+  transition?: FsmTransitionLike;
+  /** Entity label for success toasts (Spanish). Default "Institución". */
+  entityLabel?: string;
+  /** Write-role threshold for FSM actions. Defaults to superadmin. */
+  minRoles?: string[];
 }
 
-export function FsmActionBar({ entityId, state }: FsmActionBarProps) {
+export function FsmActionBar({
+  entityId,
+  state,
+  transition,
+  entityLabel = "Institución",
+  minRoles = ["superadmin"],
+}: FsmActionBarProps) {
   const roles = useAuthStore((s) => s.roles);
-  const transition = useInstitutionTransition();
+  const defaultTransition = useInstitutionTransition();
+  const activeTransition = transition ?? defaultTransition;
   const [confirmAction, setConfirmAction] = useState<FsmAction | null>(null);
 
-  const actions = getEntityActions(state, roles);
+  const actions = getEntityActions(state, roles, minRoles);
 
   function runAction(action: FsmAction) {
-    transition.mutate(
+    activeTransition.mutate(
       { id: entityId, action: action.name },
       {
         onSuccess: () => {
-          toast.success(`Institución ${action.label.toLowerCase()}.`);
+          toast.success(`${entityLabel} ${action.label.toLowerCase()}.`);
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
@@ -70,7 +102,7 @@ export function FsmActionBar({ entityId, state }: FsmActionBarProps) {
           key={`${action.name}-${action.fromStates.join("|")}`}
           variant={isDestructiveEntityAction(action.name) ? "destructive" : "default"}
           size="sm"
-          disabled={transition.isPending}
+          disabled={activeTransition.isPending}
           onClick={() => handleClick(action)}
         >
           {action.label}

@@ -50,14 +50,25 @@ const TERMINAL_STATES = new Set(["archived"]);
 /**
  * Return the actions visible for an entity in `state` for a user with
  * `roles`. Filters by source state and allowed role.
+ *
+ * `minRoles` optionally overrides the write-role threshold: child entities
+ * (sede/facultad/center) use ["admin", "superadmin"] (RF-F05) while the
+ * root institution stays superadmin-only. When omitted the per-action
+ * `allowedRoles` from the config table applies.
  */
-export function getEntityActions(state: string, roles: string[]): FsmAction[] {
+export function getEntityActions(
+  state: string,
+  roles: string[],
+  minRoles?: string[],
+): FsmAction[] {
   if (TERMINAL_STATES.has(state)) return [];
 
   const roleSet = new Set(roles);
-  return ENTITY_ACTIONS.filter(
-    (a) => a.fromStates.includes(state) && a.allowedRoles.some((r) => roleSet.has(r)),
-  );
+  return ENTITY_ACTIONS.filter((a) => {
+    if (!a.fromStates.includes(state)) return false;
+    if (minRoles) return minRoles.some((r) => roleSet.has(r));
+    return a.allowedRoles.some((r) => roleSet.has(r));
+  });
 }
 
 /** Whether an action requires a destructive confirmation. */

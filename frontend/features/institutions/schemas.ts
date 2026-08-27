@@ -42,6 +42,8 @@ export const sedeSchema = z.object({
   description: z.string().optional().default(""),
 });
 
+export type SedeFormValues = z.infer<typeof sedeSchema>;
+
 /** Facultad form schema — optional sede reference. */
 export const facultadSchema = z.object({
   sede: z.string().optional().default(""),
@@ -52,6 +54,8 @@ export const facultadSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   description: z.string().optional().default(""),
 });
+
+export type FacultadFormValues = z.infer<typeof facultadSchema>;
 
 /** ResearchCenter form schema — optional sede/facultad + contact fields. */
 export const centerSchema = z.object({
@@ -71,6 +75,8 @@ export const centerSchema = z.object({
     .default(""),
   contact_phone: z.string().optional().default(""),
 });
+
+export type CenterFormValues = z.infer<typeof centerSchema>;
 
 /** ResearchGroup form schema (basic fields). */
 export const groupSchema = z.object({
@@ -115,4 +121,71 @@ export const institutionConfig: EntityConfig<InstitutionFormValues> = {
   ],
   minRoles: ["superadmin"],
   isRoot: true,
+};
+
+/**
+ * Sede entity config — child of an institution (parent from URL).
+ * Write threshold: admin or superadmin (RF-F05).
+ */
+export const sedeConfig: EntityConfig<SedeFormValues> = {
+  kind: "sede",
+  label: "Sede",
+  pluralLabel: "Sedes",
+  listPath: "/api/institutions/{pk}/sedes/",
+  detailPath: (id) => `/api/sedes/${id}/`,
+  fsmPath: (id, action) => `/api/sedes/${id}/${action}/`,
+  schema: sedeSchema,
+  fields: [
+    { name: "code", label: "Código", type: "text" },
+    { name: "name", label: "Nombre", type: "text" },
+    { name: "description", label: "Descripción", type: "textarea" },
+  ],
+  minRoles: ["admin", "superadmin"],
+};
+
+/**
+ * Facultad entity config — child of an institution with an optional sede
+ * reference. Write threshold: admin or superadmin (RF-F05).
+ */
+export const facultadConfig: EntityConfig<FacultadFormValues> = {
+  kind: "facultad",
+  label: "Facultad",
+  pluralLabel: "Facultades",
+  listPath: "/api/institutions/{pk}/facultades/",
+  detailPath: (id) => `/api/facultades/${id}/`,
+  fsmPath: (id, action) => `/api/facultades/${id}/${action}/`,
+  schema: facultadSchema,
+  fields: [
+    { name: "sede", label: "Sede", type: "select" },
+    { name: "code", label: "Código", type: "text" },
+    { name: "name", label: "Nombre", type: "text" },
+    { name: "description", label: "Descripción", type: "textarea" },
+  ],
+  minRoles: ["admin", "superadmin"],
+};
+
+/**
+ * ResearchCenter entity config — child of an institution; parent_type may
+ * be institution | sede | facultad (backend supports all three). The sede
+ * and facultad selects are optional references, never the parent.
+ * Write threshold: admin or superadmin (RF-F05).
+ */
+export const centerConfig: EntityConfig<CenterFormValues> = {
+  kind: "center",
+  label: "Centro de investigación",
+  pluralLabel: "Centros de investigación",
+  listPath: "/api/institutions/{pk}/centers/",
+  detailPath: (id) => `/api/centers/${id}/`,
+  fsmPath: (id, action) => `/api/centers/${id}/${action}/`,
+  schema: centerSchema,
+  fields: [
+    { name: "sede", label: "Sede", type: "select" },
+    { name: "facultad", label: "Facultad", type: "select" },
+    { name: "code", label: "Código", type: "text" },
+    { name: "name", label: "Nombre", type: "text" },
+    { name: "description", label: "Descripción", type: "textarea" },
+    { name: "contact_email", label: "Correo de contacto", type: "email" },
+    { name: "contact_phone", label: "Teléfono de contacto", type: "text" },
+  ],
+  minRoles: ["admin", "superadmin"],
 };

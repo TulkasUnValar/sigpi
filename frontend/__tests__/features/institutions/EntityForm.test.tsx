@@ -7,13 +7,15 @@
  *   - 409 duplicate-code detail is forwarded to onError (Toaster).
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { z } from "zod";
 
 import { ApiError } from "@/lib/errors";
 import { EntityForm } from "@/features/institutions/EntityForm";
 import { institutionConfig } from "@/features/institutions/schemas";
 import type { InstitutionFormValues } from "@/features/institutions/schemas";
+import type { EntityConfig } from "@/features/institutions/types";
 
 const validValues: InstitutionFormValues = {
   name: "Universidad Nacional",
@@ -138,6 +140,70 @@ describe("EntityForm — server errors", () => {
 
     await waitFor(() => {
       expect(onError).toHaveBeenCalledWith(expect.objectContaining({ status: 400 }));
+    });
+  });
+});
+
+describe("EntityForm — select fields (child references)", () => {
+  const selectConfig: EntityConfig<{ sede: string; name: string }> = {
+    kind: "facultad",
+    label: "Facultad",
+    pluralLabel: "Facultades",
+    listPath: "/api/institutions/x/facultades/",
+    detailPath: (id) => `/api/facultades/${id}/`,
+    fsmPath: (id, action) => `/api/facultades/${id}/${action}/`,
+    schema: z.object({
+      sede: z.string().optional().default(""),
+      name: z.string().min(1, "El nombre es obligatorio."),
+    }),
+    fields: [
+      { name: "sede", label: "Sede", type: "select" },
+      { name: "name", label: "Nombre", type: "text" },
+    ],
+    minRoles: ["admin", "superadmin"],
+  };
+
+  const fieldOptions = {
+    sede: [
+      { value: "sede-1", label: "Sede Bogotá" },
+      { value: "sede-2", label: "Sede Medellín" },
+    ],
+  };
+
+  function renderSelectForm(overrides?: { onSubmit?: (v: { sede: string; name: string }) => Promise<void> }) {
+    const onSubmit = overrides?.onSubmit ?? jest.fn(async () => undefined);
+    const utils = render(
+      <EntityForm<{ sede: string; name: string }>
+        config={selectConfig}
+        defaultValues={{ sede: "", name: "Facultad de Ingeniería" }}
+        submitLabel="Crear facultad"
+        onSubmit={onSubmit}
+        fieldOptions={fieldOptions}
+      />,
+    );
+    return { onSubmit, ...utils };
+  }
+
+  it("renders a select populated from fieldOptions with an empty default", () => {
+    renderSelectForm();
+
+    const select = screen.getByLabelText("Sede");
+    expect(select.tagName).toBe("SELECT");
+    const options = within(select).getAllByRole("option");
+    expect(options.map((o) => o.textContent)).toEqual(["—", "Sede Bogotá", "Sede Medellín"]);
+  });
+
+  it("submits the selected reference value", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderSelectForm();
+
+    await user.selectOptions(screen.getByLabelText("Sede"), "sede-2");
+    await user.click(screen.getByRole("button", { name: "Crear facultad" }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ sede: "sede-2", name: "Facultad de Ingeniería" }),
+      );
     });
   });
 });
