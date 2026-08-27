@@ -1,10 +1,28 @@
 # SIGPI — Pre-commit hooks
 # Run locally before each commit to enforce code quality.
-# Install:  cd backend && source .venv-wsl/bin/activate && pre-commit install
-# Update:   pre-commit autoupdate
-# Run all:  pre-commit run --all-files
+# Install:  wsl -e bash -lc "cd /home/tulkasubuntu/01-sigpi && pre-commit install"
+# Update:   wsl -e bash -lc "cd /home/tulkasubuntu/01-sigpi && pre-commit autoupdate"
+# Run all:  wsl -e bash -lc "cd /home/tulkasubuntu/01-sigpi && pre-commit run --all-files"
+#
+# IMPORTANT: This repo lives in WSL. Pre-commit must run inside WSL,
+#            not from Windows (PowerShell/Cmd), because WSL bash cannot
+#            translate UNC paths like \\wsl.localhost\... and npx/cmd
+#            shims crash inside WSL when invoked from Windows.
 
 repos:
+  # ── Environment guard ───────────────────────────────────────
+  # Fail fast with a clear message if pre-commit runs from Windows
+  # instead of WSL. WSL bash cannot translate UNC paths and npx/cmd
+  # shims crash inside WSL when invoked from Windows.
+  - repo: local
+    hooks:
+      - id: wsl-guard
+        name: WSL environment guard
+        entry: bash -lc 'if grep -qi microsoft /proc/version 2>/dev/null; then exit 0; else echo "ERROR - pre-commit must run inside WSL not Windows PowerShell/Cmd" && echo "Use a WSL terminal and run git commit from /home/tulkasubuntu/01-sigpi" && exit 1; fi'
+        language: system
+        always_run: true
+        pass_filenames: false
+
   # ── Basic file hygiene ──────────────────────────────────────
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -28,36 +46,38 @@ repos:
         files: ^backend/
 
   # ── Backend — Python (Pyright) ──────────────────────────────
-  # Local hook because pyright needs the project's venv (.venv-wsl)
+  # IMPORTANT: Must run inside WSL. The entry uses the WSL home
+  # path directly because WSL bash cannot translate UNC paths
+  # like \\wsl.localhost\... when invoked from Windows.
   - repo: local
     hooks:
       - id: pyright
         name: pyright type checker
-        entry: cd backend && pyright
+        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/backend && .venv-wsl/bin/pyright'
         language: system
         types: [python]
         files: ^backend/
         pass_filenames: false
 
   # ── Frontend — JavaScript / TypeScript (ESLint) ─────────────
-  # Local hook because ESLint plugins are in frontend/node_modules
+  # IMPORTANT: Must run inside WSL. Uses absolute WSL path.
   - repo: local
     hooks:
       - id: eslint
         name: eslint
-        entry: bash -c 'cd frontend && npx eslint . --ext .ts,.tsx'
+        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/frontend && npx eslint . --ext .ts,.tsx'
         language: system
         types_or: [javascript, jsx, ts, tsx]
         files: ^frontend/
         pass_filenames: false
 
   # ── Frontend — Formatting (Prettier) ────────────────────────
-  # Local hook because Prettier is in frontend/node_modules
+  # IMPORTANT: Must run inside WSL. Uses absolute WSL path.
   - repo: local
     hooks:
       - id: prettier
         name: prettier
-        entry: bash -c 'cd frontend && npx prettier --check "**/*.{ts,tsx,json,css,md}"'
+        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/frontend && npx prettier --check "**/*.{ts,tsx,json,css,md}"'
         language: system
         types_or: [javascript, jsx, ts, tsx, json, css, markdown]
         files: ^frontend/
