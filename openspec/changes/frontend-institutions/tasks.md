@@ -54,13 +54,13 @@ PR3: PR2 → 3.1 queries → 3.2 mutations → 3.3 configs/forms → 3.4 routes 
 
 ## PR 2 — Sede/Facultad/ResearchCenter (RF-F03, RF-F05)
 
-- [ ] 2.1 [M] Extend `queries.ts`: sede/facultad/center hooks keyed by (institution, parentId); enabled with both.
-- [ ] 2.2 [M] Extend `mutations.ts`: nested-URL CRUD for 3 entities; invalidate `institutions.all`.
-- [ ] 2.3 [M] Add EntityConfigs (admin threshold; center `parent_type` institution|sede|facultad) + form/detail field extensions.
-- [ ] 2.4 [M] Create routes `app/institutions/[id]/sedes|facultades|centers/**`; parent from params, never in body.
-- [ ] 2.5 [M] Tree: render child levels under nodes with per-node actions.
-- [ ] 2.6 [L] RED tests: admin creates sede, center→facultad nesting, delete-with-children 409, RoleGuard denial (RF-F05).
-- [ ] 2.7 [S] Gate: `eslint` + `tsc --noEmit` + coverage green.
+- [x] 2.1 [M] Extend `queries.ts`: sede/facultad/center hooks keyed by (institution, parentId); enabled with both.
+- [x] 2.2 [M] Extend `mutations.ts`: nested-URL CRUD for 3 entities; invalidate `institutions.all`.
+- [x] 2.3 [M] Add EntityConfigs (admin threshold; center `parent_type` institution|sede|facultad) + form/detail field extensions.
+- [x] 2.4 [M] Create routes `app/institutions/[id]/sedes|facultades|centers/**`; parent from params, never in body.
+- [x] 2.5 [M] Tree: render child levels under nodes with per-node actions.
+- [x] 2.6 [L] RED tests: admin creates sede, center→facultad nesting, delete-with-children 409, RoleGuard denial (RF-F05).
+- [x] 2.7 [S] Gate: `eslint` + `tsc --noEmit` + coverage green.
 
 ## PR 3 — ResearchGroup/ResearchLine + Polish (RF-F03 leaf; RNF completion)
 
