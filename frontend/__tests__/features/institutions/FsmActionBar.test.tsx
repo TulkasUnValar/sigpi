@@ -14,6 +14,10 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
 
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
+
 jest.mock("@/lib/api", () => ({
   api: {
     get: jest.fn(),
@@ -27,7 +31,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import { FsmActionBar } from "@/features/institutions/FsmActionBar";
+import { FsmActionBar, type FsmTransitionLike } from "@/features/institutions/FsmActionBar";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -158,6 +162,66 @@ describe("FsmActionBar — activate (non-destructive)", () => {
 describe("FsmActionBar — archived is terminal", () => {
   it("renders nothing for an archived node", () => {
     const { container } = renderBar("archived", ["superadmin"]);
+    expect(container.firstChild).toBeNull();
+  });
+});
+
+describe("FsmActionBar — child entities (RF-F03/RF-F05)", () => {
+  function renderChildBar(state: string, roles: string[]) {
+    useAuthStore.setState({
+      roles,
+      isAuthenticated: true,
+      isLoading: false,
+      activeInstitution: { id: "inst-1", name: "Universidad Alpha" },
+      institutions: [],
+      centers: [],
+    });
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
+
+    const utils = render(
+      <QueryClientProvider client={qc}>
+        <FsmActionBar
+          entityId="sede-1"
+          state={state}
+          transition={{
+            mutate: jest.fn((vars, opts) => {
+              if (opts?.onSuccess) opts.onSuccess({ id: "sede-1", status: "deactivated" });
+            }) as unknown as FsmTransitionLike,
+            isPending: false,
+          }}
+          entityLabel="Sede"
+          minRoles={["admin", "superadmin"]}
+        />
+      </QueryClientProvider>,
+    );
+    return { qc, invalidateSpy, ...utils };
+  }
+
+  it("shows FSM actions for an admin on a child entity (admin threshold)", () => {
+    const { container } = renderChildBar("active", ["admin"]);
+    expect(container.firstChild).not.toBeNull();
+    expect(screen.getByRole("button", { name: /desactivar/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /archivar/i })).toBeInTheDocument();
+  });
+
+  it("uses the injected transition and the entity label in the success toast", async () => {
+    const user = userEvent.setup();
+    const toastModule = jest.requireMock("sonner") as { toast: { success: jest.Mock } };
+    renderChildBar("active", ["admin"]);
+
+    await user.click(screen.getByRole("button", { name: /desactivar/i }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: /desactivar/i }));
+
+    await waitFor(() => {
+      expect(toastModule.toast.success).toHaveBeenCalledWith("Sede desactivar.");
+    });
+  });
+
+  it("hides child actions for a director even when minRoles allows admin", () => {
+    const { container } = renderChildBar("active", ["director"]);
     expect(container.firstChild).toBeNull();
   });
 });

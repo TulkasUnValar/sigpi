@@ -81,3 +81,30 @@ describe("getEntityActions — config completeness", () => {
     expect(archive?.fromStates).toEqual(expect.arrayContaining(["active", "deactivated"]));
   });
 });
+
+describe("getEntityActions — write-role threshold (RF-F05)", () => {
+  it("admins see child-entity actions when minRoles includes admin", () => {
+    const names = getEntityActions("active", ["admin"], ["admin", "superadmin"]).map(
+      (a) => a.name,
+    );
+    expect(names).toContain("deactivate");
+    expect(names).toContain("archive");
+  });
+
+  it("directors are still denied when minRoles requires admin", () => {
+    const names = getEntityActions("active", ["director"], ["admin", "superadmin"]).map(
+      (a) => a.name,
+    );
+    expect(names).not.toContain("deactivate");
+    expect(names).not.toContain("archive");
+  });
+
+  it("a superadmin passes a minRoles threshold that excludes superadmin", () => {
+    expect(getEntityActions("active", ["superadmin"], ["admin"])).toHaveLength(0);
+  });
+
+  it("omitting minRoles keeps the superadmin-only default (institutions)", () => {
+    expect(getEntityActions("active", ["admin"])).toHaveLength(0);
+    expect(getEntityActions("active", ["superadmin"]).length).toBeGreaterThan(0);
+  });
+});
