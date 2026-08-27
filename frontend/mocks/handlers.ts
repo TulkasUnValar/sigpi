@@ -17,6 +17,8 @@ import {
   fixtureSedes,
   fixtureFacultades,
   fixtureCenters,
+  fixtureGroups,
+  fixtureLines,
 } from "@/fixtures";
 
 interface Page<T> {
@@ -49,6 +51,8 @@ const INSTITUTION_FSM: Record<string, string> = {
 let sedesStore = fixtureSedes.map((s) => ({ ...s }));
 let facultadesStore = fixtureFacultades.map((f) => ({ ...f }));
 let centersStore = fixtureCenters.map((c) => ({ ...c }));
+let groupsStore = fixtureGroups.map((g) => ({ ...g }));
+let linesStore = fixtureLines.map((l) => ({ ...l }));
 
 /** FSM target states shared by all child entities. */
 const CHILD_FSM: Record<string, string> = {
@@ -417,11 +421,121 @@ export const handlers = [
   http.delete("http://localhost:8000/api/centers/:id/", ({ params }) => {
     const exists = centersStore.some((c) => c.id === params.id);
     if (!exists) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const hasChildren = groupsStore.some((g) => g.center === params.id);
+    if (hasChildren) {
+      return HttpResponse.json(
+        { detail: "Deactivate or archive children first." },
+        { status: 409 },
+      );
+    }
     centersStore = centersStore.filter((c) => c.id !== params.id);
     return new HttpResponse(null, { status: 204 });
   }),
   http.post("http://localhost:8000/api/centers/:id/:action/", ({ params }) => {
     const result = applyChildTransition(centersStore, String(params.id), String(params.action));
+    if (!result.ok) return HttpResponse.json({ detail: result.detail }, { status: 409 });
+    return HttpResponse.json(result.entity);
+  }),
+
+  // Research groups
+  http.get("http://localhost:8000/api/centers/:id/groups/", ({ params }) =>
+    HttpResponse.json(page(groupsStore.filter((g) => g.center === params.id))),
+  ),
+  http.post("http://localhost:8000/api/centers/:id/groups/", async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    const now = new Date().toISOString();
+    const group = {
+      id: `group-${Date.now()}`,
+      institution: "inst-1",
+      institution_name: "Universidad Nacional",
+      center: String(params.id),
+      code: String(body.code ?? ""),
+      name: String(body.name ?? ""),
+      description: String(body.description ?? ""),
+      status: "active",
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    };
+    groupsStore = [...groupsStore, group];
+    return HttpResponse.json(group, { status: 201 });
+  }),
+  http.get("http://localhost:8000/api/groups/:id/", ({ params }) => {
+    const group = groupsStore.find((g) => g.id === params.id);
+    if (!group) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    return HttpResponse.json(group);
+  }),
+  http.patch("http://localhost:8000/api/groups/:id/", async ({ params, request }) => {
+    const group = groupsStore.find((g) => g.id === params.id);
+    if (!group) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...group, ...body, updated_at: new Date().toISOString() };
+    groupsStore = groupsStore.map((g) => (g.id === group.id ? updated : g));
+    return HttpResponse.json(updated);
+  }),
+  http.delete("http://localhost:8000/api/groups/:id/", ({ params }) => {
+    const exists = groupsStore.some((g) => g.id === params.id);
+    if (!exists) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const hasChildren = linesStore.some((l) => l.group === params.id);
+    if (hasChildren) {
+      return HttpResponse.json(
+        { detail: "Deactivate or archive children first." },
+        { status: 409 },
+      );
+    }
+    groupsStore = groupsStore.filter((g) => g.id !== params.id);
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.post("http://localhost:8000/api/groups/:id/:action/", ({ params }) => {
+    const result = applyChildTransition(groupsStore, String(params.id), String(params.action));
+    if (!result.ok) return HttpResponse.json({ detail: result.detail }, { status: 409 });
+    return HttpResponse.json(result.entity);
+  }),
+
+  // Research lines (leaf level)
+  http.get("http://localhost:8000/api/groups/:id/lines/", ({ params }) =>
+    HttpResponse.json(page(linesStore.filter((l) => l.group === params.id))),
+  ),
+  http.post("http://localhost:8000/api/groups/:id/lines/", async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    const now = new Date().toISOString();
+    const line = {
+      id: `line-${Date.now()}`,
+      institution: "inst-1",
+      institution_name: "Universidad Nacional",
+      group: String(params.id),
+      code: String(body.code ?? ""),
+      name: String(body.name ?? ""),
+      description: String(body.description ?? ""),
+      status: "active",
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    };
+    linesStore = [...linesStore, line];
+    return HttpResponse.json(line, { status: 201 });
+  }),
+  http.get("http://localhost:8000/api/lines/:id/", ({ params }) => {
+    const line = linesStore.find((l) => l.id === params.id);
+    if (!line) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    return HttpResponse.json(line);
+  }),
+  http.patch("http://localhost:8000/api/lines/:id/", async ({ params, request }) => {
+    const line = linesStore.find((l) => l.id === params.id);
+    if (!line) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...line, ...body, updated_at: new Date().toISOString() };
+    linesStore = linesStore.map((l) => (l.id === line.id ? updated : l));
+    return HttpResponse.json(updated);
+  }),
+  http.delete("http://localhost:8000/api/lines/:id/", ({ params }) => {
+    const exists = linesStore.some((l) => l.id === params.id);
+    if (!exists) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    linesStore = linesStore.filter((l) => l.id !== params.id);
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.post("http://localhost:8000/api/lines/:id/:action/", ({ params }) => {
+    const result = applyChildTransition(linesStore, String(params.id), String(params.action));
     if (!result.ok) return HttpResponse.json({ detail: result.detail }, { status: 409 });
     return HttpResponse.json(result.entity);
   }),
