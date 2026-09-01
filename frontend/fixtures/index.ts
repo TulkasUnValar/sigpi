@@ -38,6 +38,15 @@ import {
   type FixtureCall,
   type FixtureCallDetail,
 } from "@/fixtures/calls";
+import {
+  fixtureResearchers,
+  fixtureResearcherDetails,
+  fixtureAffiliations,
+  fixtureExternalProfiles,
+  fixtureAttachments,
+  type FixtureResearcher,
+  type FixtureResearcherList,
+} from "@/fixtures/researchers";
 
 /** Lightweight project shape consumed by the dashboard selectors. */
 export interface SeedProjectSummary {
@@ -104,6 +113,11 @@ export {
   fixtureCenters,
   fixtureGroups,
   fixtureLines,
+  fixtureResearchers,
+  fixtureResearcherDetails,
+  fixtureAffiliations,
+  fixtureExternalProfiles,
+  fixtureAttachments,
 };
 export type {
   FixtureInstitution,
@@ -112,6 +126,8 @@ export type {
   FixtureResearchCenter,
   FixtureResearchGroup,
   FixtureResearchLine,
+  FixtureResearcher,
+  FixtureResearcherList,
 };
 export { fixtureCalls, fixtureCallDetails, CALLS_FSM, CALL_ACTION_FROM_STATES };
 export type { FixtureCall, FixtureCallDetail };

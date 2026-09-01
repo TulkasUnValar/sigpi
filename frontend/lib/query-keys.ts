@@ -49,6 +49,22 @@ export const queryKeys = {
       [...queryKeys.calls.details(), institutionId, id] as const,
   },
 
+  researchers: {
+    all: ["researchers"] as const,
+    lists: () => [...queryKeys.researchers.all, "list"] as const,
+    list: (institutionId: string | null, page: number) =>
+      [...queryKeys.researchers.lists(), institutionId, page] as const,
+    details: () => [...queryKeys.researchers.all, "detail"] as const,
+    detail: (institutionId: string | null, id: string) =>
+      [...queryKeys.researchers.details(), institutionId, id] as const,
+    affiliations: (institutionId: string | null, id: string) =>
+      [...queryKeys.researchers.detail(institutionId, id), "affiliations"] as const,
+    profiles: (institutionId: string | null, id: string) =>
+      [...queryKeys.researchers.detail(institutionId, id), "profiles"] as const,
+    attachments: (institutionId: string | null, id: string) =>
+      [...queryKeys.researchers.detail(institutionId, id), "attachments"] as const,
+  },
+
   dashboard: {
     all: ["dashboard"] as const,
     projects: (institutionId: string | null) =>
