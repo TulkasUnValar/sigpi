@@ -30,6 +30,11 @@ import {
   useUpdateCall,
   useDeleteCall,
   useCallTransition,
+  useCreateDocument,
+  useUpdateDocument,
+  useDeleteDocument,
+  useLinkProject,
+  useUnlinkProject,
 } from "@/features/calls/mutations";
 
 const callDetail = {
@@ -91,9 +96,7 @@ describe("useCreateCall", () => {
       );
     });
     await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ queryKey: ["calls"] }),
-      );
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
     });
   });
 });
@@ -117,9 +120,7 @@ describe("useUpdateCall", () => {
       );
     });
     await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ queryKey: ["calls"] }),
-      );
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
     });
   });
 });
@@ -135,9 +136,7 @@ describe("useDeleteCall", () => {
       expect(api.api.delete).toHaveBeenCalledWith("/api/calls/call-1/");
     });
     await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ queryKey: ["calls"] }),
-      );
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
     });
   });
 });
@@ -192,9 +191,135 @@ describe("useCallTransition", () => {
       );
     });
     await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ queryKey: ["calls"] }),
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
+    });
+  });
+});
+
+describe("useCreateDocument", () => {
+  it("POSTs document metadata and invalidates the calls root", async () => {
+    (api.api.post as jest.Mock).mockResolvedValue({
+      id: "doc-1",
+      call: "call-1",
+      name: "Bases",
+      doc_type: "convocatoria",
+      external_url: "https://example.com/bases.pdf",
+      created_at: "2026-01-01T00:00:00Z",
+    });
+
+    const { result, invalidateSpy } = renderMutation(() => useCreateDocument());
+    result.current.mutate({
+      callId: "call-1",
+      name: "Bases",
+      doc_type: "convocatoria",
+      external_url: "https://example.com/bases.pdf",
+    });
+
+    await waitFor(() => {
+      expect(api.api.post).toHaveBeenCalledWith(
+        "/api/calls/call-1/documents/",
+        expect.objectContaining({ name: "Bases", doc_type: "convocatoria" }),
+        expect.objectContaining({ institutionId: "inst-1" }),
       );
+    });
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
+    });
+  });
+});
+
+describe("useUpdateDocument", () => {
+  it("PATCHes the document and invalidates the calls root", async () => {
+    (api.api.patch as jest.Mock).mockResolvedValue({
+      id: "doc-1",
+      call: "call-1",
+      name: "Bases v2",
+      doc_type: "anexo",
+      external_url: "https://example.com/anexo.pdf",
+      created_at: "2026-01-01T00:00:00Z",
+    });
+
+    const { result, invalidateSpy } = renderMutation(() => useUpdateDocument());
+    result.current.mutate({
+      callId: "call-1",
+      documentId: "doc-1",
+      name: "Bases v2",
+      doc_type: "anexo",
+      external_url: "https://example.com/anexo.pdf",
+    });
+
+    await waitFor(() => {
+      expect(api.api.patch).toHaveBeenCalledWith(
+        "/api/calls/call-1/documents/doc-1/",
+        expect.objectContaining({ name: "Bases v2" }),
+        expect.objectContaining({ institutionId: "inst-1" }),
+      );
+    });
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
+    });
+  });
+});
+
+describe("useDeleteDocument", () => {
+  it("DELETEs the document and invalidates the calls root", async () => {
+    (api.api.delete as jest.Mock).mockResolvedValue(undefined);
+
+    const { result, invalidateSpy } = renderMutation(() => useDeleteDocument());
+    result.current.mutate({ callId: "call-1", documentId: "doc-1" });
+
+    await waitFor(() => {
+      expect(api.api.delete).toHaveBeenCalledWith(
+        "/api/calls/call-1/documents/doc-1/",
+        expect.objectContaining({ institutionId: "inst-1" }),
+      );
+    });
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
+    });
+  });
+});
+
+describe("useLinkProject", () => {
+  it("POSTs the project association scoped by institution and invalidates", async () => {
+    (api.api.post as jest.Mock).mockResolvedValue({
+      id: "cp-1",
+      call: "call-1",
+      project: "p1",
+      linked_at: "2026-01-01T00:00:00Z",
+    });
+
+    const { result, invalidateSpy } = renderMutation(() => useLinkProject());
+    result.current.mutate({ callId: "call-1", project: "p1" });
+
+    await waitFor(() => {
+      expect(api.api.post).toHaveBeenCalledWith(
+        "/api/calls/call-1/projects/",
+        expect.objectContaining({ project: "p1" }),
+        expect.objectContaining({ institutionId: "inst-1" }),
+      );
+    });
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
+    });
+  });
+});
+
+describe("useUnlinkProject", () => {
+  it("DELETEs the project association and invalidates the calls root", async () => {
+    (api.api.delete as jest.Mock).mockResolvedValue(undefined);
+
+    const { result, invalidateSpy } = renderMutation(() => useUnlinkProject());
+    result.current.mutate({ callId: "call-1", projectId: "cp-1" });
+
+    await waitFor(() => {
+      expect(api.api.delete).toHaveBeenCalledWith(
+        "/api/calls/call-1/projects/cp-1/",
+        expect.objectContaining({ institutionId: "inst-1" }),
+      );
+    });
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["calls"] }));
     });
   });
 });

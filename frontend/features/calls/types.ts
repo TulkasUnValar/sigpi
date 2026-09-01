@@ -99,3 +99,9 @@ export interface CreateCallPayload {
   evaluation_start?: string | null;
   evaluation_end?: string | null;
 }
+
+/** Minimal project option used by the ProjectsManager linking picker. */
+export interface ProjectOption {
+  id: string;
+  title: string;
+}

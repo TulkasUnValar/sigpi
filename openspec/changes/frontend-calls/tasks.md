@@ -40,11 +40,11 @@ Delivery strategy: auto-chain
 
 ## PR2 — Nested Managers + Delete Gate
 
-- [ ] 2.1 `DocumentsManager.tsx`: metadata-only CRUD. AC: metadata + delete-refresh. ~140 ln
-- [ ] 2.2 `ProjectsManager.tsx`: link/unlink, abierta-only, 409. AC: link/hidden/dup. ~150 ln
-- [ ] 2.3 `StateHistoryManager.tsx`: read-only logs. AC: renders, no mutations. ~60 ln
-- [ ] 2.4 Delete gate `CallDetail.tsx`: borrador+zero projects, dialog, redirect. AC: confirm/hidden. ~40 ln
-- [ ] 2.5 `managers.test.tsx` (RED): RTL managers+gate + nested fixtures. AC: handler tests. ~280 ln
+- [x] 2.1 `DocumentsManager.tsx`: metadata-only CRUD. AC: metadata + delete-refresh. ~140 ln
+- [x] 2.2 `ProjectsManager.tsx`: link/unlink, abierta-only, 409. AC: link/hidden/dup. ~150 ln
+- [x] 2.3 `StateHistoryManager.tsx`: read-only logs. AC: renders, no mutations. ~60 ln
+- [x] 2.4 Delete gate `CallDetail.tsx`: borrador+zero projects, dialog, redirect. AC: confirm/hidden. ~40 ln
+- [x] 2.5 `managers.test.tsx` (RED): RTL managers+gate + nested fixtures. AC: handler tests. ~280 ln
 
 ## PR3 — Filters + Polish + Verify
 

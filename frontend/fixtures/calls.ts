@@ -137,3 +137,90 @@ export const CALL_ACTION_FROM_STATES: Record<string, string[]> = {
   publish_results: ["en_evaluacion"],
   archive: ["cerrada", "resultados_publicados"],
 };
+
+/** Nested document row matching the CallDocumentSerializer. */
+export interface FixtureCallDocument {
+  id: string;
+  call: string;
+  name: string;
+  doc_type: string;
+  external_url: string;
+  created_at: string;
+}
+
+/** Nested project association matching the CallProjectSerializer. */
+export interface FixtureCallProject {
+  id: string;
+  call: string;
+  project: string;
+  linked_at: string;
+}
+
+/** Read-only state-log row matching the CallStateLogSerializer. */
+export interface FixtureCallStateLog {
+  id: string;
+  call: string;
+  from_state: string;
+  to_state: string;
+  triggered_by: string | null;
+  reason: string;
+  created_at: string;
+}
+
+/**
+ * Documents keyed by call id. `call-1` (abierta) carries metadata rows;
+ * `call-2` (borrador) stays empty so the delete gate has a valid target.
+ */
+export const fixtureCallDocuments: Record<string, FixtureCallDocument[]> = {
+  "call-1": [
+    {
+      id: "doc-1",
+      call: "call-1",
+      name: "Bases de la convocatoria",
+      doc_type: "convocatoria",
+      external_url: "https://example.com/bases.pdf",
+      created_at: "2026-01-05T09:00:00Z",
+    },
+    {
+      id: "doc-2",
+      call: "call-1",
+      name: "Anexo técnico",
+      doc_type: "anexo",
+      external_url: "https://example.com/anexo.pdf",
+      created_at: "2026-01-06T09:00:00Z",
+    },
+  ],
+  "call-2": [],
+};
+
+/**
+ * Linked projects keyed by call id. `call-1` (abierta) already links
+ * `p1` — posting `p1` again is the duplicate-association 409 precondition.
+ */
+export const fixtureCallProjects: Record<string, FixtureCallProject[]> = {
+  "call-1": [
+    {
+      id: "cp-1",
+      call: "call-1",
+      project: "p1",
+      linked_at: "2026-01-10T09:00:00Z",
+    },
+  ],
+  "call-2": [],
+};
+
+/** Read-only state logs keyed by call id (append-only). */
+export const fixtureCallStateLogs: Record<string, FixtureCallStateLog[]> = {
+  "call-1": [
+    {
+      id: "sl-1",
+      call: "call-1",
+      from_state: "borrador",
+      to_state: "abierta",
+      triggered_by: "u1",
+      reason: "Apertura oficial",
+      created_at: "2026-01-02T09:00:00Z",
+    },
+  ],
+  "call-2": [],
+};

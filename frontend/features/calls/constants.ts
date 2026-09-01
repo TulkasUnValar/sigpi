@@ -46,6 +46,15 @@ export const CALL_DOC_TYPE_LABELS: Record<string, string> = {
   otro: "Otro",
 };
 
+/** CallDocument doc_type select options. */
+export const CALL_DOC_TYPE_OPTIONS = [
+  { value: "convocatoria", label: "Convocatoria" },
+  { value: "anexo", label: "Anexo" },
+  { value: "reglamento", label: "Reglamento" },
+  { value: "resultado", label: "Resultado" },
+  { value: "otro", label: "Otro" },
+] as const;
+
 /** Resolve a call type value into its Spanish label (fallback: raw value). */
 export function getCallTypeLabel(callType: string): string {
   return CALL_TYPE_LABELS[callType] ?? callType;

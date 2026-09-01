@@ -35,8 +35,14 @@ import {
   CALLS_FSM,
   fixtureCallDetails,
   fixtureCalls,
+  fixtureCallDocuments,
+  fixtureCallProjects,
+  fixtureCallStateLogs,
   type FixtureCall,
   type FixtureCallDetail,
+  type FixtureCallDocument,
+  type FixtureCallProject,
+  type FixtureCallStateLog,
 } from "@/fixtures/calls";
 import {
   fixtureResearchers,
@@ -129,5 +135,19 @@ export type {
   FixtureResearcher,
   FixtureResearcherList,
 };
-export { fixtureCalls, fixtureCallDetails, CALLS_FSM, CALL_ACTION_FROM_STATES };
-export type { FixtureCall, FixtureCallDetail };
+export {
+  fixtureCalls,
+  fixtureCallDetails,
+  fixtureCallDocuments,
+  fixtureCallProjects,
+  fixtureCallStateLogs,
+  CALLS_FSM,
+  CALL_ACTION_FROM_STATES,
+};
+export type {
+  FixtureCall,
+  FixtureCallDetail,
+  FixtureCallDocument,
+  FixtureCallProject,
+  FixtureCallStateLog,
+};
