@@ -98,3 +98,29 @@ export interface CreateResearcherPayload {
 
 /** Writable payload for PATCH /api/researchers/{id}/. */
 export type UpdateResearcherPayload = Partial<CreateResearcherPayload>;
+
+/**
+ * Writable payload for POST /api/researchers/{id}/affiliations/.
+ * At least one of center/group/line is required (FK); downstream fields
+ * may be null when a parent level is not selected. The first affiliation
+ * of a researcher is primary (is_primary: true).
+ */
+export interface CreateAffiliationPayload {
+  center?: string | null;
+  group?: string | null;
+  line?: string | null;
+  is_primary?: boolean;
+}
+
+/** Writable payload for POST /api/researchers/{id}/profiles/. */
+export interface CreateExternalProfilePayload {
+  provider: string;
+  url: string;
+}
+
+/** Writable payload for POST /api/researchers/{id}/attachments/ (metadata only). */
+export interface CreateAttachmentPayload {
+  name: string;
+  type: string;
+  external_url: string;
+}
