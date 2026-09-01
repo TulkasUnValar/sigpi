@@ -19,6 +19,7 @@ import type {
   CallProject,
   CallStateLog,
   Page,
+  ProjectOption,
 } from "@/features/calls/types";
 
 /** Active institution id from the auth store (drives X-Institution-ID). */
@@ -60,8 +61,7 @@ export function useCallDetail(id: string) {
   const institutionId = useActiveInstitutionId();
   return useQuery({
     queryKey: queryKeys.calls.detail(institutionId, id),
-    queryFn: () =>
-      api.get<Call>(`/api/calls/${id}/`, { institutionId }),
+    queryFn: () => api.get<Call>(`/api/calls/${id}/`, { institutionId }),
   });
 }
 
@@ -98,5 +98,18 @@ export function useCallStateHistory(callId: string) {
       api.get<Page<CallStateLog>>(`/api/calls/${callId}/state_history/`, {
         institutionId,
       }),
+  });
+}
+
+/**
+ * Fetch the institution's projects as link options for the Projects tab.
+ * The backend exposes projects at /api/projects/; the manager renders the
+ * title and uses the id in the link payload.
+ */
+export function useProjectOptions() {
+  const institutionId = useActiveInstitutionId();
+  return useQuery({
+    queryKey: [...queryKeys.calls.all, "project-options", institutionId],
+    queryFn: () => api.get<Page<ProjectOption>>(`/api/projects/`, { institutionId }),
   });
 }
