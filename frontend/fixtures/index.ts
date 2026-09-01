@@ -76,14 +76,12 @@ export function buildSeedDashboard(): SeedDashboard {
       title,
       status,
     })),
-    progress: fixtureAdvances.map(
-      ({ id, project, status, cumulative_percentage }) => ({
-        id,
-        project,
-        status,
-        cumulative_percentage,
-      }),
-    ),
+    progress: fixtureAdvances.map(({ id, project, status, cumulative_percentage }) => ({
+      id,
+      project,
+      status,
+      cumulative_percentage,
+    })),
   };
 }
 

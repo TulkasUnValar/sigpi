@@ -106,6 +106,21 @@ describe("callFormSchema — date ordering", () => {
   });
 });
 
+describe("callFormSchema — call_type enum", () => {
+  it("rejects an unknown call_type with the required message", () => {
+    const result = callFormSchema.safeParse({
+      ...validInternal,
+      call_type: "regional",
+    } as unknown as CallFormValues);
+    expect(result.success).toBe(false);
+    const messages = (result as { error: { issues: { path: (string | number)[]; message: string }[] } })
+      .error.issues.filter((i) => i.path.join(".") === "call_type")
+      .map((i) => i.message);
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatch(/tipo de convocatoria es obligatorio/i);
+  });
+});
+
 describe("buildCallPayload — writable field projection", () => {
   it("omits external_entity for internal calls", () => {
     const payload = buildCallPayload(validInternal);

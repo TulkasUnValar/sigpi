@@ -47,6 +47,15 @@ jest.mock("next-themes", () => ({
   useTheme: () => ({ theme: "light", setTheme: jest.fn(), themes: [] }),
 }));
 
+jest.mock("sonner", () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    warning: jest.fn(),
+    info: jest.fn(),
+  },
+}));
+
 jest.mock("@/lib/api", () => ({
   api: {
     get: jest.fn(),
@@ -64,6 +73,10 @@ import CallsPage from "@/app/calls/page";
 import NewCallPage from "@/app/calls/new/page";
 import CallDetailPage from "@/app/calls/[id]/page";
 import EditCallPage from "@/app/calls/[id]/edit/page";
+
+const toastModule = jest.requireMock("sonner") as {
+  toast: { success: jest.Mock; error: jest.Mock };
+};
 
 const callRow = {
   id: "call-1",
@@ -204,6 +217,24 @@ describe("/calls/new — create route", () => {
     expect(api.api.post).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
   });
+
+  it("shows a toast and does not redirect when the create POST fails", async () => {
+    setAuthRoles(["director"]);
+    (api.api.post as jest.Mock).mockRejectedValue(
+      Object.assign(new Error("Error de servidor."), { status: 500 }),
+    );
+
+    renderWithProviders(<NewCallPage />);
+
+    await userEvent.type(screen.getByLabelText(/título/i), "Nueva convocatoria");
+    await userEvent.type(screen.getByLabelText(/descripción/i), "Descripción de prueba");
+    fireEvent.click(screen.getByRole("button", { name: /crear convocatoria/i }));
+
+    await waitFor(() => {
+      expect(toastModule.toast.error).toHaveBeenCalledWith("Error de servidor.");
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
 });
 
 describe("/calls/[id] — detail route", () => {
@@ -267,5 +298,25 @@ describe("/calls/[id]/edit — edit route", () => {
       );
     });
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/calls/call-1"));
+  });
+
+  it("shows a toast when the edit PATCH fails", async () => {
+    setAuthRoles(["director"]);
+    (api.api.get as jest.Mock).mockResolvedValue(callDetail);
+    (api.api.patch as jest.Mock).mockRejectedValue(
+      Object.assign(new Error("No tiene permisos."), { status: 403 }),
+    );
+
+    renderWithProviders(<EditCallPage />);
+
+    const titleInput = await screen.findByLabelText(/título/i);
+    await userEvent.clear(titleInput);
+    await userEvent.type(titleInput, "Convocatoria IA v3");
+    fireEvent.click(screen.getByRole("button", { name: /guardar cambios/i }));
+
+    await waitFor(() => {
+      expect(toastModule.toast.error).toHaveBeenCalledWith("No tiene permisos.");
+    });
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

@@ -70,7 +70,7 @@ function setAuthRoles(roles: string[]) {
   });
 }
 
-function renderList(getMock: jest.Mock) {
+function renderList(getMock: (path: string) => Promise<unknown>) {
   (api.api.get as jest.Mock).mockImplementation(getMock);
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -121,6 +121,35 @@ describe("CallList — paginated rows", () => {
     fireEvent.click(nextBtn);
 
     expect(await screen.findByText("Convocatoria b1")).toBeInTheDocument();
+  });
+
+  it("goes back with the Anterior control to the previous page", async () => {
+    setAuthRoles(["director"]);
+    const page1 = {
+      count: 26,
+      next: "http://localhost:8000/api/calls/?page=2",
+      previous: null,
+      results: [makeCall("a1")],
+    };
+    const page2 = {
+      count: 26,
+      next: null,
+      previous: "http://localhost:8000/api/calls/?page=1",
+      results: [makeCall("b1")],
+    };
+    const getMock = jest.fn((path: string) =>
+      Promise.resolve(path.includes("page=2") ? page2 : page1),
+    );
+
+    renderList(getMock);
+    expect(await screen.findByText("Convocatoria a1")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
+    expect(await screen.findByText("Convocatoria b1")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /anterior/i }));
+    expect(await screen.findByText("Convocatoria a1")).toBeInTheDocument();
+    expect(screen.queryByText("Convocatoria b1")).not.toBeInTheDocument();
   });
 });
 

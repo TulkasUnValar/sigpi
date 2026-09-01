@@ -9,10 +9,7 @@ interface MockCookie {
   value: string;
 }
 
-function createMockRequest(
-  pathname: string,
-  cookies: Record<string, string> = {},
-) {
+function createMockRequest(pathname: string, cookies: Record<string, string> = {}) {
   const cookieList: MockCookie[] = Object.entries(cookies).map(([k, v]) => ({
     name: k,
     value: v,

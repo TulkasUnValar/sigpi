@@ -194,9 +194,7 @@ export const handlers = [
   // ── Calls ────────────────────────────────────────────────
 
   // Calls list — paginated Page<CallList> envelope
-  http.get("http://localhost:8000/api/calls/", () =>
-    HttpResponse.json(page(callsStore)),
-  ),
+  http.get("http://localhost:8000/api/calls/", () => HttpResponse.json(page(callsStore))),
   // Call create — returns the full detail (status borrador)
   http.post("http://localhost:8000/api/calls/", async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
