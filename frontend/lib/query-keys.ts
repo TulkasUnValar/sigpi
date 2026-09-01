@@ -42,7 +42,7 @@ export const queryKeys = {
   calls: {
     all: ["calls"] as const,
     lists: () => [...queryKeys.calls.all, "list"] as const,
-    list: (institutionId: string | null, params: Record<string, unknown> = {}) =>
+    list: (institutionId: string | null, params: object = {}) =>
       [...queryKeys.calls.lists(), institutionId, params] as const,
     details: () => [...queryKeys.calls.all, "detail"] as const,
     detail: (institutionId: string | null, id: string) =>

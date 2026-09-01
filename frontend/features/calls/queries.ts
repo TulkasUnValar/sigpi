@@ -21,7 +21,8 @@ import type {
   Page,
 } from "@/features/calls/types";
 
-function useActiveInstitutionId(): string | null {
+/** Active institution id from the auth store (drives X-Institution-ID). */
+export function useActiveInstitutionId(): string | null {
   return useAuthStore((s) => s.activeInstitution?.id ?? null);
 }
 
