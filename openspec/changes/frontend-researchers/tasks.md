@@ -46,14 +46,14 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Nested Managers (PR2)
 
-- [ ] 2.1 Create `features/researchers/AffiliationsManager.tsx` — inline create/delete; dependent selects center → group → line (clear downstream on parent change); at least one FK.
-- [ ] 2.2 Primary semantics — first affiliation auto-primary (`is_primary=True`); `set_primary` POST `/affiliations/{aff_id}/set_primary/` demoting prior; toggle disabled when already primary.
-- [ ] 2.3 Cross-institution target → surface 400 detail via Toaster; POST `/affiliations/`.
-- [ ] 2.4 Create `features/researchers/ExternalProfilesManager.tsx` — `{provider, url}` with provider ∈ cvlac/orcid/google_scholar/linkedin/researchgate; nested POST/DELETE `/profiles/`; list refresh.
-- [ ] 2.5 Create `features/researchers/AttachmentsManager.tsx` — metadata only `{name, type (cv|certificate|photo|other), external_url}`, no upload; rendered as external link; nested POST/DELETE.
-- [ ] 2.6 Wire three managers into `[id]/page.tsx` tabs (Affiliations, External profiles, Attachments).
-- [ ] 2.7 Add MSW fixtures/handlers for affiliations, profiles, attachments (nested CRUD, primary switching, cross-institution 400).
-- [ ] 2.8 Jest/RTL tests for dependent selects, primary switching, metadata-only links, nested mutation invalidation; coverage ≥80%.
+- [x] 2.1 Create `features/researchers/AffiliationsManager.tsx` — inline create/delete; dependent selects center → group → line (clear downstream on parent change); at least one FK.
+- [x] 2.2 Primary semantics — first affiliation auto-primary (`is_primary=True`); `set_primary` POST `/affiliations/{aff_id}/set_primary/` demoting prior; toggle disabled when already primary.
+- [x] 2.3 Cross-institution target → surface 400 detail via Toaster; POST `/affiliations/`.
+- [x] 2.4 Create `features/researchers/ExternalProfilesManager.tsx` — `{provider, url}` with provider ∈ cvlac/orcid/google_scholar/linkedin/researchgate; nested POST/DELETE `/profiles/`; list refresh.
+- [x] 2.5 Create `features/researchers/AttachmentsManager.tsx` — metadata only `{name, type (cv|certificate|photo|other), external_url}`, no upload; rendered as external link; nested POST/DELETE.
+- [x] 2.6 Wire three managers into `[id]/page.tsx` tabs (Affiliations, External profiles, Attachments).
+- [x] 2.7 Add MSW fixtures/handlers for affiliations, profiles, attachments (nested CRUD, primary switching, cross-institution 400).
+- [x] 2.8 Jest/RTL tests for dependent selects, primary switching, metadata-only links, nested mutation invalidation; coverage ≥80%.
 
 ## Phase 3: Wizard Fix + Polish + Verify (PR3)
 
