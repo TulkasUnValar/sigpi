@@ -21,6 +21,9 @@ import {
   fixtureLines,
   fixtureCalls,
   fixtureCallDetails,
+  fixtureCallDocuments,
+  fixtureCallProjects,
+  fixtureCallStateLogs,
   CALLS_FSM,
   CALL_ACTION_FROM_STATES,
   fixtureResearchers,
@@ -165,6 +168,18 @@ function applyInstitutionTransition(
 let callsStore = fixtureCalls.map((c) => ({ ...c }));
 let callsDetailStore = Object.fromEntries(
   Object.entries(fixtureCallDetails).map(([k, v]) => [k, { ...v }]),
+);
+
+// Nested entity stores (documents / projects / state logs) — the
+// handlers mutate these so CRUD + link/unlink behave like DRF.
+let callsDocumentsStore = Object.fromEntries(
+  Object.entries(fixtureCallDocuments).map(([k, v]) => [k, v.map((d) => ({ ...d }))]),
+);
+let callsProjectsStore = Object.fromEntries(
+  Object.entries(fixtureCallProjects).map(([k, v]) => [k, v.map((p) => ({ ...p }))]),
+);
+const callsStateLogsStore = Object.fromEntries(
+  Object.entries(fixtureCallStateLogs).map(([k, v]) => [k, v.map((l) => ({ ...l }))]),
 );
 
 export const handlers = [
@@ -318,6 +333,127 @@ export const handlers = [
     callsStore = callsStore.map((r) => (r.id === id ? { ...r, status: target } : r));
     return HttpResponse.json(updated);
   }),
+  // Call delete — gated: only borrador calls with zero linked projects
+  http.delete("http://localhost:8000/api/calls/:id/", ({ params }) => {
+    const id = String(params.id);
+    const call = callsDetailStore[id];
+    if (!call) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    if (call.status !== "borrador") {
+      return HttpResponse.json(
+        { detail: "Only calls in borrador can be deleted." },
+        { status: 400 },
+      );
+    }
+    const linked = (callsProjectsStore[id] ?? []).length;
+    if (linked > 0) {
+      return HttpResponse.json(
+        { detail: "Cannot delete a call with linked projects." },
+        { status: 400 },
+      );
+    }
+    delete callsDetailStore[id];
+    callsStore = callsStore.filter((r) => r.id !== id);
+    return new HttpResponse(null, { status: 204 });
+  }),
+  // Call documents — metadata-only CRUD under the call
+  http.get("http://localhost:8000/api/calls/:id/documents/", ({ params }) =>
+    HttpResponse.json(page(callsDocumentsStore[String(params.id)] ?? [])),
+  ),
+  http.post("http://localhost:8000/api/calls/:id/documents/", async ({ params, request }) => {
+    const callId = String(params.id);
+    const call = callsDetailStore[callId];
+    if (!call) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const body = (await request.json()) as Record<string, unknown>;
+    const doc = {
+      id: `doc-${Date.now()}`,
+      call: callId,
+      name: String(body.name ?? ""),
+      doc_type: String(body.doc_type ?? "otro"),
+      external_url: String(body.external_url ?? ""),
+      created_at: new Date().toISOString(),
+    };
+    callsDocumentsStore = {
+      ...callsDocumentsStore,
+      [callId]: [...(callsDocumentsStore[callId] ?? []), doc],
+    };
+    return HttpResponse.json(doc, { status: 201 });
+  }),
+  http.patch("http://localhost:8000/api/calls/:id/documents/:did/", async ({ params, request }) => {
+    const callId = String(params.id);
+    const did = String(params.did);
+    const doc = (callsDocumentsStore[callId] ?? []).find((d) => d.id === did);
+    if (!doc) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...doc, ...body };
+    callsDocumentsStore = {
+      ...callsDocumentsStore,
+      [callId]: (callsDocumentsStore[callId] ?? []).map((d) => (d.id === did ? updated : d)),
+    };
+    return HttpResponse.json(updated);
+  }),
+  http.delete("http://localhost:8000/api/calls/:id/documents/:did/", ({ params }) => {
+    const callId = String(params.id);
+    const did = String(params.did);
+    const exists = (callsDocumentsStore[callId] ?? []).some((d) => d.id === did);
+    if (!exists) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    callsDocumentsStore = {
+      ...callsDocumentsStore,
+      [callId]: (callsDocumentsStore[callId] ?? []).filter((d) => d.id !== did),
+    };
+    return new HttpResponse(null, { status: 204 });
+  }),
+  // Call projects — link/unlink; linking only for abierta; 409 on duplicate
+  http.get("http://localhost:8000/api/calls/:id/projects/", ({ params }) =>
+    HttpResponse.json(page(callsProjectsStore[String(params.id)] ?? [])),
+  ),
+  http.post("http://localhost:8000/api/calls/:id/projects/", async ({ params, request }) => {
+    const callId = String(params.id);
+    const call = callsDetailStore[callId];
+    if (!call) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    if (call.status !== "abierta") {
+      return HttpResponse.json(
+        { detail: "Projects can only be linked to open calls." },
+        { status: 400 },
+      );
+    }
+    const body = (await request.json()) as Record<string, unknown>;
+    const project = String(body.project ?? "");
+    const alreadyLinked = Object.values(callsProjectsStore).some((list) =>
+      list.some((cp) => cp.project === project),
+    );
+    if (alreadyLinked) {
+      return HttpResponse.json(
+        { detail: "El proyecto ya está asociado a una convocatoria." },
+        { status: 409 },
+      );
+    }
+    const cp = {
+      id: `cp-${Date.now()}`,
+      call: callId,
+      project,
+      linked_at: new Date().toISOString(),
+    };
+    callsProjectsStore = {
+      ...callsProjectsStore,
+      [callId]: [...(callsProjectsStore[callId] ?? []), cp],
+    };
+    return HttpResponse.json(cp, { status: 201 });
+  }),
+  http.delete("http://localhost:8000/api/calls/:id/projects/:pid/", ({ params }) => {
+    const callId = String(params.id);
+    const pid = String(params.pid);
+    const exists = (callsProjectsStore[callId] ?? []).some((cp) => cp.id === pid);
+    if (!exists) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    callsProjectsStore = {
+      ...callsProjectsStore,
+      [callId]: (callsProjectsStore[callId] ?? []).filter((cp) => cp.id !== pid),
+    };
+    return new HttpResponse(null, { status: 204 });
+  }),
+  // Call state history — read-only list
+  http.get("http://localhost:8000/api/calls/:id/state_history/", ({ params }) =>
+    HttpResponse.json(page(callsStateLogsStore[String(params.id)] ?? [])),
+  ),
 
   // Auth
   http.get("http://localhost:8000/auth/me/", () =>
