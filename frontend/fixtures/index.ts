@@ -30,6 +30,14 @@ import {
   type FixtureResearchGroup,
   type FixtureResearchLine,
 } from "@/fixtures/institutions";
+import {
+  CALL_ACTION_FROM_STATES,
+  CALLS_FSM,
+  fixtureCallDetails,
+  fixtureCalls,
+  type FixtureCall,
+  type FixtureCallDetail,
+} from "@/fixtures/calls";
 
 /** Lightweight project shape consumed by the dashboard selectors. */
 export interface SeedProjectSummary {
@@ -107,3 +115,5 @@ export type {
   FixtureResearchGroup,
   FixtureResearchLine,
 };
+export { fixtureCalls, fixtureCallDetails, CALLS_FSM, CALL_ACTION_FROM_STATES };
+export type { FixtureCall, FixtureCallDetail };
