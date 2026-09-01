@@ -29,6 +29,11 @@ describe("getStatusMeta", () => {
     expect(getStatusMeta("en_ejecucion").variant).toBe("success");
   });
 
+  it("maps the researcher inactive state to a distinct label", () => {
+    expect(getStatusMeta("inactive").label).toBe("Inactivo");
+    expect(getStatusMeta("inactive").variant).toBe("warning");
+  });
+
   it("falls back to a Spanish label for unknown values", () => {
     expect(getStatusMeta("estado_desconocido").label).toBe("Estado desconocido");
     expect(getStatusMeta("estado_desconocido").variant).toBe("secondary");
@@ -50,5 +55,10 @@ describe("StatusBadge", () => {
   it("renders the Spanish fallback label when the status is unknown", () => {
     render(<StatusBadge status="weird_state" />);
     expect(screen.getByText("Estado desconocido")).toBeInTheDocument();
+  });
+
+  it("renders the researcher inactive label", () => {
+    render(<StatusBadge status="inactive" />);
+    expect(screen.getByText("Inactivo")).toBeInTheDocument();
   });
 });

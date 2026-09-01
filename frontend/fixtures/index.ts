@@ -30,6 +30,12 @@ import {
   type FixtureResearchGroup,
   type FixtureResearchLine,
 } from "@/fixtures/institutions";
+import {
+  fixtureResearchers,
+  fixtureResearcherDetails,
+  type FixtureResearcher,
+  type FixtureResearcherList,
+} from "@/fixtures/researchers";
 
 /** Lightweight project shape consumed by the dashboard selectors. */
 export interface SeedProjectSummary {
@@ -68,14 +74,12 @@ export function buildSeedDashboard(): SeedDashboard {
       title,
       status,
     })),
-    progress: fixtureAdvances.map(
-      ({ id, project, status, cumulative_percentage }) => ({
-        id,
-        project,
-        status,
-        cumulative_percentage,
-      }),
-    ),
+    progress: fixtureAdvances.map(({ id, project, status, cumulative_percentage }) => ({
+      id,
+      project,
+      status,
+      cumulative_percentage,
+    })),
   };
 }
 
@@ -98,6 +102,8 @@ export {
   fixtureCenters,
   fixtureGroups,
   fixtureLines,
+  fixtureResearchers,
+  fixtureResearcherDetails,
 };
 export type {
   FixtureInstitution,
@@ -106,4 +112,6 @@ export type {
   FixtureResearchCenter,
   FixtureResearchGroup,
   FixtureResearchLine,
+  FixtureResearcher,
+  FixtureResearcherList,
 };

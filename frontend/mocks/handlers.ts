@@ -19,6 +19,8 @@ import {
   fixtureCenters,
   fixtureGroups,
   fixtureLines,
+  fixtureResearchers,
+  fixtureResearcherDetails,
 } from "@/fixtures";
 
 interface Page<T> {
@@ -53,6 +55,39 @@ let facultadesStore = fixtureFacultades.map((f) => ({ ...f }));
 let centersStore = fixtureCenters.map((c) => ({ ...c }));
 let groupsStore = fixtureGroups.map((g) => ({ ...g }));
 let linesStore = fixtureLines.map((l) => ({ ...l }));
+
+// ── Researchers in-memory store (seeded from fixtures) ──────────────────
+// The handlers mutate this store so list CRUD + deactivate behave like the
+// real DRF backend during dev/tests.
+
+let researchersStore = fixtureResearchers.map((r) => ({ ...r }));
+
+/** Build the full detail shape for a researcher list row. */
+function researcherDetailFor(row: (typeof researchersStore)[number]) {
+  return (
+    fixtureResearcherDetails[row.id] ?? {
+      id: row.id,
+      user: null,
+      institution: row.institution,
+      first_name: row.full_name.split(" ")[0] ?? "",
+      last_name: row.full_name.split(" ").slice(1).join(" ") ?? "",
+      document_type: "CC",
+      document_number: `doc-${row.id}`,
+      primary_email: `${row.id}@example.com`,
+      phone: "",
+      bio: "",
+      academic_formation: "",
+      is_active: row.is_active,
+      full_name: row.full_name,
+      completeness_score: row.completeness_score,
+      affiliations: [],
+      external_profiles: [],
+      attachments: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+  );
+}
 
 /** FSM target states shared by all child entities. */
 const CHILD_FSM: Record<string, string> = {
@@ -538,5 +573,110 @@ export const handlers = [
     const result = applyChildTransition(linesStore, String(params.id), String(params.action));
     if (!result.ok) return HttpResponse.json({ detail: result.detail }, { status: 409 });
     return HttpResponse.json(result.entity);
+  }),
+
+  // Researchers list (paginated envelope, 25/page)
+  http.get("http://localhost:8000/api/researchers/", ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("page") ?? "1");
+    const size = 25;
+    const start = (page - 1) * size;
+    const results = researchersStore.slice(start, start + size);
+    const total = researchersStore.length;
+    return HttpResponse.json({
+      count: total,
+      next: start + size < total ? `?page=${page + 1}` : null,
+      previous: page > 1 ? `?page=${page - 1}` : null,
+      results,
+    });
+  }),
+  // Researcher detail
+  http.get("http://localhost:8000/api/researchers/:id/", ({ params }) => {
+    const row = researchersStore.find((r) => r.id === params.id);
+    if (!row) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    return HttpResponse.json(researcherDetailFor(row));
+  }),
+  // Researcher create — duplicate document_number returns 400 field error
+  http.post("http://localhost:8000/api/researchers/", async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    const documentNumber = String(body.document_number ?? "");
+    if (
+      researchersStore.some(
+        (r) =>
+          r.institution === "inst-1" && researcherDetailFor(r).document_number === documentNumber,
+      )
+    ) {
+      return HttpResponse.json(
+        { document_number: ["Ya existe un investigador con este documento."] },
+        { status: 400 },
+      );
+    }
+    const now = new Date().toISOString();
+    const fullName = `${String(body.first_name ?? "")} ${String(body.last_name ?? "")}`.trim();
+    const row = {
+      id: `r-${Date.now()}`,
+      full_name: fullName,
+      institution: "inst-1",
+      is_active: body.is_active !== false,
+      completeness_score: 0,
+    };
+    researchersStore = [...researchersStore, row];
+    const detail = {
+      ...researcherDetailFor(row),
+      first_name: String(body.first_name ?? ""),
+      last_name: String(body.last_name ?? ""),
+      document_type: String(body.document_type ?? "CC"),
+      document_number: documentNumber,
+      primary_email: String(body.primary_email ?? ""),
+      phone: String(body.phone ?? ""),
+      bio: String(body.bio ?? ""),
+      academic_formation: String(body.academic_formation ?? ""),
+      is_active: body.is_active !== false,
+      created_at: now,
+      updated_at: now,
+    };
+    fixtureResearcherDetails[detail.id] = detail;
+    return HttpResponse.json(detail, { status: 201 });
+  }),
+  // Researcher update (PATCH — partial, is_active enables reactivation)
+  http.patch("http://localhost:8000/api/researchers/:id/", async ({ params, request }) => {
+    const row = researchersStore.find((r) => r.id === params.id);
+    if (!row) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const body = (await request.json()) as Record<string, unknown>;
+    const current = researcherDetailFor(row);
+    const updated = {
+      ...current,
+      ...body,
+      updated_at: new Date().toISOString(),
+    };
+    fixtureResearcherDetails[updated.id] = updated;
+    researchersStore = researchersStore.map((r) =>
+      r.id === updated.id
+        ? {
+            ...r,
+            is_active: updated.is_active,
+            full_name: `${updated.first_name} ${updated.last_name}`.trim(),
+          }
+        : r,
+    );
+    return HttpResponse.json(updated);
+  }),
+  // Researcher deactivate (admin+; POST)
+  http.post("http://localhost:8000/api/researchers/:id/deactivate/", ({ params }) => {
+    const row = researchersStore.find((r) => r.id === params.id);
+    if (!row) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const current = researcherDetailFor(row);
+    if (!current.is_active) {
+      return HttpResponse.json(
+        { detail: "Solo se puede desactivar un investigador activo." },
+        { status: 400 },
+      );
+    }
+    const updated = { ...current, is_active: false, updated_at: new Date().toISOString() };
+    fixtureResearcherDetails[updated.id] = updated;
+    researchersStore = researchersStore.map((r) =>
+      r.id === updated.id ? { ...r, is_active: false } : r,
+    );
+    return HttpResponse.json(updated);
   }),
 ];
