@@ -123,4 +123,12 @@ describe("ResearchersPage — list", () => {
     expect(screen.getByRole("heading", { name: "Investigadores" })).toBeInTheDocument();
     expect(document.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
+
+  it("announces the loading state to assistive technology", () => {
+    (api.api.get as jest.Mock).mockReturnValue(new Promise(() => undefined));
+
+    renderPage(["admin"]);
+
+    expect(screen.getByRole("status", { name: /cargando investigadores/i })).toBeInTheDocument();
+  });
 });

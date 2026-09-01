@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/store/auth";
+import type { ResearcherList } from "@/features/researchers/types";
 import type {
   HierarchyNode,
   Page,
@@ -20,7 +21,6 @@ import type {
   ProjectList,
   ProjectObservation,
   ProjectStateLog,
-  ResearcherOption,
 } from "@/features/projects/types";
 
 export function useActiveInstitutionId(): string | null {
@@ -55,10 +55,7 @@ export function useProjectsList(params: ProjectListParams = {}) {
   return useQuery({
     queryKey: queryKeys.projects.list(institutionId, params),
     queryFn: () =>
-      api.get<Page<ProjectList>>(
-        `/api/projects/${buildQueryString(params)}`,
-        { institutionId },
-      ),
+      api.get<Page<ProjectList>>(`/api/projects/${buildQueryString(params)}`, { institutionId }),
   });
 }
 
@@ -67,8 +64,7 @@ export function useProjectDetail(id: string) {
   const institutionId = useActiveInstitutionId();
   return useQuery({
     queryKey: queryKeys.projects.detail(institutionId, id),
-    queryFn: () =>
-      api.get<ProjectDetail>(`/api/projects/${id}/`, { institutionId }),
+    queryFn: () => api.get<ProjectDetail>(`/api/projects/${id}/`, { institutionId }),
   });
 }
 
@@ -134,12 +130,17 @@ export function useLines(groupId: string | null) {
   });
 }
 
-/** Fetch researchers for PI/team selects (wizard). */
+/**
+ * Fetch researchers for PI/team selects (wizard).
+ *
+ * The endpoint returns a DRF paginated Page<ResearcherList> envelope
+ * (25/page); the wizard maps `results` to {id, full_name} options and
+ * intentionally never fetches page 2.
+ */
 export function useResearchers() {
   const institutionId = useActiveInstitutionId();
   return useQuery({
     queryKey: [...queryKeys.projects.all, "researchers", institutionId],
-    queryFn: () =>
-      api.get<ResearcherOption[]>(`/api/researchers/`, { institutionId }),
+    queryFn: () => api.get<Page<ResearcherList>>(`/api/researchers/`, { institutionId }),
   });
 }

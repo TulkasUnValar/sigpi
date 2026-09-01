@@ -27,9 +27,7 @@ jest.mock("next/link", () => {
     }: {
       href: string | { pathname: string };
       children: React.ReactNode;
-    }) => (
-      <a href={typeof href === "string" ? href : href.pathname}>{children}</a>
-    ),
+    }) => <a href={typeof href === "string" ? href : href.pathname}>{children}</a>,
   };
 });
 
@@ -58,7 +56,28 @@ const centers = [
 ];
 const groups = [{ id: "g1", name: "Grupo 1", code: "G1" }];
 const lines = [{ id: "l1", name: "Línea 1", code: "L1" }];
-const researchers = [{ id: "r1", full_name: "Ana Pérez" }];
+
+/** ResearcherList rows as the paginated API returns them. */
+const researchers = [
+  {
+    id: "r1",
+    full_name: "Ana Pérez",
+    institution: "inst-1",
+    is_active: true,
+    completeness_score: 100,
+  },
+  {
+    id: "r2",
+    full_name: "Luis Gómez",
+    institution: "inst-1",
+    is_active: true,
+    completeness_score: 40,
+  },
+];
+
+function pageOf<T>(results: T[], count?: number, next: string | null = null) {
+  return { count: count ?? results.length, next, previous: null, results };
+}
 
 function renderWizard() {
   useAuthStore.setState({
@@ -73,7 +92,7 @@ function renderWizard() {
     if (path.includes("/centers/")) return Promise.resolve(centers);
     if (path.includes("/groups/")) return Promise.resolve(groups);
     if (path.includes("/lines/")) return Promise.resolve(lines);
-    if (path.includes("/researchers/")) return Promise.resolve(researchers);
+    if (path.includes("/researchers/")) return Promise.resolve(pageOf(researchers));
     return Promise.resolve([]);
   });
 
@@ -165,5 +184,71 @@ describe("NewProjectPage — submit", () => {
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/projects/p-new");
     });
+  });
+});
+
+describe("NewProjectPage — paginated researcher options", () => {
+  it("renders PI options mapped from the paginated results, not the raw envelope", async () => {
+    renderWizard();
+    await screen.findByLabelText(/título/i);
+    await fillBasicStep();
+    fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
+
+    // Classification step — the PI select offers options from `results`.
+    const piSelect = await screen.findByLabelText(/investigador principal/i);
+    fireEvent.click(piSelect);
+    expect(await screen.findByRole("option", { name: "Ana Pérez" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Luis Gómez" })).toBeInTheDocument();
+  });
+
+  it("offers the same options in the team step", async () => {
+    renderWizard();
+    await screen.findByLabelText(/título/i);
+    await fillBasicStep();
+    fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
+
+    // Select a center so classification validates and the team step opens.
+    const centerSelect = await screen.findByLabelText(/centro/i);
+    fireEvent.click(centerSelect);
+    fireEvent.click(screen.getByRole("option", { name: "Centro A" }));
+    fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /agregar integrante/i }));
+    const memberSelect = await screen.findByLabelText(/investigador 1/i);
+    fireEvent.click(memberSelect);
+    expect(await screen.findByRole("option", { name: "Ana Pérez" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Luis Gómez" })).toBeInTheDocument();
+  });
+
+  it("offers only the first page's options when the API has more researchers", async () => {
+    // Isolate this test's call history from earlier tests in the file.
+    (api.api.get as jest.Mock).mockClear();
+
+    (api.api.get as jest.Mock).mockImplementation((path: string) => {
+      if (path.includes("/centers/")) return Promise.resolve(centers);
+      if (path.includes("/groups/")) return Promise.resolve(groups);
+      if (path.includes("/lines/")) return Promise.resolve(lines);
+      // 26 researchers total, only 2 on the fetched first page.
+      if (path.includes("/researchers/"))
+        return Promise.resolve(pageOf(researchers, 26, "?page=2"));
+      return Promise.resolve([]);
+    });
+
+    renderWizard();
+    await screen.findByLabelText(/título/i);
+    await fillBasicStep();
+    fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
+
+    const piSelect = await screen.findByLabelText(/investigador principal/i);
+    fireEvent.click(piSelect);
+    expect(await screen.findByRole("option", { name: "Ana Pérez" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Luis Gómez" })).toBeInTheDocument();
+
+    // No second page was fetched for the wizard's select options.
+    const researcherCalls = (api.api.get as jest.Mock).mock.calls.filter((call) =>
+      String(call[0]).includes("/researchers/"),
+    );
+    expect(researcherCalls).toHaveLength(1);
+    expect(String(researcherCalls[0]?.[0])).not.toContain("page=2");
   });
 });

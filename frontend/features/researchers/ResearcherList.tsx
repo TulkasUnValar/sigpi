@@ -47,13 +47,21 @@ export function ResearcherList({
         <p className="py-10 text-center text-sm text-muted-foreground">No hay investigadores</p>
       ) : (
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
+          <table aria-label="Lista de investigadores" className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">
               <tr>
-                <th className="px-4 py-3 font-medium">Nombre</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium">Completitud</th>
-                <th className="px-4 py-3 font-medium">Acciones</th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  Nombre
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  Estado
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  Completitud
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -91,7 +99,7 @@ export function ResearcherList({
         >
           Anterior
         </Button>
-        <span className="text-sm text-muted-foreground">
+        <span aria-live="polite" className="text-sm text-muted-foreground">
           Página {page} · {count} investigadores
         </span>
         <Button

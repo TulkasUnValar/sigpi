@@ -57,12 +57,12 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Wizard Fix + Polish + Verify (PR3)
 
-- [ ] 3.1 RED test — `features/projects/queries.ts` `useResearchers()` returns `Page<ResearcherList>`; wizard maps `results` to `{id, full_name}`, not raw envelope.
-- [ ] 3.2 Update `features/projects/queries.ts` `useResearchers()` to fetch `Page<ResearcherList>` (25/page, no page 2 fetch).
-- [ ] 3.3 Update `app/projects/new/page.tsx` team/PI selects to consume `results` mapping; only first page options offered, no crash.
-- [ ] 3.4 Add matching MSW researchers handler for the wizard (paginated envelope).
-- [ ] 3.5 Accessibility/UX polish pass on researchers routes (focus, aria, loading/empty states).
-- [ ] 3.6 Full verification — `jest --coverage` (branch ≥80%), ESLint, `tsc --noEmit` across all three slices; confirm the researchers-ui and projects-ui acceptance criteria.
+- [x] 3.1 RED test — `features/projects/queries.ts` `useResearchers()` returns `Page<ResearcherList>`; wizard maps `results` to `{id, full_name}`, not raw envelope.
+- [x] 3.2 Update `features/projects/queries.ts` `useResearchers()` to fetch `Page<ResearcherList>` (25/page, no page 2 fetch).
+- [x] 3.3 Update `app/projects/new/page.tsx` team/PI selects to consume `results` mapping; only first page options offered, no crash.
+- [x] 3.4 Add matching MSW researchers handler for the wizard (paginated envelope).
+- [x] 3.5 Accessibility/UX polish pass on researchers routes (focus, aria, loading/empty states).
+- [x] 3.6 Full verification — `jest --coverage` (branch ≥80%), ESLint, `tsc --noEmit` across all three slices; confirm the researchers-ui and projects-ui acceptance criteria.
 
 ## PR Boundaries and Rollback Plan
 

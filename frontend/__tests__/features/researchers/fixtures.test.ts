@@ -54,6 +54,19 @@ describe("researchers fixtures", () => {
     });
   });
 
+  it("provides rows the projects wizard can map to {id, full_name} options", () => {
+    // The wizard consumes Page<ResearcherList>.results and maps each row to
+    // a SelectItem option — every seeded row must map cleanly with unique ids.
+    const options = fixtureResearchers.map((r) => ({ id: r.id, full_name: r.full_name }));
+    expect(options.length).toBeGreaterThan(0);
+    const ids = new Set(options.map((o) => o.id));
+    expect(ids.size).toBe(options.length);
+    options.forEach((o) => {
+      expect(o.id.length).toBeGreaterThan(0);
+      expect(o.full_name.trim().length).toBeGreaterThan(0);
+    });
+  });
+
   it("provides nested affiliation/profile/attachment fixtures for a seeded researcher", () => {
     expect(fixtureAffiliations.length).toBeGreaterThan(0);
     expect(fixtureExternalProfiles.length).toBeGreaterThan(0);

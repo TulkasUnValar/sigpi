@@ -1,7 +1,7 @@
-# Apply Progress — frontend-researchers (PR1 + PR2)
+# Apply Progress — frontend-researchers (PR1 + PR2 + PR3)
 
-**Status**: PR1 complete (15/15, tasks 1.1–1.15). PR2 complete (8/8, tasks 2.1–2.8). PR3 NOT started (0/6).
-**Branch**: PR1 on `feature/frontend-researchers-pr1` (off `main`); PR2 on `feature/frontend-researchers-pr2` (off `feature/frontend-researchers-pr1`). No PRs created.
+**Status**: PR1 complete (15/15, tasks 1.1–1.15). PR2 complete (8/8, tasks 2.1–2.8). PR3 complete (6/6, tasks 3.1–3.6).
+**Branch**: PR1 on `feature/frontend-researchers-pr1` (off `main`); PR2 on `feature/frontend-researchers-pr2` (off `feature/frontend-researchers-pr1`); PR3 on `feature/frontend-researchers-pr3` (off `feature/frontend-researchers-pr2`). No PRs created.
 **Mode**: Strict TDD (runner `cd frontend; jest --passWithNoTests`).
 **Date**: 2026-09-01
 
@@ -140,18 +140,110 @@ clean, Prettier clean.
 
 ---
 
+## PR3: Wizard Fix + Polish + Verify (Complete)
+
+**Status**: PR3 complete (6/6 tasks, tasks 3.1–3.6).
+**Branch**: `feature/frontend-researchers-pr3` (off `feature/frontend-researchers-pr2`) — 3 work-unit commits, no PR created.
+
+### Executive Summary (PR3)
+
+Fixed the projects-wizard researcher pagination bug and applied a11y polish
+per the `projects-ui` delta spec and design. `useResearchers()` in
+`features/projects/queries.ts` now consumes the paginated
+`Page<ResearcherList>` envelope from `/api/researchers/` (was typed as a bare
+`ResearcherOption[]`, which crashed the wizard against the real paginated
+API), and `app/projects/new/page.tsx` maps `results` to `{id, full_name}`
+options — first page only, no page-2 fetch. The wizard's MSW researchers
+handler already existed from PR1 (paginated envelope); added a fixtures
+contract test proving the seeded rows map to the wizard's option shape. A11y
+polish on the researchers routes: polite live region for the list loading
+state, semantic table name + `scope=col` headers, polite pagination region,
+and `aria-describedby` linking field errors to their inputs. All gates green:
+81 suites / 578 tests (full suite), coverage ≥80% on every axis (whole-project
+92.31 stmts / 87.87 branch / 81.3 funcs / 93.28 lines), `tsc --noEmit` clean,
+ESLint clean, Prettier clean.
+
+### TDD Cycle Evidence (PR3)
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| 3.1 | `__tests__/features/projects/queries.test.tsx` | Unit | ✅ 27/145 | ✅ Written (runtime fail + `tsc` type-contract fail) | ✅ 2/2 | ✅ 2 cases | ✅ mock-clear + capture fix |
+| 3.2 | `queries.test.tsx` (useResearchers) | Unit | ✅ 27/145 | ✅ `tsc` TS2322 on `Page<ResearcherList>` | ✅ Passed | ✅ (see 3.1) | ✅ removed dead import |
+| 3.3 | `__tests__/features/projects/wizard.test.tsx` | Component | ✅ 27/145 | ✅ Crash (`researchers.map is not a function`) | ✅ 7/7 | ✅ 3 cases | ✅ isolated call count |
+| 3.4 | `__tests__/features/researchers/fixtures.test.ts` | Unit | ✅ PR2 baseline | ✅ Added option-contract test | ✅ 6/6 | ✅ 2 cases | ➖ None needed |
+| 3.5 | `list-page.test.tsx` + `ResearcherList.test.tsx` + `ResearcherForm.test.tsx` | Component | ✅ PR2 baseline | ✅ 4 RED | ✅ 8/8, 7/7, 6/6 | ✅ 4 cases | ➖ None needed |
+| 3.6 | Full `jest --coverage` + `tsc` + ESLint + Prettier | Mixed | ✅ 155/155 focused | N/A (verification) | ✅ 578/578 | ✅ full | ✅ prettier pass |
+
+### Test Summary (PR3)
+
+- **Full suite**: 81 suites / 578 tests passing
+- **Layers used**: Unit (query contract, fixtures), Component (wizard RTL, list page, list/form a11y)
+- **Approval tests**: 0 — no refactoring of behavior in PR3 (the wizard mapping was a bug fix, not a refactor)
+- **Pure functions created**: 0 (mapping uses an existing pure `map` in the page)
+- **New tests added (PR3)**: 10 (2 query, 3 wizard scenarios, 1 fixtures option-contract, 4 a11y)
+
+### Work Unit Evidence (PR3)
+
+| Evidence | Required value |
+|---|---|
+| Focused test command and result | `jest __tests__/features/projects __tests__/features/researchers --runInBand` → 28 suites, 155 tests passed |
+| Runtime harness command/scenario and result | `jest --coverage --passWithNoTests --runInBand` (full) → 81 suites / 578 passed; All files 92.31 stmts / 87.87 branch / 81.3 funcs / 93.28 lines; `tsc --noEmit` clean (exit 0); eslint clean; prettier --check clean. `npm run dev` not executed in this env (wizard + researchers exercised via RTL + mocked api layer, matching repo pattern) |
+| Rollback boundary | Revert `feature/frontend-researchers-pr3` (or the 3 PR3 work-unit commits): `useResearchers()` falls back to `ResearcherOption[]`, wizard mapping reverts, and a11y attributes revert. PR1/PR2 unaffected; no data loss (wizard bug resurfaces only) |
+
+### Files Changed (PR3)
+
+| File | Action | What Was Done |
+|------|--------|---------------|
+| `frontend/features/projects/queries.ts` | Modified | `useResearchers()` now fetches `Page<ResearcherList>` (was `ResearcherOption[]`); removed unused import |
+| `frontend/app/projects/new/page.tsx` | Modified | Maps `results` to `{id, full_name}` options via `useMemo`; PI/team selects use `researcherOptions`; default PI uses `researcherOptions[0]` |
+| `frontend/__tests__/features/projects/queries.test.tsx` | Created | Paginated contract (count/next/previous/results) + "never fetches page 2" |
+| `frontend/__tests__/features/projects/wizard.test.tsx` | Modified | Researchers mock returns paginated envelope; 3 scenarios (PI options from results, team options, page-2 not fetched) |
+| `frontend/app/researchers/page.tsx` | Modified | Loading skeletons wrapped in `role="status"` with accessible label |
+| `frontend/features/researchers/ResearcherList.tsx` | Modified | `aria-label` on table, `scope="col"` headers, `aria-live="polite"` pagination count |
+| `frontend/features/researchers/ResearcherForm.tsx` | Modified | Field errors carry stable ids; inputs link via `aria-describedby` (incl. document_type select) |
+| `frontend/__tests__/features/researchers/list-page.test.tsx` | Modified | Loading announced via `role="status"` test |
+| `frontend/__tests__/features/researchers/ResearcherList.test.tsx` | Modified | Table name/headers + polite pagination region tests |
+| `frontend/__tests__/features/researchers/ResearcherForm.test.tsx` | Modified | `aria-describedby` field-error test |
+| `frontend/__tests__/features/researchers/fixtures.test.ts` | Modified | Option-contract test (seeded rows map to `{id, full_name}` with unique ids) |
+| `openspec/changes/frontend-researchers/tasks.md` | Modified | Tasks 3.1–3.6 marked `[x]` |
+
+### Deviations from Design (PR3)
+
+None — implementation matches design. The design specified `useResearchers()`
+fetching `Page<ResearcherList>` and the wizard mapping `results` to
+`{id, full_name}` with no page-2 fetch; implemented exactly. The MSW
+researchers handler for the wizard was already present from PR1 (paginated
+envelope), so task 3.4 was satisfied by adding the fixture option-contract
+test rather than a redundant new handler.
+
+### Issues Found (PR3)
+
+- The wizard previously crashed because `researchersQuery.data` was the
+  paginated envelope object, not an array — `researchers.map is not a
+  function`. Fixed by mapping `results` in the page.
+- Test-hygiene: mock call history accumulates across tests within a file;
+  added `jest.clearAllMocks()` (queries.test.tsx) and a targeted `mockClear`
+  (wizard.test.tsx page-2 case).
+- The `msw/node` module-resolution limitation (documented PR1/PR2) still
+  applies — the wizard's MSW researcher handler is exercised by the runtime
+  dev flow and validated via the fixtures contract test, not MSW-in-jest.
+
+---
+
 ## Remaining Tasks
 
-- [ ] Phase 3 (PR3): Wizard `useResearchers()` pagination fix + `results` mapping, accessibility/UX polish, full verification (tasks 3.1–3.6)
+None — all PR3 tasks (3.1–3.6) complete. Change `frontend-researchers` is
+fully implemented across PR1, PR2, PR3.
 
 ## Workload / PR Boundary (cumulative)
 
 - Mode: stacked PR slice (auto-chain, stacked-to-main)
-- PR1 work unit: Foundation (tasks 1.1–1.15) — commits on `feature/frontend-researchers-pr1`: data layer; routes/components; shell+fixtures/handlers; docs
-- PR2 work unit: Nested managers (tasks 2.1–2.8) — commits on `feature/frontend-researchers-pr2`: nested data layer (types/mutations/constants); managers + page wiring; fixtures/handlers; tests; docs
-- Estimated review budget impact: PR2 ~1,000 authored lines (above the 400-line budget by design — the PR2 slice of the approved 3-PR auto-chain split)
+- PR1 work unit: Foundation (tasks 1.1–1.15) — commits on `feature/frontend-researchers-pr1`
+- PR2 work unit: Nested managers (tasks 2.1–2.8) — commits on `feature/frontend-researchers-pr2`
+- PR3 work unit: Wizard fix + polish + verify (tasks 3.1–3.6) — commits on `feature/frontend-researchers-pr3` (3 work-unit commits: `c65ca78` wizard pagination, `96732db` a11y + handler contract, `27ef617` polite pagination region)
+- Estimated review budget impact: PR3 ~250 authored lines (within the 400-line budget; the aggregate across all three PRs exceeds it by design of the approved 3-PR auto-chain split)
 - Rollback: revert each PR branch independently
 
 ## Status
 
-PR1: 15/15 complete. PR2: 8/8 complete. PR3: 0/6. Ready for next batch (PR3) after review of PR2.
+PR1: 15/15 complete. PR2: 8/8 complete. PR3: 6/6 complete. All 29 tasks done. Ready for review of the PR3 slice (then archive).

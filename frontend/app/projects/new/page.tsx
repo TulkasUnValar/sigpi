@@ -26,19 +26,18 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/errors";
 import { useCreateProject } from "@/features/projects/mutations";
-import {
-  useCenters,
-  useGroups,
-  useLines,
-  useResearchers,
-} from "@/features/projects/queries";
+import { useCenters, useGroups, useLines, useResearchers } from "@/features/projects/queries";
 import {
   basicStepSchema,
   classificationStepSchema,
   teamStepSchema,
   documentsStepSchema,
 } from "@/features/projects/schemas";
-import type { CreateProjectPayload, TeamMemberDraft } from "@/features/projects/types";
+import type {
+  CreateProjectPayload,
+  ResearcherOption,
+  TeamMemberDraft,
+} from "@/features/projects/types";
 
 const STEPS = ["Información básica", "Centro / Línea", "Equipo", "Documentos", "Revisión"];
 
@@ -87,7 +86,19 @@ export default function NewProjectPage() {
   const linesQuery = useLines(draft.group || null);
   const researchersQuery = useResearchers();
 
-  const researchers = researchersQuery.data ?? [];
+  /**
+   * Researcher options for the PI/team selects — mapped from the
+   * paginated Page<ResearcherList> envelope. Only the first page
+   * (25/page) is fetched; the wizard intentionally never loads page 2.
+   */
+  const researcherOptions: ResearcherOption[] = useMemo(
+    () =>
+      (researchersQuery.data?.results ?? []).map((r) => ({
+        id: r.id,
+        full_name: r.full_name,
+      })),
+    [researchersQuery.data],
+  );
 
   const stepSchema = useMemo(() => {
     switch (step) {
@@ -144,7 +155,7 @@ export default function NewProjectPage() {
       center: draft.center,
       group: draft.group || null,
       line: draft.line || null,
-      principal_investigator: draft.principal_investigator || researchers[0]?.id || "",
+      principal_investigator: draft.principal_investigator || researcherOptions[0]?.id || "",
     };
 
     createProject.mutate(payload, {
@@ -196,9 +207,7 @@ export default function NewProjectPage() {
             }}
             className="space-y-4"
           >
-            {step === 0 && (
-              <BasicFields draft={draft} onChange={patch} errors={stepErrors} />
-            )}
+            {step === 0 && <BasicFields draft={draft} onChange={patch} errors={stepErrors} />}
             {step === 1 && (
               <ClassificationFields
                 draft={draft}
@@ -206,10 +215,12 @@ export default function NewProjectPage() {
                 centers={centersQuery.data ?? []}
                 groups={groupsQuery.data ?? []}
                 lines={linesQuery.data ?? []}
-                researchers={researchers}
+                researchers={researcherOptions}
               />
             )}
-            {step === 2 && <TeamFields draft={draft} onChange={patch} researchers={researchers} />}
+            {step === 2 && (
+              <TeamFields draft={draft} onChange={patch} researchers={researcherOptions} />
+            )}
             {step === 3 && <DocumentsFields draft={draft} onChange={patch} />}
             {step === 4 && <ReviewFields draft={draft} />}
 
@@ -262,10 +273,18 @@ function BasicFields({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label="Título" error={errors.title}>
-        <Input value={draft.title} onChange={(e) => onChange({ title: e.target.value })} aria-label="Título" />
+        <Input
+          value={draft.title}
+          onChange={(e) => onChange({ title: e.target.value })}
+          aria-label="Título"
+        />
       </Field>
       <Field label="Palabras clave">
-        <Input value={draft.keywords} onChange={(e) => onChange({ keywords: e.target.value })} aria-label="Palabras clave" />
+        <Input
+          value={draft.keywords}
+          onChange={(e) => onChange({ keywords: e.target.value })}
+          aria-label="Palabras clave"
+        />
       </Field>
       <div className="sm:col-span-2">
         <Field label="Resumen" error={errors.abstract}>
@@ -368,7 +387,9 @@ function ClassificationFields({
           disabled={!draft.center}
         >
           <SelectTrigger aria-label="Grupo">
-            <SelectValue placeholder={draft.center ? "Selecciona un grupo" : "Primero elige centro"} />
+            <SelectValue
+              placeholder={draft.center ? "Selecciona un grupo" : "Primero elige centro"}
+            />
           </SelectTrigger>
           <SelectContent>
             {groups.map((g) => (
@@ -380,9 +401,15 @@ function ClassificationFields({
         </Select>
       </Field>
       <Field label="Línea">
-        <Select value={draft.line} onValueChange={(v) => onChange({ line: v })} disabled={!draft.group}>
+        <Select
+          value={draft.line}
+          onValueChange={(v) => onChange({ line: v })}
+          disabled={!draft.group}
+        >
           <SelectTrigger aria-label="Línea">
-            <SelectValue placeholder={draft.group ? "Selecciona una línea" : "Primero elige grupo"} />
+            <SelectValue
+              placeholder={draft.group ? "Selecciona una línea" : "Primero elige grupo"}
+            />
           </SelectTrigger>
           <SelectContent>
             {lines.map((l) => (
@@ -543,7 +570,9 @@ function DocumentsFields({
         variant="outline"
         size="sm"
         onClick={() =>
-          onChange({ documents: [...draft.documents, { name: "", doc_type: "", external_url: "" }] })
+          onChange({
+            documents: [...draft.documents, { name: "", doc_type: "", external_url: "" }],
+          })
         }
       >
         Agregar documento

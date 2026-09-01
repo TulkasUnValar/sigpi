@@ -113,4 +113,20 @@ describe("ResearcherList", () => {
 
     expect(screen.getByText("No hay investigadores")).toBeInTheDocument();
   });
+
+  it("exposes the table with a semantic accessible name and column headers", () => {
+    renderList();
+
+    expect(screen.getByRole("table", { name: /lista de investigadores/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader")).toHaveLength(4);
+  });
+
+  it("announces pagination changes via a polite live region", () => {
+    renderList({ page: 2, count: 25 });
+
+    expect(screen.getByText(/página 2 · 25 investigadores/i)).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
+  });
 });
