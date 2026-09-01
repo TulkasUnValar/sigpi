@@ -27,6 +27,12 @@ const STATUS_META: Record<string, StatusMeta> = {
   cerrado: { label: "Cerrado", variant: "secondary" },
   rechazado: { label: "Rechazado", variant: "destructive" },
   cancelado: { label: "Cancelado", variant: "destructive" },
+  // Call FSM statuses (calls feature)
+  abierta: { label: "Abierta", variant: "success" },
+  cerrada: { label: "Cerrada", variant: "secondary" },
+  en_evaluacion: { label: "En evaluación", variant: "warning" },
+  resultados_publicados: { label: "Resultados publicados", variant: "info" },
+  archivada: { label: "Archivada", variant: "secondary" },
 };
 
 /**
