@@ -21,6 +21,9 @@ import {
   fixtureLines,
   fixtureResearchers,
   fixtureResearcherDetails,
+  fixtureAffiliations,
+  fixtureExternalProfiles,
+  fixtureAttachments,
 } from "@/fixtures";
 
 interface Page<T> {
@@ -62,6 +65,11 @@ let linesStore = fixtureLines.map((l) => ({ ...l }));
 
 let researchersStore = fixtureResearchers.map((r) => ({ ...r }));
 
+// Nested researcher stores (affiliations / external profiles / attachments)
+let affiliationsStore = fixtureAffiliations.map((a) => ({ ...a }));
+let externalProfilesStore = fixtureExternalProfiles.map((p) => ({ ...p }));
+let attachmentsStore = fixtureAttachments.map((a) => ({ ...a }));
+
 /** Build the full detail shape for a researcher list row. */
 function researcherDetailFor(row: (typeof researchersStore)[number]) {
   return (
@@ -80,9 +88,9 @@ function researcherDetailFor(row: (typeof researchersStore)[number]) {
       is_active: row.is_active,
       full_name: row.full_name,
       completeness_score: row.completeness_score,
-      affiliations: [],
-      external_profiles: [],
-      attachments: [],
+      affiliations: affiliationsStore.filter((a) => a.researcher === row.id),
+      external_profiles: externalProfilesStore.filter((p) => p.researcher === row.id),
+      attachments: attachmentsStore.filter((a) => a.researcher === row.id),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -678,5 +686,112 @@ export const handlers = [
       r.id === updated.id ? { ...r, is_active: false } : r,
     );
     return HttpResponse.json(updated);
+  }),
+
+  // ── Researcher nested: affiliations ──────────────────────────────────
+  http.get("http://localhost:8000/api/researchers/:id/affiliations/", ({ params }) => {
+    const rows = affiliationsStore.filter((a) => a.researcher === params.id);
+    return HttpResponse.json(page(rows));
+  }),
+  http.post(
+    "http://localhost:8000/api/researchers/:id/affiliations/",
+    async ({ params, request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      const center = (body.center as string) ?? null;
+      const group = (body.group as string) ?? null;
+      const line = (body.line as string) ?? null;
+      // Cross-institution target → 400 (fixture centers/groups/lines all belong
+      // to inst-1; a foreign id simulates the backend guard).
+      const foreign =
+        (center && centersStore.find((c) => c.id === center)?.institution !== "inst-1") ||
+        (group && groupsStore.find((g) => g.id === group)?.institution !== "inst-1") ||
+        (line && linesStore.find((l) => l.id === line)?.institution !== "inst-1");
+      if (foreign) {
+        return HttpResponse.json(
+          { detail: "El centro de investigación pertenece a otra institución." },
+          { status: 400 },
+        );
+      }
+      const existing = affiliationsStore.filter((a) => a.researcher === params.id);
+      const aff = {
+        id: `aff-${Date.now()}`,
+        researcher: String(params.id),
+        center,
+        group,
+        line,
+        is_primary: body.is_primary === true || existing.length === 0,
+        created_at: new Date().toISOString(),
+      };
+      affiliationsStore = [...affiliationsStore, aff];
+      return HttpResponse.json(aff, { status: 201 });
+    },
+  ),
+  http.delete("http://localhost:8000/api/researchers/:id/affiliations/:affId/", ({ params }) => {
+    affiliationsStore = affiliationsStore.filter(
+      (a) => !(a.researcher === params.id && a.id === params.affId),
+    );
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.post(
+    "http://localhost:8000/api/researchers/:id/affiliations/:affId/set_primary/",
+    ({ params }) => {
+      affiliationsStore = affiliationsStore.map((a) =>
+        a.researcher === params.id ? { ...a, is_primary: a.id === params.affId } : a,
+      );
+      const target = affiliationsStore.find((a) => a.id === params.affId);
+      return HttpResponse.json(target);
+    },
+  ),
+
+  // ── Researcher nested: external profiles ─────────────────────────────
+  http.get("http://localhost:8000/api/researchers/:id/profiles/", ({ params }) => {
+    const rows = externalProfilesStore.filter((p) => p.researcher === params.id);
+    return HttpResponse.json(page(rows));
+  }),
+  http.post("http://localhost:8000/api/researchers/:id/profiles/", async ({ params, request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    const profile = {
+      id: `prof-${Date.now()}`,
+      researcher: String(params.id),
+      provider: String(body.provider ?? ""),
+      url: String(body.url ?? ""),
+      created_at: new Date().toISOString(),
+    };
+    externalProfilesStore = [...externalProfilesStore, profile];
+    return HttpResponse.json(profile, { status: 201 });
+  }),
+  http.delete("http://localhost:8000/api/researchers/:id/profiles/:profileId/", ({ params }) => {
+    externalProfilesStore = externalProfilesStore.filter(
+      (p) => !(p.researcher === params.id && p.id === params.profileId),
+    );
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Researcher nested: attachments (metadata only) ───────────────────
+  http.get("http://localhost:8000/api/researchers/:id/attachments/", ({ params }) => {
+    const rows = attachmentsStore.filter((a) => a.researcher === params.id);
+    return HttpResponse.json(page(rows));
+  }),
+  http.post(
+    "http://localhost:8000/api/researchers/:id/attachments/",
+    async ({ params, request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      const attachment = {
+        id: `att-${Date.now()}`,
+        researcher: String(params.id),
+        name: String(body.name ?? ""),
+        type: String(body.type ?? ""),
+        external_url: String(body.external_url ?? ""),
+        created_at: new Date().toISOString(),
+      };
+      attachmentsStore = [...attachmentsStore, attachment];
+      return HttpResponse.json(attachment, { status: 201 });
+    },
+  ),
+  http.delete("http://localhost:8000/api/researchers/:id/attachments/:attId/", ({ params }) => {
+    attachmentsStore = attachmentsStore.filter(
+      (a) => !(a.researcher === params.id && a.id === params.attId),
+    );
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

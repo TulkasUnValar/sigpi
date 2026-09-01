@@ -8,6 +8,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
 
@@ -163,5 +164,32 @@ describe("ResearcherDetailPage", () => {
     renderPage(["admin"]);
 
     expect(await screen.findByText("Investigador no encontrado")).toBeInTheDocument();
+  });
+
+  it("wires the nested managers into the Affiliations and Profiles tabs", async () => {
+    (api.api.get as jest.Mock).mockImplementation((url: string) => {
+      if (url.startsWith("/api/researchers/r-1/affiliations")) {
+        return Promise.resolve({ count: 0, next: null, previous: null, results: [] });
+      }
+      if (url.startsWith("/api/researchers/r-1/profiles")) {
+        return Promise.resolve({ count: 0, next: null, previous: null, results: [] });
+      }
+      if (url.startsWith("/api/researchers/r-1/attachments")) {
+        return Promise.resolve({ count: 0, next: null, previous: null, results: [] });
+      }
+      return Promise.resolve(detail);
+    });
+
+    renderPage(["admin"]);
+    await screen.findByRole("heading", { name: "Ana Pérez" });
+
+    await userEvent.click(screen.getByRole("tab", { name: "Afiliaciones" }));
+    expect(await screen.findByText("Nueva afiliación")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Perfiles externos" }));
+    expect(await screen.findByText("Nuevo perfil externo")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Adjuntos" }));
+    expect(await screen.findByText("Nuevo adjunto")).toBeInTheDocument();
   });
 });

@@ -11,7 +11,13 @@
  * jest-resolve in this setup (raw .ts sources with #core imports).
  */
 
-import { fixtureResearchers, fixtureResearcherDetails } from "@/fixtures/researchers";
+import {
+  fixtureResearchers,
+  fixtureResearcherDetails,
+  fixtureAffiliations,
+  fixtureExternalProfiles,
+  fixtureAttachments,
+} from "@/fixtures/researchers";
 
 describe("researchers fixtures", () => {
   it("provides non-empty list rows with the required fields", () => {
@@ -46,5 +52,22 @@ describe("researchers fixtures", () => {
     fixtureResearchers.forEach((r) => {
       expect(r.institution).toBe("inst-1");
     });
+  });
+
+  it("provides nested affiliation/profile/attachment fixtures for a seeded researcher", () => {
+    expect(fixtureAffiliations.length).toBeGreaterThan(0);
+    expect(fixtureExternalProfiles.length).toBeGreaterThan(0);
+    expect(fixtureAttachments.length).toBeGreaterThan(0);
+
+    const r1Id = fixtureResearchers[0]!.id;
+    expect(fixtureAffiliations.every((a) => a.researcher === r1Id)).toBe(true);
+    expect(fixtureExternalProfiles.every((p) => p.researcher === r1Id)).toBe(true);
+    expect(fixtureAttachments.every((a) => a.researcher === r1Id)).toBe(true);
+
+    // The first affiliation is primary.
+    expect(fixtureAffiliations.some((a) => a.is_primary)).toBe(true);
+
+    // Attachments are metadata only — they carry an external_url, not a file.
+    expect(fixtureAttachments.every((a) => a.external_url.length > 0)).toBe(true);
   });
 });

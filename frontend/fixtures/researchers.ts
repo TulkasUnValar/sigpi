@@ -180,3 +180,47 @@ export const fixtureResearcherDetails: Record<string, FixtureResearcher> = {
     ...TS,
   },
 };
+
+/**
+ * Nested affiliation rows (ResearcherAffiliationSerializer). Seeded into
+ * the researcher nested store so /researchers/{id}/affiliations/ returns
+ * non-empty data in the dev flow.
+ */
+export const fixtureAffiliations: FixtureResearcher["affiliations"] = [
+  {
+    id: "aff-1",
+    researcher: "r-1",
+    center: "center-1",
+    group: "group-1",
+    line: "line-1",
+    is_primary: true,
+    created_at: TS.created_at,
+  },
+];
+
+/**
+ * Nested external profile rows (ExternalProfileSerializer).
+ */
+export const fixtureExternalProfiles: FixtureResearcher["external_profiles"] = [
+  {
+    id: "prof-1",
+    researcher: "r-1",
+    provider: "cvlac",
+    url: "https://scienti.minciencias.gov.co/cvlac/1",
+    created_at: TS.created_at,
+  },
+];
+
+/**
+ * Nested metadata-only attachment rows (ResearcherAttachmentSerializer).
+ */
+export const fixtureAttachments: FixtureResearcher["attachments"] = [
+  {
+    id: "att-1",
+    researcher: "r-1",
+    name: "Hoja de vida",
+    type: "cv",
+    external_url: "https://example.com/cv-ana.pdf",
+    created_at: TS.created_at,
+  },
+];

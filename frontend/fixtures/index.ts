@@ -33,6 +33,9 @@ import {
 import {
   fixtureResearchers,
   fixtureResearcherDetails,
+  fixtureAffiliations,
+  fixtureExternalProfiles,
+  fixtureAttachments,
   type FixtureResearcher,
   type FixtureResearcherList,
 } from "@/fixtures/researchers";
@@ -104,6 +107,9 @@ export {
   fixtureLines,
   fixtureResearchers,
   fixtureResearcherDetails,
+  fixtureAffiliations,
+  fixtureExternalProfiles,
+  fixtureAttachments,
 };
 export type {
   FixtureInstitution,

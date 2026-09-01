@@ -9,8 +9,8 @@
  *   - Overview shows profile fields, the is_active badge, and the
  *     completeness bar.
  *   - Edit is gated by admin+ or the linked self; deactivate is admin+.
- *   - PR2 wires the nested managers; the tabs here render the nested
- *     data read-only from the detail.
+ *   - PR2 wires the nested managers into the Affiliations / External
+ *     profiles / Attachments tabs.
  */
 
 import Link from "next/link";
@@ -26,32 +26,10 @@ import { useAuthStore } from "@/store/auth";
 import { useResearcherDetail } from "@/features/researchers/queries";
 import { ResearcherDetail } from "@/features/researchers/ResearcherDetail";
 import { DeactivateResearcherButton } from "@/features/researchers/DeactivateResearcherButton";
+import { AffiliationsManager } from "@/features/researchers/AffiliationsManager";
+import { ExternalProfilesManager } from "@/features/researchers/ExternalProfilesManager";
+import { AttachmentsManager } from "@/features/researchers/AttachmentsManager";
 import { canEditResearcher } from "@/features/researchers/permissions";
-import type { ExternalProfile, ResearcherAttachment } from "@/features/researchers/types";
-
-/** Read-only list for a nested tab (affiliations/profiles/attachments). */
-function NestedList<T>({
-  rows,
-  emptyLabel,
-  renderRow,
-}: {
-  rows: T[];
-  emptyLabel: string;
-  renderRow: (row: T) => React.ReactNode;
-}) {
-  if (rows.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">{emptyLabel}</p>;
-  }
-  return (
-    <ul className="divide-y">
-      {rows.map((row, i) => (
-        <li key={i} className="py-3 text-sm">
-          {renderRow(row)}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 export default function ResearcherDetailPage() {
   const params = useParams<{ id: string }>();
@@ -109,25 +87,13 @@ export default function ResearcherDetailPage() {
           <ResearcherDetail researcher={researcher} />
         </TabsContent>
         <TabsContent value="affiliations">
-          <NestedList
-            rows={researcher.affiliations}
-            emptyLabel="Sin afiliaciones."
-            renderRow={(a) => `${a.center ?? "Centro"} · ${a.is_primary ? "Principal" : ""}`}
-          />
+          <AffiliationsManager researcherId={researcher.id} />
         </TabsContent>
         <TabsContent value="profiles">
-          <NestedList
-            rows={researcher.external_profiles}
-            emptyLabel="Sin perfiles externos."
-            renderRow={(p: ExternalProfile) => `${p.provider} · ${p.url}`}
-          />
+          <ExternalProfilesManager researcherId={researcher.id} />
         </TabsContent>
         <TabsContent value="attachments">
-          <NestedList
-            rows={researcher.attachments}
-            emptyLabel="Sin adjuntos."
-            renderRow={(a: ResearcherAttachment) => `${a.name} · ${a.type}`}
-          />
+          <AttachmentsManager researcherId={researcher.id} />
         </TabsContent>
       </Tabs>
     </AuthenticatedLayout>
