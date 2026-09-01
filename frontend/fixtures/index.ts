@@ -31,6 +31,14 @@ import {
   type FixtureResearchLine,
 } from "@/fixtures/institutions";
 import {
+  CALL_ACTION_FROM_STATES,
+  CALLS_FSM,
+  fixtureCallDetails,
+  fixtureCalls,
+  type FixtureCall,
+  type FixtureCallDetail,
+} from "@/fixtures/calls";
+import {
   fixtureResearchers,
   fixtureResearcherDetails,
   fixtureAffiliations,
@@ -121,3 +129,5 @@ export type {
   FixtureResearcher,
   FixtureResearcherList,
 };
+export { fixtureCalls, fixtureCallDetails, CALLS_FSM, CALL_ACTION_FROM_STATES };
+export type { FixtureCall, FixtureCallDetail };

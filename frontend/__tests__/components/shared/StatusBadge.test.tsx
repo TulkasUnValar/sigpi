@@ -40,6 +40,28 @@ describe("getStatusMeta", () => {
   });
 });
 
+describe("getStatusMeta — calls FSM statuses", () => {
+  it("maps abierta to its Spanish label", () => {
+    expect(getStatusMeta("abierta").label).toBe("Abierta");
+  });
+
+  it("maps cerrada to its Spanish label", () => {
+    expect(getStatusMeta("cerrada").label).toBe("Cerrada");
+  });
+
+  it("maps en_evaluacion to a distinct label", () => {
+    expect(getStatusMeta("en_evaluacion").label).toBe("En evaluación");
+  });
+
+  it("maps resultados_publicados to its Spanish label", () => {
+    expect(getStatusMeta("resultados_publicados").label).toBe("Resultados publicados");
+  });
+
+  it("maps archivada to its Spanish label", () => {
+    expect(getStatusMeta("archivada").label).toBe("Archivada");
+  });
+});
+
 describe("StatusBadge", () => {
   it("renders the Spanish label for a known status", () => {
     render(<StatusBadge status="en_revision" />);

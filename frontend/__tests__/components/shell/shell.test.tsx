@@ -137,6 +137,15 @@ describe("Sidebar", () => {
       screen.queryByRole("link", { name: "Estructura institucional" }),
     ).not.toBeInTheDocument();
   });
+
+  it("shows the Convocatorias nav item for every authenticated role", () => {
+    ["researcher", "director"].forEach((role) => {
+      setRoles([role]);
+      const { unmount } = render(<Sidebar />);
+      expect(screen.getByRole("link", { name: "Convocatorias" })).toHaveAttribute("href", "/calls");
+      unmount();
+    });
+  });
 });
 
 describe("Topbar", () => {

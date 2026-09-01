@@ -19,6 +19,10 @@ import {
   fixtureCenters,
   fixtureGroups,
   fixtureLines,
+  fixtureCalls,
+  fixtureCallDetails,
+  CALLS_FSM,
+  CALL_ACTION_FROM_STATES,
   fixtureResearchers,
   fixtureResearcherDetails,
   fixtureAffiliations,
@@ -154,6 +158,15 @@ function applyInstitutionTransition(
   return { ok: true, inst };
 }
 
+// ── Calls in-memory stores (seeded from fixtures) ───────────
+// FSM transitions validate the source state like the backend
+// (409 on invalid transitions).
+
+let callsStore = fixtureCalls.map((c) => ({ ...c }));
+let callsDetailStore = Object.fromEntries(
+  Object.entries(fixtureCallDetails).map(([k, v]) => [k, { ...v }]),
+);
+
 export const handlers = [
   // Projects list (dashboard + projects page)
   http.get("http://localhost:8000/api/projects/", () => HttpResponse.json(page(fixtureProjects))),
@@ -221,6 +234,91 @@ export const handlers = [
     ];
     return HttpResponse.json(advance);
   }),
+  // ── Calls ────────────────────────────────────────────────
+
+  // Calls list — paginated Page<CallList> envelope
+  http.get("http://localhost:8000/api/calls/", () => HttpResponse.json(page(callsStore))),
+  // Call create — returns the full detail (status borrador)
+  http.post("http://localhost:8000/api/calls/", async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    const now = new Date().toISOString();
+    const detail = {
+      id: `call-${Date.now()}`,
+      institution: "inst-1",
+      title: String(body.title ?? ""),
+      description: String(body.description ?? ""),
+      call_type: String(body.call_type ?? "internal"),
+      external_entity: String(body.external_entity ?? ""),
+      submission_start: (body.submission_start as string) ?? null,
+      submission_end: (body.submission_end as string) ?? null,
+      evaluation_start: (body.evaluation_start as string) ?? null,
+      evaluation_end: (body.evaluation_end as string) ?? null,
+      status: "borrador",
+      created_at: now,
+      updated_at: now,
+    };
+    const row = {
+      id: detail.id,
+      title: detail.title,
+      status: detail.status,
+      call_type: detail.call_type,
+      created_at: now,
+    };
+    callsStore = [...callsStore, row];
+    callsDetailStore = { ...callsDetailStore, [detail.id]: detail };
+    return HttpResponse.json(detail, { status: 201 });
+  }),
+  // Call detail
+  http.get("http://localhost:8000/api/calls/:id/", ({ params }) => {
+    const call = callsDetailStore[String(params.id)];
+    if (!call) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    return HttpResponse.json(call);
+  }),
+  // Call update (PATCH — partial)
+  http.patch("http://localhost:8000/api/calls/:id/", async ({ params, request }) => {
+    const call = callsDetailStore[String(params.id)];
+    if (!call) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...call, ...body, updated_at: new Date().toISOString() };
+    callsDetailStore = { ...callsDetailStore, [call.id]: updated };
+    callsStore = callsStore.map((r) =>
+      r.id === call.id
+        ? {
+            id: r.id,
+            title: updated.title,
+            status: updated.status,
+            call_type: updated.call_type,
+            created_at: r.created_at,
+          }
+        : r,
+    );
+    return HttpResponse.json(updated);
+  }),
+  // Call FSM transitions — validate the source state, then apply
+  http.post("http://localhost:8000/api/calls/:id/:action/", ({ params }) => {
+    const id = String(params.id);
+    const action = String(params.action);
+    const call = callsDetailStore[id];
+    if (!call) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const target = CALLS_FSM[action];
+    const fromStates = CALL_ACTION_FROM_STATES[action];
+    if (!target || !fromStates) {
+      return HttpResponse.json({ detail: "Transición no permitida." }, { status: 400 });
+    }
+    if (!fromStates.includes(call.status)) {
+      return HttpResponse.json(
+        { detail: "Transición no permitida desde este estado." },
+        { status: 409 },
+      );
+    }
+
+    const updated = { ...call, status: target, updated_at: new Date().toISOString() };
+    callsDetailStore = { ...callsDetailStore, [id]: updated };
+    callsStore = callsStore.map((r) => (r.id === id ? { ...r, status: target } : r));
+    return HttpResponse.json(updated);
+  }),
+
   // Auth
   http.get("http://localhost:8000/auth/me/", () =>
     HttpResponse.json({ id: "u1", email: "test@example.com" }),
