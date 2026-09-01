@@ -120,4 +120,13 @@ describe("ResearcherList", () => {
     expect(screen.getByRole("table", { name: /lista de investigadores/i })).toBeInTheDocument();
     expect(screen.getAllByRole("columnheader")).toHaveLength(4);
   });
+
+  it("announces pagination changes via a polite live region", () => {
+    renderList({ page: 2, count: 25 });
+
+    expect(screen.getByText(/página 2 · 25 investigadores/i)).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
+  });
 });

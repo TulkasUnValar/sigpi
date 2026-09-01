@@ -99,7 +99,7 @@ export function ResearcherList({
         >
           Anterior
         </Button>
-        <span className="text-sm text-muted-foreground">
+        <span aria-live="polite" className="text-sm text-muted-foreground">
           Página {page} · {count} investigadores
         </span>
         <Button
