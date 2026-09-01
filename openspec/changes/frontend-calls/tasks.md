@@ -48,12 +48,18 @@ Delivery strategy: auto-chain
 
 ## PR3 — Filters + Polish + Verify
 
-- [ ] 3.1 Filter wiring `CallList.tsx` → refetch + `list.test.tsx` (RED). AC: status/type, pagination. ~200 ln
-- [ ] 3.2 Polish: skeletons, error/empty states, a11y labels. ~60 ln
-- [ ] 3.3 Verify: coverage ≥80%, tsc, ESLint. AC: floor met. ~50 ln
+- [x] 3.1 Filter wiring `CallList.tsx` → refetch + `list.test.tsx` (RED). AC: status/type, pagination. ~200 ln
+- [x] 3.2 Polish: skeletons, error/empty states, a11y labels. ~60 ln
+- [x] 3.3 Verify: coverage ≥80%, tsc, ESLint. AC: floor met. ~50 ln
 
 ## PR Boundaries & Rollback
 
 - PR1 targets main; PR2/PR3 stack on PR1/PR2, each merging to main in order; rebase child diffs showing prior slices.
 - Rollback: frontend-only, no migration; revert merges in reverse (PR3 → PR2 → PR1).
 - Open question: auth store emits `director_centro` as `director`? else alias in `permissions.ts` (1.2).
+
+## Apply Status
+
+- PR1 (1.1–1.11): COMPLETE — see `sdd/frontend-calls/apply-progress` (Engram) and `openspec/changes/frontend-calls/apply-progress.md`. Branch `feature/frontend-calls-pr1` (HEAD 3db5f19), 14 commits. Full suite 526/526, tsc green, coverage ≥80%.
+- PR2 (2.1–2.5): COMPLETE — see merged `sdd/frontend-calls/apply-progress`. Branch `feature/frontend-calls-pr2` (HEAD 05dd7b8, 5 commits, stacked on PR1). Full suite 551/551, tsc green, coverage ≥80% (functions 80.03).
+- PR3 (3.1–3.3): COMPLETE — see merged `sdd/frontend-calls/apply-progress`. Branch `feature/frontend-calls-pr3` (3 code commits + docs commit, stacked on PR2 HEAD 05dd7b8). Full suite 571/571, tsc green, eslint/prettier clean, coverage ≥80% (functions 80.12, branches 89.42).

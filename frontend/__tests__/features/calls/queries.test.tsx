@@ -95,6 +95,18 @@ describe("useCallsList", () => {
       expect(path).toContain("call_type=external");
     });
   });
+
+  it("passes a null institution id when no active institution is set", async () => {
+    useAuthStore.setState({ activeInstitution: null });
+    renderQuery(() => useCallsList());
+
+    await waitFor(() => {
+      expect(api.api.get).toHaveBeenCalledWith(
+        "/api/calls/",
+        expect.objectContaining({ institutionId: null }),
+      );
+    });
+  });
 });
 
 describe("useCallDetail", () => {

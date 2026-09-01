@@ -33,6 +33,7 @@ import {
 import {
   CALL_ACTION_FROM_STATES,
   CALLS_FSM,
+  filterCallRows,
   fixtureCallDetails,
   fixtureCalls,
   fixtureCallDocuments,
@@ -141,6 +142,7 @@ export {
   fixtureCallDocuments,
   fixtureCallProjects,
   fixtureCallStateLogs,
+  filterCallRows,
   CALLS_FSM,
   CALL_ACTION_FROM_STATES,
 };

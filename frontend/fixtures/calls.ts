@@ -129,6 +129,22 @@ export const CALLS_FSM: Record<string, string> = {
   archive: "archivada",
 };
 
+/**
+ * Filter list rows by status and call_type — mirrors the DRF query params
+ * applied to GET /api/calls/. Used by the MSW list handler so dev/tests
+ * behave like the backend when filters are active.
+ */
+export function filterCallRows(
+  rows: FixtureCall[],
+  params: { status?: string | null; call_type?: string | null } = {},
+): FixtureCall[] {
+  return rows.filter((row) => {
+    if (params.status && row.status !== params.status) return false;
+    if (params.call_type && row.call_type !== params.call_type) return false;
+    return true;
+  });
+}
+
 /** Valid source states per transition (models.py @transition sources). */
 export const CALL_ACTION_FROM_STATES: Record<string, string[]> = {
   open_call: ["borrador"],

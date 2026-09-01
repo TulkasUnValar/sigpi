@@ -7,8 +7,10 @@
  * Spec (calls-ui list):
  *   - Rows render title, StatusBadge, call_type label and created_at.
  *   - Pagination controls are driven by the DRF next/previous links.
- *   - The status/call_type filter controls render here; the refetch
- *     wiring lands with the PR3 slice.
+ *   - Selecting status/call_type refetches ?status=…&call_type=… and
+ *     resets to page 1; "Todos" clears each filter.
+ *   - Loading shows a labelled skeleton region, failures an alert, and
+ *     empty results a distinct empty state.
  */
 
 import { useState } from "react";
@@ -27,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { getErrorMessage } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth";
 import { useCallsList } from "@/features/calls/queries";
 import { canManageCall } from "@/features/calls/permissions";
@@ -36,6 +39,14 @@ import {
   getCallTypeLabel,
 } from "@/features/calls/constants";
 
+/** Sentinel for the "Todos" (no filter) option in the Radix Selects. */
+const ALL_FILTER = "all";
+
+/** Map the "Todos" sentinel back to an empty filter value. */
+export function normalizeFilter(value: string): string {
+  return value === ALL_FILTER ? "" : value;
+}
+
 export function CallList() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
@@ -44,12 +55,25 @@ export function CallList() {
   const { roles } = useAuthStore();
   const canCreate = canManageCall(roles);
 
-  const callsQuery = useCallsList({ page });
+  const callsQuery = useCallsList({ page, status, call_type: callType });
   const data = callsQuery.data;
   const calls = data?.results ?? [];
   const loading = callsQuery.isLoading;
+  const error = callsQuery.error;
 
   const hasFilters = Boolean(status || callType);
+
+  /** Apply a status filter; a new filter always restarts at page 1. */
+  const changeStatus = (value: string) => {
+    setStatus(normalizeFilter(value));
+    setPage(1);
+  };
+
+  /** Apply a call_type filter; a new filter always restarts at page 1. */
+  const changeCallType = (value: string) => {
+    setCallType(normalizeFilter(value));
+    setPage(1);
+  };
 
   return (
     <>
@@ -62,16 +86,17 @@ export function CallList() {
         ) : null}
       </div>
 
-      {/* Filters — UI present in PR1; refetch wiring lands in PR3 */}
+      {/* Filters — selection refetches ?status=…&call_type=… immediately */}
       <Card className="mb-6">
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="call-filter-status">Estado</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={changeStatus}>
               <SelectTrigger id="call-filter-status" aria-label="Estado">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
                 {CALL_STATUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -82,11 +107,12 @@ export function CallList() {
           </div>
           <div>
             <Label htmlFor="call-filter-type">Tipo</Label>
-            <Select value={callType} onValueChange={setCallType}>
+            <Select value={callType} onValueChange={changeCallType}>
               <SelectTrigger id="call-filter-type" aria-label="Tipo de convocatoria">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
                 {CALL_TYPE_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -99,10 +125,17 @@ export function CallList() {
       </Card>
 
       {loading ? (
-        <div className="space-y-2">
+        <div role="status" aria-label="Cargando convocatorias" className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-12" />
           ))}
+        </div>
+      ) : error ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive"
+        >
+          {getErrorMessage(error)}
         </div>
       ) : calls.length === 0 ? (
         <EmptyState
@@ -122,7 +155,7 @@ export function CallList() {
         />
       ) : (
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
+          <table aria-label="Lista de convocatorias" className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">
               <tr>
                 <th className="px-4 py-3 font-medium">Título</th>
@@ -135,10 +168,7 @@ export function CallList() {
               {calls.map((c) => (
                 <tr key={c.id} className="border-b last:border-0">
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/calls/${c.id}`}
-                      className="font-medium hover:underline"
-                    >
+                    <Link href={`/calls/${c.id}`} className="font-medium hover:underline">
                       {c.title}
                     </Link>
                   </td>
@@ -164,7 +194,7 @@ export function CallList() {
         >
           Anterior
         </Button>
-        <span className="text-sm text-muted-foreground">
+        <span aria-live="polite" className="text-sm text-muted-foreground">
           Página {page}
           {data?.count !== undefined ? ` · ${data.count} convocatorias` : ""}
         </span>
