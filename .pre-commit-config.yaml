@@ -60,25 +60,29 @@ repos:
         pass_filenames: false
 
   # ── Frontend — JavaScript / TypeScript (ESLint) ─────────────
-  # IMPORTANT: Must run inside WSL. Uses absolute WSL path.
+  # IMPORTANT: Must run inside WSL. Uses the nvm Linux node binary
+  # directly — npx shims resolve to Windows cmd.exe via WSL interop
+  # and crash on UNC paths.
   - repo: local
     hooks:
       - id: eslint
         name: eslint
-        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/frontend && npx eslint . --ext .ts,.tsx'
+        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/frontend && ~/.nvm/versions/node/v24.17.0/bin/node node_modules/eslint/bin/eslint.js . --ext .ts,.tsx'
         language: system
         types_or: [javascript, jsx, ts, tsx]
         files: ^frontend/
         pass_filenames: false
 
   # ── Frontend — Formatting (Prettier) ────────────────────────
-  # IMPORTANT: Must run inside WSL. Uses absolute WSL path.
+  # IMPORTANT: Must run inside WSL. The script uses the nvm Linux node
+  # binary directly (npx shims resolve to Windows cmd.exe via WSL
+  # interop and crash on UNC paths) and checks only the staged files.
   - repo: local
     hooks:
       - id: prettier
         name: prettier
-        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/frontend && npx prettier --check "**/*.{ts,tsx,json,css,md}"'
+        entry: bash scripts/prettier-check.sh
         language: system
         types_or: [javascript, jsx, ts, tsx, json, css, markdown]
         files: ^frontend/
-        pass_filenames: false
+        pass_filenames: true
