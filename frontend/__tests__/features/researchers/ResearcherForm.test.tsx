@@ -126,4 +126,22 @@ describe("ResearcherForm", () => {
       expect(onError).toHaveBeenCalledWith(expect.any(Error));
     });
   });
+
+  it("links field errors to their inputs via aria-describedby", async () => {
+    const user = userEvent.setup();
+    render(
+      <ResearcherForm
+        defaultValues={emptyValues}
+        submitLabel="Crear investigador"
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Crear investigador" }));
+
+    const input = await screen.findByLabelText("Primer nombre");
+    const error = screen.getByText(/primer nombre es obligatorio/i);
+    expect(error.id.length).toBeGreaterThan(0);
+    expect(input).toHaveAttribute("aria-describedby", error.id);
+  });
 });

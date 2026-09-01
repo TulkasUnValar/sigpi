@@ -92,6 +92,7 @@ export function ResearcherForm({
       <div className="grid gap-4 sm:grid-cols-2">
         {TEXT_FIELDS.map((field) => {
           const error = errors[field.name];
+          const errorId = `researcher-${field.name}-error`;
           return (
             <div key={field.name}>
               <Label htmlFor={`researcher-${field.name}`}>{field.label}</Label>
@@ -101,11 +102,14 @@ export function ResearcherForm({
                   type={field.type ?? "text"}
                   aria-label={field.label}
                   aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? errorId : undefined}
                   {...register(field.name)}
                 />
               </div>
               {error ? (
-                <p className="mt-1 text-sm text-destructive">{String(error.message ?? "")}</p>
+                <p id={errorId} className="mt-1 text-sm text-destructive">
+                  {String(error.message ?? "")}
+                </p>
               ) : null}
             </div>
           );
@@ -117,6 +121,8 @@ export function ResearcherForm({
             <select
               id="researcher-document_type"
               aria-label="Tipo de documento"
+              aria-invalid={errors.document_type ? true : undefined}
+              aria-describedby={errors.document_type ? "researcher-document_type-error" : undefined}
               className="min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register("document_type")}
             >
@@ -128,7 +134,7 @@ export function ResearcherForm({
             </select>
           </div>
           {errors.document_type ? (
-            <p className="mt-1 text-sm text-destructive">
+            <p id="researcher-document_type-error" className="mt-1 text-sm text-destructive">
               {String(errors.document_type.message ?? "")}
             </p>
           ) : null}

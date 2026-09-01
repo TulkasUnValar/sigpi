@@ -48,7 +48,7 @@ export default function ResearchersPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-2">
+        <div role="status" aria-label="Cargando investigadores" className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-12" />
           ))}
