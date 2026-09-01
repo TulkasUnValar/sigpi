@@ -17,9 +17,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { useAuthStore } from "@/store/auth";
 import { FsmActionBar } from "@/features/calls/FsmActionBar";
+import { DeleteCallButton } from "@/features/calls/DeleteCallButton";
+import { DocumentsManager } from "@/features/calls/DocumentsManager";
+import { ProjectsManager } from "@/features/calls/ProjectsManager";
+import { StateHistoryManager } from "@/features/calls/StateHistoryManager";
 import { canManageCall } from "@/features/calls/permissions";
 import { getCallTypeLabel } from "@/features/calls/constants";
 import type { Call } from "@/features/calls/types";
@@ -39,11 +42,14 @@ export function CallDetail({ call }: CallDetailProps) {
           <h1 className="text-2xl font-semibold">{call.title}</h1>
           <StatusBadge status={call.status} />
         </div>
-        {canEdit ? (
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/calls/${call.id}/edit`}>Editar</Link>
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {canEdit ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/calls/${call.id}/edit`}>Editar</Link>
+            </Button>
+          ) : null}
+          <DeleteCallButton call={call} />
+        </div>
       </div>
 
       <div className="mb-6">
@@ -70,9 +76,7 @@ export function CallDetail({ call }: CallDetailProps) {
                 <p className="mt-1">{getCallTypeLabel(call.call_type)}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Entidad externa
-                </h3>
+                <h3 className="text-sm font-medium text-muted-foreground">Entidad externa</h3>
                 <p className="mt-1">{call.external_entity || "—"}</p>
               </div>
               <div>
@@ -89,24 +93,15 @@ export function CallDetail({ call }: CallDetailProps) {
         </TabsContent>
 
         <TabsContent value="documents">
-          <EmptyState
-            title="Sin documentos"
-            description="El gestor de documentos se entrega en una próxima etapa."
-          />
+          <DocumentsManager callId={call.id} />
         </TabsContent>
 
         <TabsContent value="projects">
-          <EmptyState
-            title="Sin proyectos"
-            description="La vinculación de proyectos se entrega en una próxima etapa."
-          />
+          <ProjectsManager callId={call.id} status={call.status} />
         </TabsContent>
 
         <TabsContent value="history">
-          <EmptyState
-            title="Sin historial"
-            description="El historial de estados se entrega en una próxima etapa."
-          />
+          <StateHistoryManager callId={call.id} />
         </TabsContent>
       </Tabs>
     </>

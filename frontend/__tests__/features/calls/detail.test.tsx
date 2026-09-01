@@ -30,6 +30,12 @@ jest.mock("next/link", () => {
   };
 });
 
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/calls",
+  useParams: () => ({ id: "call-1" }),
+  useRouter: () => ({ push: jest.fn(), prefetch: jest.fn() }),
+}));
+
 jest.mock("sonner", () => ({
   toast: {
     success: jest.fn(),
@@ -98,6 +104,14 @@ function renderDetail(call: ReturnType<typeof makeCall>) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // CallDetail now mounts the nested managers + delete gate, which query
+  // the nested resources; keep those queries resolved with empty pages.
+  (api.api.get as jest.Mock).mockResolvedValue({
+    count: 0,
+    next: null,
+    previous: null,
+    results: [],
+  });
 });
 
 describe("CallDetail — loads", () => {
@@ -111,9 +125,7 @@ describe("CallDetail — loads", () => {
     expect(screen.getByRole("tab", { name: "Documentos" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Proyectos" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Historial" })).toBeInTheDocument();
-    expect(
-      screen.getByText("Investigación en inteligencia artificial."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Investigación en inteligencia artificial.")).toBeInTheDocument();
     expect(screen.getByText("Interna")).toBeInTheDocument();
     expect(screen.getByText(/2026-02-01/)).toBeInTheDocument();
     expect(screen.getByText(/2026-04-15/)).toBeInTheDocument();
@@ -192,8 +204,6 @@ describe("FsmActionBar — transitions", () => {
     setAuthRoles(["researcher"]);
     renderDetail(makeCall("borrador"));
 
-    expect(
-      screen.queryByRole("button", { name: "Abrir convocatoria" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Abrir convocatoria" })).not.toBeInTheDocument();
   });
 });
