@@ -24,6 +24,7 @@ import {
   fixtureCallDocuments,
   fixtureCallProjects,
   fixtureCallStateLogs,
+  filterCallRows,
   CALLS_FSM,
   CALL_ACTION_FROM_STATES,
   fixtureResearchers,
@@ -251,8 +252,15 @@ export const handlers = [
   }),
   // ── Calls ────────────────────────────────────────────────
 
-  // Calls list — paginated Page<CallList> envelope
-  http.get("http://localhost:8000/api/calls/", () => HttpResponse.json(page(callsStore))),
+  // Calls list — paginated Page<CallList> envelope, filters applied like DRF
+  http.get("http://localhost:8000/api/calls/", ({ request }) => {
+    const url = new URL(request.url);
+    const filtered = filterCallRows(callsStore, {
+      status: url.searchParams.get("status"),
+      call_type: url.searchParams.get("call_type"),
+    });
+    return HttpResponse.json(page(filtered));
+  }),
   // Call create — returns the full detail (status borrador)
   http.post("http://localhost:8000/api/calls/", async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;

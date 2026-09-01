@@ -10,6 +10,7 @@
 import {
   CALL_ACTION_FROM_STATES,
   CALLS_FSM,
+  filterCallRows,
   fixtureCallDetails,
   fixtureCalls,
 } from "@/fixtures";
@@ -61,13 +62,38 @@ describe("CALL_ACTION_FROM_STATES — valid source states", () => {
     expect(CALL_ACTION_FROM_STATES.close_call).toEqual(["abierta"]);
     expect(CALL_ACTION_FROM_STATES.start_evaluation).toEqual(["cerrada"]);
     expect(CALL_ACTION_FROM_STATES.publish_results).toEqual(["en_evaluacion"]);
-    expect(CALL_ACTION_FROM_STATES.archive).toEqual([
-      "cerrada",
-      "resultados_publicados",
-    ]);
+    expect(CALL_ACTION_FROM_STATES.archive).toEqual(["cerrada", "resultados_publicados"]);
   });
 
   it("rejects an invalid transition (publish_results from borrador)", () => {
     expect(CALL_ACTION_FROM_STATES.publish_results).not.toContain("borrador");
+  });
+});
+
+describe("filterCallRows — DRF status/call_type filter parity", () => {
+  it("keeps only rows matching the status param", () => {
+    const result = filterCallRows(fixtureCalls, { status: "abierta" });
+    expect(result.map((c) => c.id)).toEqual(["call-1"]);
+  });
+
+  it("keeps only rows matching the call_type param", () => {
+    const result = filterCallRows(fixtureCalls, { call_type: "external" });
+    expect(result.map((c) => c.id)).toEqual(["call-2", "call-5"]);
+  });
+
+  it("applies status and call_type together", () => {
+    const result = filterCallRows(fixtureCalls, {
+      status: "borrador",
+      call_type: "external",
+    });
+    expect(result.map((c) => c.id)).toEqual(["call-2"]);
+  });
+
+  it("returns all rows when no params are given", () => {
+    expect(filterCallRows(fixtureCalls)).toHaveLength(fixtureCalls.length);
+  });
+
+  it("returns an empty list when no row matches", () => {
+    expect(filterCallRows(fixtureCalls, { status: "archivada" })).toEqual([]);
   });
 });
