@@ -17,6 +17,7 @@ const PROTECTED_PREFIXES = [
   "/switch-institution",
   "/dashboard",
   "/projects",
+  "/calls",
 ];
 
 /** Paths that are always public (no redirect needed). */
