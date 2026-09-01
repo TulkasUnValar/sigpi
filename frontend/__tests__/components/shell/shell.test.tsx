@@ -83,6 +83,27 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Proyectos" })).toBeInTheDocument();
   });
 
+  it("shows the investigadores nav item for every authenticated role", () => {
+    setRoles(["researcher"]);
+    render(<Sidebar />);
+
+    expect(screen.getByRole("link", { name: "Investigadores" })).toHaveAttribute(
+      "href",
+      "/researchers",
+    );
+  });
+
+  it("shows the investigadores nav item for admin and director too", () => {
+    setRoles(["admin"]);
+    const { unmount } = render(<Sidebar />);
+    expect(screen.getByRole("link", { name: "Investigadores" })).toBeInTheDocument();
+    unmount();
+
+    setRoles(["director"]);
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: "Investigadores" })).toBeInTheDocument();
+  });
+
   it("highlights the active route via aria-current", () => {
     setRoles(["researcher"]);
     mockUsePathname.mockReturnValue("/projects");
@@ -96,18 +117,17 @@ describe("Sidebar", () => {
     setRoles(["superadmin"]);
     render(<Sidebar />);
 
-    expect(
-      screen.getByRole("link", { name: "Estructura institucional" }),
-    ).toHaveAttribute("href", "/institutions");
+    expect(screen.getByRole("link", { name: "Estructura institucional" })).toHaveAttribute(
+      "href",
+      "/institutions",
+    );
   });
 
   it("shows the institutions nav item for admin", () => {
     setRoles(["admin"]);
     render(<Sidebar />);
 
-    expect(
-      screen.getByRole("link", { name: "Estructura institucional" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Estructura institucional" })).toBeInTheDocument();
   });
 
   it("hides the institutions nav item for director and researcher", () => {

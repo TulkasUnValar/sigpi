@@ -14,6 +14,8 @@ const STATUS_META: Record<string, StatusMeta> = {
   active: { label: "Activa", variant: "success" },
   deactivated: { label: "Desactivada", variant: "warning" },
   archived: { label: "Archivada", variant: "secondary" },
+  // Researcher lifecycle (researchers feature — is_active derived status)
+  inactive: { label: "Inactivo", variant: "warning" },
   // Project / advance statuses
   borrador: { label: "Borrador", variant: "secondary" },
   enviado: { label: "Enviado", variant: "info" },
