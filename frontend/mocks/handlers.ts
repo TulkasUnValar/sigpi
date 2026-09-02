@@ -32,7 +32,16 @@ import {
   fixtureAffiliations,
   fixtureExternalProfiles,
   fixtureAttachments,
+  fixtureProducts,
+  fixtureProductDetails,
+  fixtureProductAuthors,
+  fixtureProductAttachments,
+  filterProductRows,
+  validateProductAuthorCreate,
+  validateProductAuthorUpdate,
+  validateProductAttachmentPayload,
 } from "@/fixtures";
+import { ALLOWED_PROJECT_STATES, PRODUCT_TYPES } from "@/features/products/constants";
 
 interface Page<T> {
   count: number;
@@ -182,6 +191,32 @@ let callsProjectsStore = Object.fromEntries(
 const callsStateLogsStore = Object.fromEntries(
   Object.entries(fixtureCallStateLogs).map(([k, v]) => [k, v.map((l) => ({ ...l }))]),
 );
+
+// ── Products in-memory stores (seeded from fixtures) ───────
+// The handlers mutate these so list/create behave like a real DRF backend
+// during dev/tests.
+
+let productsStore = fixtureProducts.map((p) => ({ ...p }));
+let productsDetailStore = Object.fromEntries(
+  Object.entries(fixtureProductDetails).map(([k, v]) => [k, { ...v }]),
+);
+
+// Nested product stores (authors / attachments) — the handlers mutate
+// these so nested CRUD behaves like the DRF backend during dev/tests.
+let productsAuthorsStore: Record<string, (typeof fixtureProductAuthors)[string]> =
+  Object.fromEntries(
+    Object.entries(fixtureProductAuthors).map(([k, v]) => [k, v.map((a) => ({ ...a }))]),
+  );
+let productsAttachmentsStore: Record<string, (typeof fixtureProductAttachments)[string]> =
+  Object.fromEntries(
+    Object.entries(fixtureProductAttachments).map(([k, v]) => [k, v.map((a) => ({ ...a }))]),
+  );
+
+/** Valid type codes mirroring ProductType choices. */
+const VALID_PRODUCT_TYPES = Object.keys(PRODUCT_TYPES);
+
+/** Current year + 1 bound mirroring the serializer validation. */
+const PRODUCT_MAX_YEAR = new Date().getFullYear() + 1;
 
 export const handlers = [
   // Projects list (dashboard + projects page)
@@ -462,6 +497,342 @@ export const handlers = [
   http.get("http://localhost:8000/api/calls/:id/state_history/", ({ params }) =>
     HttpResponse.json(page(callsStateLogsStore[String(params.id)] ?? [])),
   ),
+
+  // ── Products ────────────────────────────────────────────
+
+  // Products list — paginated Page<ProductList> envelope with the 9
+  // backend filters and ordering applied like DRF.
+  http.get("http://localhost:8000/api/products/", ({ request }) => {
+    const url = new URL(request.url);
+    const filtered = filterProductRows(productsStore, {
+      type: url.searchParams.get("type"),
+      year: url.searchParams.get("year"),
+      year__gte: url.searchParams.get("year__gte"),
+      year__lte: url.searchParams.get("year__lte"),
+      project: url.searchParams.get("project"),
+      researcher: url.searchParams.get("researcher"),
+      center: url.searchParams.get("center"),
+      group: url.searchParams.get("group"),
+      line: url.searchParams.get("line"),
+    });
+
+    const ordering = url.searchParams.get("ordering");
+    let rows = filtered;
+    if (ordering) {
+      const desc = ordering.startsWith("-");
+      const field = desc ? ordering.slice(1) : ordering;
+      rows = [...rows].sort((a, b) => {
+        const av = a[field as keyof typeof a];
+        const bv = b[field as keyof typeof b];
+        if (typeof av === "string" && typeof bv === "string") {
+          return desc ? bv.localeCompare(av) : av.localeCompare(bv);
+        }
+        if (typeof av === "number" && typeof bv === "number") {
+          return desc ? bv - av : av - bv;
+        }
+        return 0;
+      });
+    }
+
+    const page = Number(url.searchParams.get("page") ?? "1");
+    const size = 25;
+    const start = (page - 1) * size;
+    const results = rows.slice(start, start + size);
+    return HttpResponse.json({
+      count: rows.length,
+      next: start + size < rows.length ? `?page=${page + 1}` : null,
+      previous: page > 1 ? `?page=${page - 1}` : null,
+      results,
+    });
+  }),
+  // Product create — mirrors serializer validation + project-state guard
+  // (403 disallowed state, 404 foreign project, 400 field errors).
+  http.post("http://localhost:8000/api/products/", async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+
+    const type = String(body.type ?? "");
+    if (!VALID_PRODUCT_TYPES.includes(type)) {
+      return HttpResponse.json({ type: ["Invalid product type."] }, { status: 400 });
+    }
+    const publicationYear = Number(body.publication_year);
+    if (!Number.isInteger(publicationYear) || publicationYear < 1900) {
+      return HttpResponse.json(
+        { publication_year: ["Publication year must be 1900 or later."] },
+        { status: 400 },
+      );
+    }
+    if (publicationYear > PRODUCT_MAX_YEAR) {
+      return HttpResponse.json(
+        { publication_year: [`Publication year must not exceed ${PRODUCT_MAX_YEAR}.`] },
+        { status: 400 },
+      );
+    }
+
+    const project = String(body.project ?? "");
+    const projectRow = fixtureProjects.find((p) => p.id === project);
+    if (!projectRow) {
+      return HttpResponse.json({ detail: "Project not found." }, { status: 404 });
+    }
+    if (!(ALLOWED_PROJECT_STATES as readonly string[]).includes(projectRow.status)) {
+      return HttpResponse.json(
+        { detail: "Products can only be linked to approved or active projects." },
+        { status: 403 },
+      );
+    }
+
+    const now = new Date().toISOString();
+    const detail = {
+      id: `prod-${Date.now()}`,
+      institution: "inst-1",
+      project,
+      title: String(body.title ?? ""),
+      description: String(body.description ?? ""),
+      type,
+      publication_year: publicationYear,
+      created_at: now,
+      updated_at: now,
+      created_by: "u1",
+      updated_by: null,
+    };
+    const row = {
+      id: detail.id,
+      title: detail.title,
+      type: detail.type,
+      publication_year: detail.publication_year,
+      project: detail.project,
+      created_at: now,
+    };
+    productsStore = [...productsStore, row];
+    productsDetailStore = { ...productsDetailStore, [detail.id]: detail };
+    return HttpResponse.json(detail, { status: 201 });
+  }),
+  // Product detail
+  http.get("http://localhost:8000/api/products/:id/", ({ params }) => {
+    const product = productsDetailStore[String(params.id)];
+    if (!product) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    return HttpResponse.json(product);
+  }),
+  // Product update (PATCH — partial, same guards as create)
+  http.patch("http://localhost:8000/api/products/:id/", async ({ params, request }) => {
+    const product = productsDetailStore[String(params.id)];
+    if (!product) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const type = body.type !== undefined ? String(body.type) : product.type;
+    if (!VALID_PRODUCT_TYPES.includes(type)) {
+      return HttpResponse.json({ type: ["Invalid product type."] }, { status: 400 });
+    }
+    if (body.publication_year !== undefined) {
+      const publicationYear = Number(body.publication_year);
+      if (!Number.isInteger(publicationYear) || publicationYear < 1900) {
+        return HttpResponse.json(
+          { publication_year: ["Publication year must be 1900 or later."] },
+          { status: 400 },
+        );
+      }
+      if (publicationYear > PRODUCT_MAX_YEAR) {
+        return HttpResponse.json(
+          { publication_year: [`Publication year must not exceed ${PRODUCT_MAX_YEAR}.`] },
+          { status: 400 },
+        );
+      }
+    }
+    if (body.project !== undefined) {
+      const projectRow = fixtureProjects.find((p) => p.id === String(body.project));
+      if (!projectRow) {
+        return HttpResponse.json({ detail: "Project not found." }, { status: 404 });
+      }
+      if (!(ALLOWED_PROJECT_STATES as readonly string[]).includes(projectRow.status)) {
+        return HttpResponse.json(
+          { detail: "Products can only be linked to approved or active projects." },
+          { status: 403 },
+        );
+      }
+    }
+
+    const updated = { ...product, ...body, updated_at: new Date().toISOString() };
+    productsDetailStore = { ...productsDetailStore, [product.id]: updated };
+    productsStore = productsStore.map((r) =>
+      r.id === product.id
+        ? {
+            id: r.id,
+            title: updated.title,
+            type: updated.type,
+            publication_year: updated.publication_year,
+            project: updated.project,
+            created_at: r.created_at,
+          }
+        : r,
+    );
+    return HttpResponse.json(updated);
+  }),
+  // Product delete
+  http.delete("http://localhost:8000/api/products/:id/", ({ params }) => {
+    const id = String(params.id);
+    const product = productsDetailStore[id];
+    if (!product) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    delete productsDetailStore[id];
+    productsStore = productsStore.filter((r) => r.id !== id);
+    delete productsAuthorsStore[id];
+    delete productsAttachmentsStore[id];
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Product nested: authors ─────────────────────────────────────────
+  // CRUD with the exactly-one-principal invariant and duplicate guard:
+  //   - create: first author auto-principal; duplicate researcher → 400
+  //     {researcher}; second principal → 400 {is_principal}.
+  //   - patch: setting a principal while another exists → 400
+  //     {is_principal} (two-step switch must unset first).
+  http.get("http://localhost:8000/api/products/:id/authors/", ({ params }) =>
+    HttpResponse.json(page(productsAuthorsStore[String(params.id)] ?? [])),
+  ),
+  http.post("http://localhost:8000/api/products/:id/authors/", async ({ params, request }) => {
+    const productId = String(params.id);
+    const product = productsDetailStore[productId];
+    if (!product) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const existing = productsAuthorsStore[productId] ?? [];
+    const payload = {
+      researcher: String(body.researcher ?? ""),
+      is_principal: body.is_principal === true,
+      order: Number(body.order ?? existing.length),
+    };
+    const validation = validateProductAuthorCreate(existing, payload);
+    if (!validation.ok) {
+      return HttpResponse.json(validation.errors, { status: 400 });
+    }
+
+    const author = {
+      id: `pa-${Date.now()}`,
+      product: productId,
+      ...payload,
+    };
+    productsAuthorsStore = {
+      ...productsAuthorsStore,
+      [productId]: [...existing, author],
+    };
+    return HttpResponse.json(author, { status: 201 });
+  }),
+  http.patch(
+    "http://localhost:8000/api/products/:id/authors/:aid/",
+    async ({ params, request }) => {
+      const productId = String(params.id);
+      const aid = String(params.aid);
+      const existing = productsAuthorsStore[productId] ?? [];
+      const author = existing.find((a) => a.id === aid);
+      if (!author) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+      const body = (await request.json()) as Record<string, unknown>;
+      const payload: Record<string, unknown> = {};
+      if (body.researcher !== undefined) payload.researcher = String(body.researcher);
+      if (body.is_principal !== undefined) payload.is_principal = body.is_principal === true;
+      if (body.order !== undefined) payload.order = Number(body.order);
+
+      const validation = validateProductAuthorUpdate(existing, aid, payload);
+      if (!validation.ok) {
+        return HttpResponse.json(validation.errors, { status: 400 });
+      }
+
+      const updated = { ...author, ...payload };
+      productsAuthorsStore = {
+        ...productsAuthorsStore,
+        [productId]: existing.map((a) => (a.id === aid ? updated : a)),
+      };
+      return HttpResponse.json(updated);
+    },
+  ),
+  http.delete("http://localhost:8000/api/products/:id/authors/:aid/", ({ params }) => {
+    const productId = String(params.id);
+    const aid = String(params.aid);
+    const existing = productsAuthorsStore[productId] ?? [];
+    if (!existing.some((a) => a.id === aid)) {
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    }
+    productsAuthorsStore = {
+      ...productsAuthorsStore,
+      [productId]: existing.filter((a) => a.id !== aid),
+    };
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Product nested: attachments (metadata only) ─────────────────────
+  // CRUD with the same zod rules: name/doc_type required, doc_type ≤ 50,
+  // external_url a valid URL → 400 field errors otherwise.
+  http.get("http://localhost:8000/api/products/:id/attachments/", ({ params }) =>
+    HttpResponse.json(page(productsAttachmentsStore[String(params.id)] ?? [])),
+  ),
+  http.post("http://localhost:8000/api/products/:id/attachments/", async ({ params, request }) => {
+    const productId = String(params.id);
+    const product = productsDetailStore[productId];
+    if (!product) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const payload = {
+      name: String(body.name ?? ""),
+      doc_type: String(body.doc_type ?? ""),
+      external_url: String(body.external_url ?? ""),
+    };
+    const validation = validateProductAttachmentPayload(payload);
+    if (!validation.ok) {
+      return HttpResponse.json(validation.errors, { status: 400 });
+    }
+
+    const attachment = {
+      id: `pt-${Date.now()}`,
+      product: productId,
+      ...payload,
+      created_at: new Date().toISOString(),
+    };
+    productsAttachmentsStore = {
+      ...productsAttachmentsStore,
+      [productId]: [...(productsAttachmentsStore[productId] ?? []), attachment],
+    };
+    return HttpResponse.json(attachment, { status: 201 });
+  }),
+  http.patch(
+    "http://localhost:8000/api/products/:id/attachments/:tid/",
+    async ({ params, request }) => {
+      const productId = String(params.id);
+      const tid = String(params.tid);
+      const existing = productsAttachmentsStore[productId] ?? [];
+      const attachment = existing.find((a) => a.id === tid);
+      if (!attachment) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+      const body = (await request.json()) as Record<string, unknown>;
+      const payload = {
+        name: body.name !== undefined ? String(body.name) : attachment.name,
+        doc_type: body.doc_type !== undefined ? String(body.doc_type) : attachment.doc_type,
+        external_url:
+          body.external_url !== undefined ? String(body.external_url) : attachment.external_url,
+      };
+      const validation = validateProductAttachmentPayload(payload);
+      if (!validation.ok) {
+        return HttpResponse.json(validation.errors, { status: 400 });
+      }
+
+      const updated = { ...attachment, ...payload };
+      productsAttachmentsStore = {
+        ...productsAttachmentsStore,
+        [productId]: existing.map((a) => (a.id === tid ? updated : a)),
+      };
+      return HttpResponse.json(updated);
+    },
+  ),
+  http.delete("http://localhost:8000/api/products/:id/attachments/:tid/", ({ params }) => {
+    const productId = String(params.id);
+    const tid = String(params.tid);
+    const existing = productsAttachmentsStore[productId] ?? [];
+    if (!existing.some((a) => a.id === tid)) {
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    }
+    productsAttachmentsStore = {
+      ...productsAttachmentsStore,
+      [productId]: existing.filter((a) => a.id !== tid),
+    };
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   // Auth
   http.get("http://localhost:8000/auth/me/", () =>
