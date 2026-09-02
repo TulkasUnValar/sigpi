@@ -54,6 +54,21 @@ import {
   type FixtureResearcher,
   type FixtureResearcherList,
 } from "@/fixtures/researchers";
+import {
+  filterProductRows,
+  fixtureProductAttachments,
+  fixtureProductAuthors,
+  fixtureProductDetails,
+  fixtureProducts,
+  isValidHttpUrl,
+  validateProductAttachmentPayload,
+  validateProductAuthorCreate,
+  validateProductAuthorUpdate,
+  type FixtureProduct,
+  type FixtureProductAttachment,
+  type FixtureProductAuthor,
+  type FixtureProductDetail,
+} from "@/fixtures/products";
 
 /** Lightweight project shape consumed by the dashboard selectors. */
 export interface SeedProjectSummary {
@@ -152,4 +167,21 @@ export type {
   FixtureCallDocument,
   FixtureCallProject,
   FixtureCallStateLog,
+};
+export {
+  fixtureProducts,
+  fixtureProductDetails,
+  fixtureProductAuthors,
+  fixtureProductAttachments,
+  filterProductRows,
+  isValidHttpUrl,
+  validateProductAuthorCreate,
+  validateProductAuthorUpdate,
+  validateProductAttachmentPayload,
+};
+export type {
+  FixtureProduct,
+  FixtureProductDetail,
+  FixtureProductAuthor,
+  FixtureProductAttachment,
 };

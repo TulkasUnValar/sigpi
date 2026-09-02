@@ -65,6 +65,20 @@ export const queryKeys = {
       [...queryKeys.researchers.detail(institutionId, id), "attachments"] as const,
   },
 
+  products: {
+    all: ["products"] as const,
+    lists: () => [...queryKeys.products.all, "list"] as const,
+    list: (institutionId: string | null, params: object = {}) =>
+      [...queryKeys.products.lists(), institutionId, params] as const,
+    details: () => [...queryKeys.products.all, "detail"] as const,
+    detail: (institutionId: string | null, id: string) =>
+      [...queryKeys.products.details(), institutionId, id] as const,
+    authors: (institutionId: string | null, id: string) =>
+      [...queryKeys.products.detail(institutionId, id), "authors"] as const,
+    attachments: (institutionId: string | null, id: string) =>
+      [...queryKeys.products.detail(institutionId, id), "attachments"] as const,
+  },
+
   dashboard: {
     all: ["dashboard"] as const,
     projects: (institutionId: string | null) =>
