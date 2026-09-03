@@ -5,12 +5,12 @@
  *
  * Spec (frontend-reports RF-001): the hub owns the local selection state
  * (report type + entity), renders the generator form, and lists the
- * entities of the selected type with status indicators. The status is a UI
- * projection ("No generado" until a successful preview/pdf/approve) because
- * the backend exposes only preview/pdf/approve actions — no registry.
+ * entities of the selected type with status indicators and action buttons.
+ * The status is a UI projection derived from successful preview/pdf/approve
+ * operations in the current session because the backend exposes no registry.
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
   Card,
@@ -20,9 +20,12 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { ApprovalButton } from "@/features/reports/ApprovalButton";
+import { DownloadButton } from "@/features/reports/DownloadButton";
+import { PreviewDialog } from "@/features/reports/PreviewDialog";
 import { ReportGeneratorForm } from "@/features/reports/ReportGeneratorForm";
 import { useReportEntityOptions } from "@/features/reports/queries";
-import type { ReportType } from "@/features/reports/types";
+import type { ReportTarget, ReportType, ReportStatus } from "@/features/reports/types";
 
 /** Section titles (Spanish plurals) for each report type. */
 const SECTION_TITLES: Record<ReportType, string> = {
@@ -32,15 +35,34 @@ const SECTION_TITLES: Record<ReportType, string> = {
   advances: "Avances",
 };
 
+/** Stable key for a target in the status map. */
+function targetKey(type: ReportType, entityId: string) {
+  return `${type}:${entityId}`;
+}
+
 export function ReportHub() {
   const [type, setType] = useState<ReportType>("project");
   const [entityId, setEntityId] = useState<string | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<ReportTarget | null>(null);
+  const [statusMap, setStatusMap] = useState<Record<string, ReportStatus>>({});
 
   const handleTypeChange = (next: ReportType) => {
     setType(next);
     // Reset the dependent entity when the type changes (RF-002).
     setEntityId(null);
   };
+
+  const markGenerated = useCallback((t: ReportType, id: string) => {
+    setStatusMap((prev) => {
+      const key = targetKey(t, id);
+      if (prev[key] === "approved") return prev; // approved is terminal
+      return { ...prev, [key]: "generated" };
+    });
+  }, []);
+
+  const markApproved = useCallback((t: ReportType, id: string) => {
+    setStatusMap((prev) => ({ ...prev, [targetKey(t, id)]: "approved" }));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -66,13 +88,45 @@ export function ReportHub() {
         </CardContent>
       </Card>
 
-      <ReportEntityList type={type} />
+      <ReportEntityList
+        type={type}
+        statusMap={statusMap}
+        onPreview={(target) => setPreviewTarget(target)}
+        onDownloadSuccess={(t, id) => markGenerated(t, id)}
+        onApproveSuccess={(t, id) => markApproved(t, id)}
+        onPreviewSuccess={(t, id) => markGenerated(t, id)}
+      />
+
+      <PreviewDialog
+        target={previewTarget}
+        onClose={() => setPreviewTarget(null)}
+        onSuccess={() => {
+          if (previewTarget) {
+            markGenerated(previewTarget.type, previewTarget.entityId);
+          }
+        }}
+      />
     </div>
   );
 }
 
+interface ReportEntityListProps {
+  type: ReportType;
+  statusMap: Record<string, ReportStatus>;
+  onPreview: (target: ReportTarget) => void;
+  onDownloadSuccess: (type: ReportType, entityId: string) => void;
+  onApproveSuccess: (type: ReportType, entityId: string) => void;
+  onPreviewSuccess: (type: ReportType, entityId: string) => void;
+}
+
 /** Derived entity list for the selected type with status indicators. */
-function ReportEntityList({ type }: { type: ReportType }) {
+function ReportEntityList({
+  type,
+  statusMap,
+  onPreview,
+  onDownloadSuccess,
+  onApproveSuccess,
+}: ReportEntityListProps) {
   const { options, isLoading } = useReportEntityOptions(type);
   const sectionTitle = SECTION_TITLES[type];
 
@@ -105,17 +159,42 @@ function ReportEntityList({ type }: { type: ReportType }) {
         <CardTitle className="text-base">{sectionTitle}</CardTitle>
       </CardHeader>
       <CardContent className="divide-y">
-        {options.map((option) => (
-          <div
-            key={option.id}
-            className="flex items-center justify-between py-3"
-          >
-            <span className="text-sm font-medium">{option.name}</span>
-            {/* UI projection: every report starts "No generado" (PR3 derives
-                Generado/Aprobado from successful operations). */}
-            <StatusBadge status="not_generated" />
-          </div>
-        ))}
+        {options.map((option) => {
+          const status = statusMap[targetKey(type, option.id)] ?? "not_generated";
+          return (
+            <div
+              key={option.id}
+              className="flex items-center justify-between py-3 gap-4"
+            >
+              <span className="text-sm font-medium">{option.name}</span>
+              <div className="flex items-center gap-2">
+                <StatusBadge status={status} />
+                <button
+                  className="text-sm text-primary underline-offset-4 hover:underline"
+                  onClick={() =>
+                    onPreview({
+                      type,
+                      entityId: option.id,
+                      entityName: option.name,
+                    })
+                  }
+                >
+                  Vista previa
+                </button>
+                <DownloadButton
+                  type={type}
+                  entityId={option.id}
+                  onSuccess={() => onDownloadSuccess(type, option.id)}
+                />
+                <ApprovalButton
+                  type={type}
+                  entityId={option.id}
+                  onSuccess={() => onApproveSuccess(type, option.id)}
+                />
+              </div>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );

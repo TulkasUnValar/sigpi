@@ -27,9 +27,11 @@ interface DownloadButtonProps {
   type: ReportType;
   /** Entity id — the PDF endpoint path segment. */
   entityId: string;
+  /** Called when the download completes successfully. */
+  onSuccess?: () => void;
 }
 
-export function DownloadButton({ type, entityId }: DownloadButtonProps) {
+export function DownloadButton({ type, entityId, onSuccess }: DownloadButtonProps) {
   const institutionId = useActiveInstitutionId();
   const [pending, setPending] = useState(false);
 
@@ -37,6 +39,7 @@ export function DownloadButton({ type, entityId }: DownloadButtonProps) {
     setPending(true);
     try {
       await downloadBlob(buildPdfUrl(type, entityId), buildPdfFilename(type), institutionId);
+      onSuccess?.();
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
