@@ -118,6 +118,12 @@ describe("middleware", () => {
       const res = middleware(req as never);
       expect(res.status).toBe(307);
     });
+
+    it("redirects /reports to /login (RF-006)", () => {
+      const req = createMockRequest("/reports");
+      const res = middleware(req as never);
+      expect(res.status).toBe(307);
+    });
   });
 
   describe("protected routes — with session", () => {
@@ -146,6 +152,12 @@ describe("middleware", () => {
 
     it("allows /calls with session cookie", () => {
       const req = createMockRequest("/calls", { sessionid: "abc123" });
+      const res = middleware(req as never);
+      expect(res.status).toBe(200);
+    });
+
+    it("allows /reports with session cookie (RF-006)", () => {
+      const req = createMockRequest("/reports", { sessionid: "abc123" });
       const res = middleware(req as never);
       expect(res.status).toBe(200);
     });

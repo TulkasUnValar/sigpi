@@ -69,6 +69,14 @@ import {
   type FixtureProductAuthor,
   type FixtureProductDetail,
 } from "@/fixtures/products";
+import {
+  RN_017_MESSAGE,
+  fixtureReportApproveConflict,
+  fixtureReportApproveForbidden,
+  fixtureReportApproveSuccess,
+  fixtureReportPdfBytes,
+  fixtureReportPreviewHtml,
+} from "@/fixtures/reports";
 
 /** Lightweight project shape consumed by the dashboard selectors. */
 export interface SeedProjectSummary {
@@ -184,4 +192,12 @@ export type {
   FixtureProductDetail,
   FixtureProductAuthor,
   FixtureProductAttachment,
+};
+export {
+  RN_017_MESSAGE,
+  fixtureReportApproveConflict,
+  fixtureReportApproveForbidden,
+  fixtureReportApproveSuccess,
+  fixtureReportPdfBytes,
+  fixtureReportPreviewHtml,
 };

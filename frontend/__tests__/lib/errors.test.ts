@@ -77,6 +77,35 @@ describe("normalizeError", () => {
     expect(err.message).toBe("Something failed.");
     expect(err.fieldErrors).toEqual({ title: ["Required."] });
   });
+
+  it("maps the reports-backend {error: string} key to the message", () => {
+    const err = normalizeError(
+      { error: "Pending progress reports must be reviewed" },
+      409,
+      "Unknown error",
+    );
+    expect(err.status).toBe(409);
+    expect(err.message).toBe("Pending progress reports must be reviewed");
+  });
+
+  it("does not treat the reports-backend error key as a field error", () => {
+    const err = normalizeError(
+      { error: "You must be a center director to approve reports." },
+      403,
+      "Unknown error",
+    );
+    expect(err.message).toBe("You must be a center director to approve reports.");
+    expect(err.fieldErrors).toBeUndefined();
+  });
+
+  it("prefers detail over the error key when both are present", () => {
+    const err = normalizeError(
+      { detail: "Detail wins.", error: "Fallback error." },
+      400,
+      "Unknown error",
+    );
+    expect(err.message).toBe("Detail wins.");
+  });
 });
 
 describe("ApiError", () => {

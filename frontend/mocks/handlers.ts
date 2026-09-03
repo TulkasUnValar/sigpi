@@ -40,8 +40,14 @@ import {
   validateProductAuthorCreate,
   validateProductAuthorUpdate,
   validateProductAttachmentPayload,
+  fixtureReportApproveConflict,
+  fixtureReportApproveForbidden,
+  fixtureReportApproveSuccess,
+  fixtureReportPdfBytes,
+  fixtureReportPreviewHtml,
 } from "@/fixtures";
 import { ALLOWED_PROJECT_STATES, PRODUCT_TYPES } from "@/features/products/constants";
+import { REPORT_TYPES } from "@/features/reports/constants";
 
 interface Page<T> {
   count: number;
@@ -214,6 +220,9 @@ let productsAttachmentsStore: Record<string, (typeof fixtureProductAttachments)[
 
 /** Valid type codes mirroring ProductType choices. */
 const VALID_PRODUCT_TYPES = Object.keys(PRODUCT_TYPES);
+
+/** Valid report type codes mirroring ReportType choices (reports hub). */
+const VALID_REPORT_TYPES = Object.keys(REPORT_TYPES);
 
 /** Current year + 1 bound mirroring the serializer validation. */
 const PRODUCT_MAX_YEAR = new Date().getFullYear() + 1;
@@ -832,6 +841,67 @@ export const handlers = [
       [productId]: existing.filter((a) => a.id !== tid),
     };
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Reports ─────────────────────────────────────────────────
+  // Reports hub endpoints (archived apps.reports): preview/pdf/approve.
+  // Guard ids drive the error scenarios: forbidden-* → 403, missing-* →
+  // 404, error-* → 500. Approving project p1 → 409 RN-017 (verbatim).
+
+  http.get("http://localhost:8000/api/reports/:type/:id/preview/", ({ params }) => {
+    const type = String(params.type);
+    const id = String(params.id);
+    if (!VALID_REPORT_TYPES.includes(type)) {
+      return HttpResponse.json({ error: `Invalid report type: ${type}` }, { status: 400 });
+    }
+    if (id.startsWith("forbidden-")) {
+      return HttpResponse.json({ error: "Forbidden." }, { status: 403 });
+    }
+    if (id.startsWith("missing-")) {
+      return HttpResponse.json({ error: "Entity not found." }, { status: 404 });
+    }
+    if (id.startsWith("error-")) {
+      return HttpResponse.json({ error: "Preview rendering failed." }, { status: 500 });
+    }
+    return HttpResponse.json({ html: fixtureReportPreviewHtml });
+  }),
+  http.get("http://localhost:8000/api/reports/:type/:id/pdf/", ({ params }) => {
+    const type = String(params.type);
+    const id = String(params.id);
+    if (!VALID_REPORT_TYPES.includes(type)) {
+      return HttpResponse.json({ error: `Invalid report type: ${type}` }, { status: 400 });
+    }
+    if (id.startsWith("forbidden-")) {
+      return HttpResponse.json({ error: "Forbidden." }, { status: 403 });
+    }
+    if (id.startsWith("missing-")) {
+      return HttpResponse.json({ error: "Entity not found." }, { status: 404 });
+    }
+    return new HttpResponse(fixtureReportPdfBytes, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${type}_report.pdf"`,
+      },
+    });
+  }),
+  http.post("http://localhost:8000/api/reports/:type/:id/approve/", ({ params }) => {
+    const type = String(params.type);
+    const id = String(params.id);
+    if (!VALID_REPORT_TYPES.includes(type)) {
+      return HttpResponse.json({ error: `Invalid report type: ${type}` }, { status: 400 });
+    }
+    if (id.startsWith("forbidden-")) {
+      return HttpResponse.json(fixtureReportApproveForbidden, { status: 403 });
+    }
+    if (id.startsWith("missing-")) {
+      return HttpResponse.json({ error: "Entity not found." }, { status: 404 });
+    }
+    // RN-017: a project with pending progress reports blocks approval.
+    if (type === "project" && id === "p1") {
+      return HttpResponse.json(fixtureReportApproveConflict, { status: 409 });
+    }
+    return HttpResponse.json(fixtureReportApproveSuccess);
   }),
 
   // Auth

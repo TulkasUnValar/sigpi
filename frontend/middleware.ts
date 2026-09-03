@@ -18,6 +18,7 @@ const PROTECTED_PREFIXES = [
   "/dashboard",
   "/projects",
   "/calls",
+  "/reports",
 ];
 
 /** Paths that are always public (no redirect needed). */
