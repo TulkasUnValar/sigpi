@@ -8,7 +8,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, FolderKanban, LayoutDashboard, Megaphone, Package, Users } from "lucide-react";
+import {
+  Building2,
+  FileText,
+  FolderKanban,
+  LayoutDashboard,
+  Megaphone,
+  Package,
+  Users,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
@@ -19,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/calls", label: "Convocatorias", icon: Megaphone },
   { href: "/products", label: "Productos", icon: Package },
   { href: "/researchers", label: "Investigadores", icon: Users },
+  { href: "/reports", label: "Informes", icon: FileText },
 ];
 
 /** "Estructura institucional" — institutions module, role-gated (RF-F06). */

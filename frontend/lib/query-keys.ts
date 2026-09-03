@@ -8,6 +8,8 @@
  * `advances`, and `dashboard`.
  */
 
+import type { ReportType } from "@/features/reports/types";
+
 export const queryKeys = {
   projects: {
     all: ["projects"] as const,
@@ -85,5 +87,15 @@ export const queryKeys = {
       [...queryKeys.dashboard.all, "projects", institutionId] as const,
     progress: (institutionId: string | null) =>
       [...queryKeys.dashboard.all, "progress", institutionId] as const,
+  },
+
+  reports: {
+    all: ["reports"] as const,
+    preview: (institutionId: string | null, type: ReportType | null, id: string | null) =>
+      [...queryKeys.reports.all, "preview", institutionId, type, id] as const,
+    pdf: (institutionId: string | null, type: ReportType | null, id: string | null) =>
+      [...queryKeys.reports.all, "pdf", institutionId, type, id] as const,
+    derived: (institutionId: string | null, type: ReportType, id: string) =>
+      [...queryKeys.reports.all, "derived", institutionId, type, id] as const,
   },
 } as const;

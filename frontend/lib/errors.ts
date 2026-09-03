@@ -4,6 +4,8 @@
  * Maps DRF error payloads into a single typed ApiError:
  *   - `{ "detail": "..." }` → message
  *   - `{ "non_field_errors": [...] }` → message
+ *   - `{ "error": "..." }` → message (apps.reports uses the `error` key —
+ *     RN-017 approval conflicts and preview/pdf failures)
  *   - `{ "field": ["..."] }` → fieldErrors (per-field)
  *
  * Spec (server-state): a failed query returning `{"detail":"..."}` must
@@ -58,14 +60,14 @@ export function normalizeError(
 
   const record = body as Record<string, unknown>;
 
-  // Prefer `detail`, then `non_field_errors`.
-  const detail = joinDetail(record.detail ?? record.non_field_errors);
+  // Prefer `detail`, then `non_field_errors`, then the reports `error` key.
+  const detail = joinDetail(record.detail ?? record.non_field_errors ?? record.error);
   const message = detail ?? fallback;
 
   // Collect per-field errors (anything else that is a string array).
   const fieldErrors: Record<string, string[]> = {};
   for (const [key, value] of Object.entries(record)) {
-    if (key === "detail" || key === "non_field_errors") continue;
+    if (key === "detail" || key === "non_field_errors" || key === "error") continue;
     if (isStringArray(value)) {
       fieldErrors[key] = value;
     }

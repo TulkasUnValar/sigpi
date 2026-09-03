@@ -35,6 +35,10 @@ const STATUS_META: Record<string, StatusMeta> = {
   en_evaluacion: { label: "En evaluación", variant: "warning" },
   resultados_publicados: { label: "Resultados publicados", variant: "info" },
   archivada: { label: "Archivada", variant: "secondary" },
+  // Report lifecycle statuses (reports feature — UI projection)
+  not_generated: { label: "No generado", variant: "secondary" },
+  generated: { label: "Generado", variant: "info" },
+  approved: { label: "Aprobado", variant: "success" },
 };
 
 /**
