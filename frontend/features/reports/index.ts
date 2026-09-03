@@ -7,6 +7,7 @@
 
 export { ReportHub } from "@/features/reports/ReportHub";
 export { ReportGeneratorForm } from "@/features/reports/ReportGeneratorForm";
+export { ApprovalButton } from "@/features/reports/ApprovalButton";
 export { useReportPreview, useReportEntityOptions } from "@/features/reports/queries";
 export { useApproveReport } from "@/features/reports/mutations";
 export {

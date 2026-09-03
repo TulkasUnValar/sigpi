@@ -101,6 +101,19 @@ describe("PreviewDialog", () => {
     expect(api.api.get).not.toHaveBeenCalled();
   });
 
+  it("calls onSuccess when preview data loads successfully", async () => {
+    const onSuccess = jest.fn();
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <PreviewDialog target={target} onClose={jest.fn()} onSuccess={onSuccess} />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTitle("Vista previa del informe");
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
   it("calls onClose when the dialog is dismissed", async () => {
     const { onClose } = renderDialog(target);
     await screen.findByTitle("Vista previa del informe");

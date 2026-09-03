@@ -89,7 +89,7 @@ function renderHub() {
 beforeEach(() => {
   jest.clearAllMocks();
   useAuthStore.setState({
-    roles: ["director_centro"],
+    roles: ["director"],
     isAuthenticated: true,
     isLoading: false,
     activeInstitution: { id: "inst-1", name: "Universidad Nacional" },
@@ -157,6 +157,50 @@ describe("ReportHub — rendering", () => {
     expect(
       await screen.findByText("No hay proyectos disponibles para generar informes."),
     ).toBeInTheDocument();
+  });
+
+  it("renders action buttons for each entity row", async () => {
+    renderHub();
+
+    expect(await screen.findByText("Proyecto Alpha")).toBeInTheDocument();
+    const rows = screen.getAllByText(/Proyecto Alpha|Proyecto Gamma/);
+    expect(rows).toHaveLength(2);
+
+    // Each row has "Vista previa" text button + "Descargar PDF" + "Aprobar".
+    expect(screen.getAllByText("Vista previa")).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: /descargar pdf/i })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: /aprobar/i })).toHaveLength(2);
+  });
+
+  it("hides the approve action for non-directors (RB-001)", async () => {
+    useAuthStore.setState({ roles: ["investigador"] });
+    renderHub();
+
+    expect(await screen.findByText("Proyecto Alpha")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /aprobar/i })).not.toBeInTheDocument();
+    // Preview and download remain visible regardless of role.
+    expect(screen.getAllByText("Vista previa")).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: /descargar pdf/i })).toHaveLength(2);
+  });
+
+  it("updates status to Generado after preview success", async () => {
+    (api.api.get as jest.Mock).mockImplementation((path: string) => {
+      if (path.includes("/api/reports/") && path.includes("/preview/"))
+        return Promise.resolve({ html: "<h1>Preview</h1>" });
+      return Promise.resolve(pageOf(projectRows));
+    });
+    renderHub();
+
+    expect(await screen.findByText("Proyecto Alpha")).toBeInTheDocument();
+    expect(screen.getAllByText("No generado")).toHaveLength(2);
+
+    const previewButtons = screen.getAllByText("Vista previa");
+    expect(previewButtons.length).toBeGreaterThan(0);
+    fireEvent.click(previewButtons[0]!);
+
+    await waitFor(() => {
+      expect(screen.getByText("Generado")).toBeInTheDocument();
+    });
   });
 
   it("resets the selected entity when the type changes", async () => {

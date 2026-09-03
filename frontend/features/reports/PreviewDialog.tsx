@@ -21,19 +21,29 @@ import { getErrorMessage } from "@/lib/errors";
 import { getReportTypeLabel } from "@/features/reports/constants";
 import { useReportPreview } from "@/features/reports/queries";
 import type { ReportTarget } from "@/features/reports/types";
+import { useEffect } from "react";
 
 interface PreviewDialogProps {
   /** Selected report target; null closes the dialog and disables the query. */
   target: ReportTarget | null;
   /** Called when the dialog is dismissed. */
   onClose: () => void;
+  /** Called when preview data loads successfully. */
+  onSuccess?: () => void;
 }
 
-export function PreviewDialog({ target, onClose }: PreviewDialogProps) {
+export function PreviewDialog({ target, onClose, onSuccess }: PreviewDialogProps) {
   const { data, isLoading, isError, error } = useReportPreview(
     target?.type ?? null,
     target?.entityId ?? null,
   );
+
+  // Notify parent on successful preview load.
+  useEffect(() => {
+    if (data && onSuccess) {
+      onSuccess();
+    }
+  }, [data, onSuccess]);
 
   const title = target
     ? `Vista previa — ${getReportTypeLabel(target.type)}`

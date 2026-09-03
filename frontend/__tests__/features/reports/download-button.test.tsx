@@ -101,6 +101,17 @@ describe("DownloadButton", () => {
     expect(screen.getByRole("button", { name: /descargar pdf/i })).toBeEnabled();
   });
 
+  it("calls onSuccess when download completes", async () => {
+    const onSuccess = jest.fn();
+    render(<DownloadButton type="project" entityId="p1" onSuccess={onSuccess} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /descargar pdf/i }));
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("downloads without an institution header when none is active", async () => {
     useAuthStore.setState({ activeInstitution: null });
     renderButton();
