@@ -15,7 +15,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import { useActiveInstitutionId } from "@/features/advances/queries";
-import type { AdvanceDetail, CreateAdvancePayload } from "@/features/advances/types";
+import type {
+  AdvanceDetail,
+  AdvanceDocument,
+  AdvanceDocumentPayload,
+  CreateAdvancePayload,
+} from "@/features/advances/types";
 
 /** Invalidate every query derived from the advances resource. */
 function invalidateAdvances(qc: ReturnType<typeof useQueryClient>) {
@@ -34,16 +39,73 @@ export function useCreateAdvance() {
   });
 }
 
+/** Payload for an advance FSM transition (RF-041). */
+export interface AdvanceTransitionPayload {
+  id: string;
+  action: string;
+  /** Required by observe/reject; omitted for the other transitions. */
+  review_text?: string;
+}
+
 /**
  * Trigger an advance FSM transition. `action` is the DRF endpoint action
- * (e.g. "approve", "reject"). On success all derived caches invalidate.
+ * (e.g. "approve", "reject"). observe/reject send `{ review_text }` in the
+ * body (RF-041); the other transitions keep the empty body. On success all
+ * derived caches invalidate.
  */
 export function useAdvanceTransition() {
   const qc = useQueryClient();
   const institutionId = useActiveInstitutionId();
   return useMutation({
-    mutationFn: ({ id, action }: { id: string; action: string }) =>
-      api.post<AdvanceDetail>(`/api/progress/${id}/${action}/`, {}, {
+    mutationFn: ({ id, action, review_text }: AdvanceTransitionPayload) =>
+      api.post<AdvanceDetail>(
+        `/api/progress/${id}/${action}/`,
+        review_text ? { review_text } : {},
+        { institutionId },
+      ),
+    onSuccess: () => invalidateAdvances(qc),
+  });
+}
+
+// ── Nested documents ────────────────────────────────────
+
+/** Create a document under an advance and invalidate the advances cache (RF-042). */
+export function useCreateAdvanceDocument() {
+  const qc = useQueryClient();
+  const institutionId = useActiveInstitutionId();
+  return useMutation({
+    mutationFn: ({ advanceId, ...payload }: { advanceId: string } & AdvanceDocumentPayload) =>
+      api.post<AdvanceDocument>(`/api/progress/${advanceId}/documents/`, payload, {
+        institutionId,
+      }),
+    onSuccess: () => invalidateAdvances(qc),
+  });
+}
+
+/** Update a document's metadata and invalidate the advances cache (RF-042). */
+export function useUpdateAdvanceDocument() {
+  const qc = useQueryClient();
+  const institutionId = useActiveInstitutionId();
+  return useMutation({
+    mutationFn: ({
+      advanceId,
+      documentId,
+      ...payload
+    }: { advanceId: string; documentId: string } & AdvanceDocumentPayload) =>
+      api.patch<AdvanceDocument>(`/api/progress/${advanceId}/documents/${documentId}/`, payload, {
+        institutionId,
+      }),
+    onSuccess: () => invalidateAdvances(qc),
+  });
+}
+
+/** Delete a document and invalidate the advances cache (RF-042). */
+export function useDeleteAdvanceDocument() {
+  const qc = useQueryClient();
+  const institutionId = useActiveInstitutionId();
+  return useMutation({
+    mutationFn: ({ advanceId, documentId }: { advanceId: string; documentId: string }) =>
+      api.delete<void>(`/api/progress/${advanceId}/documents/${documentId}/`, {
         institutionId,
       }),
     onSuccess: () => invalidateAdvances(qc),

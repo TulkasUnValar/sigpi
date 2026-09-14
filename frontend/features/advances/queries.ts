@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/store/auth";
-import type { AdvanceDetail, AdvanceList, Page } from "@/features/advances/types";
+import type { AdvanceDetail, AdvanceDocument, AdvanceList, Page } from "@/features/advances/types";
 
 export function useActiveInstitutionId(): string | null {
   return useAuthStore((s) => s.activeInstitution?.id ?? null);
@@ -36,7 +36,18 @@ export function useAdvanceDetail(id: string) {
   const institutionId = useActiveInstitutionId();
   return useQuery({
     queryKey: queryKeys.advances.detail(institutionId, id),
+    queryFn: () => api.get<AdvanceDetail>(`/api/progress/${id}/`, { institutionId }),
+  });
+}
+
+/** Fetch the metadata-only documents of an advance (RF-042). */
+export function useAdvanceDocuments(advanceId: string) {
+  const institutionId = useActiveInstitutionId();
+  return useQuery({
+    queryKey: queryKeys.advances.documents(institutionId, advanceId),
     queryFn: () =>
-      api.get<AdvanceDetail>(`/api/progress/${id}/`, { institutionId }),
+      api.get<Page<AdvanceDocument>>(`/api/progress/${advanceId}/documents/`, {
+        institutionId,
+      }),
   });
 }

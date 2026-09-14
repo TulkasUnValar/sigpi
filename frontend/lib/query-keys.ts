@@ -29,6 +29,10 @@ export const queryKeys = {
     details: () => [...queryKeys.advances.all, "detail"] as const,
     detail: (institutionId: string | null, id: string) =>
       [...queryKeys.advances.details(), institutionId, id] as const,
+    documents: (institutionId: string | null, id: string) =>
+      [...queryKeys.advances.detail(institutionId, id), "documents"] as const,
+    reviews: (institutionId: string | null, id: string) =>
+      [...queryKeys.advances.detail(institutionId, id), "reviews"] as const,
   },
 
   institutions: {

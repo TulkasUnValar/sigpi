@@ -57,6 +57,13 @@ export interface AdvanceDocument {
   uploaded_at: string;
 }
 
+/** Payload for document create/update (ProgressDocumentSerializer writable fields). */
+export interface AdvanceDocumentPayload {
+  name: string;
+  doc_type: string;
+  external_url: string;
+}
+
 /** Full advance detail (ProgressReportSerializer). */
 export interface AdvanceDetail {
   id: string;
