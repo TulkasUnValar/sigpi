@@ -1,5 +1,5 @@
 /**
- * Advances FsmActionBar — visible actions, destructive confirmation, and
+ * Advances FsmActionBar — visible actions, review-text dialog, and
  * post-FSM invalidation.
  *
  * Spec (server-state post-FSM invalidation):
@@ -7,8 +7,10 @@
  *   WHEN mutation succeeds
  *   THEN `advances`, `dashboard`, and `projects` keys refetch.
  *
- * Spec (advances-ui FSM):
- *   Reject opens a ConfirmDialog before the POST.
+ * Spec (RF-041 review transitions):
+ *   observe/reject collect `review_text` through a dialog with a textarea;
+ *   confirmation is disabled for blank text; no POST fires before confirm;
+ *   the POST body includes `review_text` (never `{}`).
  */
 
 import { render, screen, waitFor, within } from "@testing-library/react";
@@ -88,9 +90,7 @@ describe("FsmActionBar — approve", () => {
     const user = userEvent.setup();
     const { invalidateSpy } = renderBar("en_revision", ["director"]);
 
-    (api.api.post as jest.Mock).mockRejectedValueOnce(
-      new Error("Transición no permitida."),
-    );
+    (api.api.post as jest.Mock).mockRejectedValueOnce(new Error("Transición no permitida."));
 
     await user.click(screen.getByRole("button", { name: /aprobar/i }));
 
@@ -100,38 +100,89 @@ describe("FsmActionBar — approve", () => {
   });
 });
 
-describe("FsmActionBar — reject", () => {
-  it("opens a ConfirmDialog before POSTing reject", async () => {
+describe("FsmActionBar — reject (RF-041)", () => {
+  it("opens a dialog with a textarea and POSTs review_text after confirm", async () => {
     const user = userEvent.setup();
     renderBar("en_revision", ["director"]);
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }));
 
-    // ConfirmDialog appears; the POST must NOT have fired yet.
-    const dialog = await screen.findByRole("alertdialog");
+    // The dialog appears; the POST must NOT have fired yet.
+    const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveTextContent(/¿confirmar "rechazar"\?/i);
     expect(api.api.post).not.toHaveBeenCalled();
 
+    await user.type(
+      within(dialog).getByLabelText(/comentario de revisión/i),
+      "Falta la metodología.",
+    );
     await user.click(within(dialog).getByRole("button", { name: /rechazar/i }));
 
     await waitFor(() => {
       expect(api.api.post).toHaveBeenCalledWith(
         "/api/progress/a1/reject/",
-        {},
+        { review_text: "Falta la metodología." },
         { institutionId: "inst-1" },
       );
     });
   });
 
-  it("cancelling the dialog does not POST", async () => {
+  it("keeps confirmation disabled while the review text is blank", async () => {
     const user = userEvent.setup();
     renderBar("en_revision", ["director"]);
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }));
-    const dialog = await screen.findByRole("alertdialog");
+    const dialog = await screen.findByRole("dialog");
+
+    const confirm = within(dialog).getByRole("button", { name: /rechazar/i });
+    expect(confirm).toBeDisabled();
+
+    // Whitespace-only input still blocks confirmation.
+    await user.type(within(dialog).getByLabelText(/comentario de revisión/i), "   ");
+    expect(confirm).toBeDisabled();
+
+    await user.type(within(dialog).getByLabelText(/comentario de revisión/i), "Texto válido");
+    expect(confirm).toBeEnabled();
+    expect(api.api.post).not.toHaveBeenCalled();
+  });
+
+  it("cancelling the dialog does not POST and closes it", async () => {
+    const user = userEvent.setup();
+    renderBar("en_revision", ["director"]);
+
+    await user.click(screen.getByRole("button", { name: /rechazar/i }));
+    const dialog = await screen.findByRole("dialog");
 
     await user.click(within(dialog).getByRole("button", { name: /cancelar/i }));
     expect(api.api.post).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("FsmActionBar — observe (RF-041)", () => {
+  it("opens the dialog and POSTs review_text only after confirm", async () => {
+    const user = userEvent.setup();
+    renderBar("en_revision", ["director"]);
+
+    await user.click(screen.getByRole("button", { name: /observar/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent(/¿confirmar "observar"\?/i);
+    expect(api.api.post).not.toHaveBeenCalled();
+
+    await user.type(
+      within(dialog).getByLabelText(/comentario de revisión/i),
+      "Ajustar entregables.",
+    );
+    await user.click(within(dialog).getByRole("button", { name: /observar/i }));
+
+    await waitFor(() => {
+      expect(api.api.post).toHaveBeenCalledWith(
+        "/api/progress/a1/observe/",
+        { review_text: "Ajustar entregables." },
+        { institutionId: "inst-1" },
+      );
+    });
   });
 });
 

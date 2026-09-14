@@ -105,10 +105,7 @@ const TERMINAL_STATES = new Set(["aprobado"]);
  * Return the actions visible for an advance in `state` for a user with
  * `roles`. Filters by source state and allowed role.
  */
-export function getAdvanceActions(
-  state: string,
-  roles: string[],
-): AdvanceAction[] {
+export function getAdvanceActions(state: string, roles: string[]): AdvanceAction[] {
   if (TERMINAL_STATES.has(state)) return [];
 
   const roleSet = new Set(roles);
@@ -120,4 +117,16 @@ export function getAdvanceActions(
 /** Whether an action requires a destructive confirmation. */
 export function isDestructiveAdvanceAction(name: string): boolean {
   return DESTRUCTIVE.has(name);
+}
+
+/** Actions that collect a `review_text` before firing (RF-041). */
+const REVIEW_TEXT_ACTIONS = new Set(["observe", "reject"]);
+
+/**
+ * Whether an action requires the review-text dialog. Observe and reject
+ * must collect `review_text` before the POST fires (RF-041); approve and
+ * the creator transitions do not.
+ */
+export function needsReviewText(name: string): boolean {
+  return REVIEW_TEXT_ACTIONS.has(name);
 }

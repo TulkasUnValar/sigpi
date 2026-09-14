@@ -12,6 +12,7 @@
 import {
   getAdvanceActions,
   isDestructiveAdvanceAction,
+  needsReviewText,
   type AdvanceAction,
 } from "@/features/advances/fsm";
 
@@ -26,9 +27,7 @@ describe("getAdvanceActions — en_revision (director)", () => {
   });
 
   it("does not show creator-only actions (submit/resubmit) to a director", () => {
-    const names = getAdvanceActions("en_revision", ["director"]).map(
-      (a) => a.name,
-    );
+    const names = getAdvanceActions("en_revision", ["director"]).map((a) => a.name);
     expect(names).not.toContain("submit");
     expect(names).not.toContain("resubmit");
   });
@@ -40,16 +39,12 @@ describe("getAdvanceActions — en_revision (director)", () => {
 
 describe("getAdvanceActions — creator-gated states", () => {
   it("shows submit for the creator on borrador", () => {
-    const names = getAdvanceActions("borrador", ["researcher"]).map(
-      (a) => a.name,
-    );
+    const names = getAdvanceActions("borrador", ["researcher"]).map((a) => a.name);
     expect(names).toContain("submit");
   });
 
   it("shows resubmit for the creator on observado", () => {
-    const names = getAdvanceActions("observado", ["researcher"]).map(
-      (a) => a.name,
-    );
+    const names = getAdvanceActions("observado", ["researcher"]).map((a) => a.name);
     expect(names).toContain("resubmit");
   });
 
@@ -60,16 +55,12 @@ describe("getAdvanceActions — creator-gated states", () => {
 
 describe("getAdvanceActions — accept_review from enviado", () => {
   it("shows accept_review to a director on enviado", () => {
-    const names = getAdvanceActions("enviado", ["director"]).map(
-      (a) => a.name,
-    );
+    const names = getAdvanceActions("enviado", ["director"]).map((a) => a.name);
     expect(names).toContain("accept_review");
   });
 
   it("hides accept_review from a researcher member", () => {
-    const names = getAdvanceActions("enviado", ["researcher"]).map(
-      (a) => a.name,
-    );
+    const names = getAdvanceActions("enviado", ["researcher"]).map((a) => a.name);
     expect(names).not.toContain("accept_review");
   });
 });
@@ -94,22 +85,30 @@ describe("isDestructiveAdvanceAction", () => {
   });
 });
 
+describe("needsReviewText (RF-041)", () => {
+  it("requires review text for observe and reject", () => {
+    expect(needsReviewText("observe")).toBe(true);
+    expect(needsReviewText("reject")).toBe(true);
+  });
+
+  it("does not require review text for the other transitions", () => {
+    expect(needsReviewText("approve")).toBe(false);
+    expect(needsReviewText("submit")).toBe(false);
+    expect(needsReviewText("resubmit")).toBe(false);
+    expect(needsReviewText("return_to_draft")).toBe(false);
+    expect(needsReviewText("accept_review")).toBe(false);
+  });
+});
+
 describe("getAdvanceActions — Spanish labels", () => {
   it("provides a non-empty Spanish label for every returned action", () => {
     const allActions = new Map<string, AdvanceAction>();
     ["director", "researcher", "admin"].forEach((role) => {
-      [
-        "borrador",
-        "enviado",
-        "en_revision",
-        "observado",
-        "aprobado",
-        "rechazado",
-      ].forEach((state) => {
-        getAdvanceActions(state, [role]).forEach((a) =>
-          allActions.set(a.name, a),
-        );
-      });
+      ["borrador", "enviado", "en_revision", "observado", "aprobado", "rechazado"].forEach(
+        (state) => {
+          getAdvanceActions(state, [role]).forEach((a) => allActions.set(a.name, a));
+        },
+      );
     });
 
     expect(allActions.size).toBeGreaterThanOrEqual(5);
