@@ -16,8 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { FsmActionBar } from "@/features/advances/FsmActionBar";
-import { useAdvanceDetail } from "@/features/advances/queries";
+import { DocumentsManager, FsmActionBar, useAdvanceDetail } from "@/features/advances";
 
 export default function AdvanceDetailPage() {
   const params = useParams<{ id: string; advanceId: string }>();
@@ -76,12 +75,8 @@ export default function AdvanceDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Porcentaje acumulado
-                </p>
-                <p className="mt-1 text-lg font-semibold">
-                  {advance.cumulative_percentage}%
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Porcentaje acumulado</p>
+                <p className="mt-1 text-lg font-semibold">{advance.cumulative_percentage}%</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Período</p>
@@ -98,15 +93,11 @@ export default function AdvanceDetailPage() {
                 <p className="mt-1">{advance.activities}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Dificultades
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Dificultades</p>
                 <p className="mt-1">{advance.difficulties || "—"}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Próximos pasos
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Próximos pasos</p>
                 <p className="mt-1">{advance.next_steps || "—"}</p>
               </div>
             </CardContent>
@@ -114,6 +105,12 @@ export default function AdvanceDetailPage() {
         </div>
 
         <div className="space-y-6">
+          <DocumentsManager
+            advanceId={advanceId}
+            status={advance.status}
+            createdBy={advance.created_by}
+          />
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Línea de revisión</CardTitle>
@@ -150,9 +147,7 @@ export default function AdvanceDetailPage() {
                       <span className="font-medium">
                         {log.from_state} → {log.to_state}
                       </span>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {log.created_at}
-                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">{log.created_at}</p>
                     </li>
                   ))}
                 </ul>
