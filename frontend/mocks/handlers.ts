@@ -13,6 +13,7 @@ import {
   fixtureProjects,
   fixtureAdvances,
   fixtureAdvanceDetails,
+  fixtureAdvanceDocuments,
   fixtureInstitutions,
   fixtureSedes,
   fixtureFacultades,
@@ -198,6 +199,14 @@ const callsStateLogsStore = Object.fromEntries(
   Object.entries(fixtureCallStateLogs).map(([k, v]) => [k, v.map((l) => ({ ...l }))]),
 );
 
+// ── Advance documents in-memory store (seeded from fixtures) ─────
+// The handlers mutate this store so document CRUD behaves like DRF.
+
+let advanceDocumentsStore: Record<string, (typeof fixtureAdvanceDocuments)[string]> =
+  Object.fromEntries(
+    Object.entries(fixtureAdvanceDocuments).map(([k, v]) => [k, v.map((d) => ({ ...d }))]),
+  );
+
 // ── Products in-memory stores (seeded from fixtures) ───────
 // The handlers mutate these so list/create behave like a real DRF backend
 // during dev/tests.
@@ -258,11 +267,19 @@ export const handlers = [
     const advance = fixtureAdvanceDetails[String(params.id)];
     return HttpResponse.json(page(advance?.state_logs ?? []));
   }),
-  // Advance FSM transitions — mutate the in-memory fixture state.
-  http.post("http://localhost:8000/api/progress/:id/:action/", ({ params }) => {
+  // Advance FSM transitions — body-aware: observe/reject append a
+  // ProgressReview carrying the posted review_text (RF-041).
+  http.post("http://localhost:8000/api/progress/:id/:action/", async ({ params, request }) => {
     const id = String(params.id);
     const advance = fixtureAdvanceDetails[id];
     if (!advance) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    let body: Record<string, unknown> = {};
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      // No body — non-review transitions post {}.
+    }
 
     const action = String(params.action);
     const nextState: Record<string, string> = {
@@ -292,7 +309,72 @@ export const handlers = [
         created_at: new Date().toISOString(),
       },
     ];
+    if (action === "observe" || action === "reject") {
+      advance.reviews = [
+        ...advance.reviews,
+        {
+          id: `r-${Date.now()}`,
+          progress_report: id,
+          reviewed_by: "u2",
+          review_text: String(body.review_text ?? ""),
+          review_type: action === "observe" ? "observation" : "rejection",
+          created_at: new Date().toISOString(),
+        },
+      ];
+    }
     return HttpResponse.json(advance);
+  }),
+  // Advance documents — metadata-only CRUD under the progress report (RF-042)
+  http.get("http://localhost:8000/api/progress/:id/documents/", ({ params }) =>
+    HttpResponse.json(page(advanceDocumentsStore[String(params.id)] ?? [])),
+  ),
+  http.post("http://localhost:8000/api/progress/:id/documents/", async ({ params, request }) => {
+    const advanceId = String(params.id);
+    const advance = fixtureAdvanceDetails[advanceId];
+    if (!advance) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    const body = (await request.json()) as Record<string, unknown>;
+    const doc = {
+      id: `doc-${Date.now()}`,
+      progress_report: advanceId,
+      name: String(body.name ?? ""),
+      doc_type: String(body.doc_type ?? "other"),
+      external_url: String(body.external_url ?? ""),
+      uploaded_at: new Date().toISOString(),
+    };
+    advanceDocumentsStore = {
+      ...advanceDocumentsStore,
+      [advanceId]: [...(advanceDocumentsStore[advanceId] ?? []), doc],
+    };
+    return HttpResponse.json(doc, { status: 201 });
+  }),
+  http.patch(
+    "http://localhost:8000/api/progress/:id/documents/:did/",
+    async ({ params, request }) => {
+      const advanceId = String(params.id);
+      const did = String(params.did);
+      const doc = (advanceDocumentsStore[advanceId] ?? []).find((d) => d.id === did);
+      if (!doc) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+      const body = (await request.json()) as Record<string, unknown>;
+      const updated = { ...doc, ...body };
+      advanceDocumentsStore = {
+        ...advanceDocumentsStore,
+        [advanceId]: (advanceDocumentsStore[advanceId] ?? []).map((d) =>
+          d.id === did ? updated : d,
+        ),
+      };
+      return HttpResponse.json(updated);
+    },
+  ),
+  http.delete("http://localhost:8000/api/progress/:id/documents/:did/", ({ params }) => {
+    const advanceId = String(params.id);
+    const did = String(params.did);
+    const exists = (advanceDocumentsStore[advanceId] ?? []).some((d) => d.id === did);
+    if (!exists) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    advanceDocumentsStore = {
+      ...advanceDocumentsStore,
+      [advanceId]: (advanceDocumentsStore[advanceId] ?? []).filter((d) => d.id !== did),
+    };
+    return new HttpResponse(null, { status: 204 });
   }),
   // ── Calls ────────────────────────────────────────────────
 

@@ -19,6 +19,16 @@ export interface FixtureAdvance {
   created_at: string;
 }
 
+/** Advance document matching the ProgressDocumentSerializer (RF-042). */
+export interface FixtureAdvanceDocument {
+  id: string;
+  progress_report: string;
+  name: string;
+  doc_type: string;
+  external_url: string;
+  uploaded_at: string;
+}
+
 /** Advance detail matching the full ProgressReportSerializer. */
 export interface FixtureAdvanceDetail extends FixtureAdvance {
   institution: string;
@@ -28,14 +38,7 @@ export interface FixtureAdvanceDetail extends FixtureAdvance {
   difficulties: string;
   next_steps: string;
   updated_at: string;
-  documents: {
-    id: string;
-    progress_report: string;
-    name: string;
-    doc_type: string;
-    external_url: string;
-    uploaded_at: string;
-  }[];
+  documents: FixtureAdvanceDocument[];
   reviews: {
     id: string;
     progress_report: string;
@@ -212,3 +215,15 @@ export const fixtureAdvanceDetails: Record<string, FixtureAdvanceDetail> = {
     ],
   },
 };
+
+/**
+ * Documents keyed by advance id (nested endpoint contract, RF-042).
+ * Derived from the detail fixtures so the documents list and the detail
+ * serializer always agree during dev.
+ */
+export const fixtureAdvanceDocuments: Record<string, FixtureAdvanceDocument[]> = Object.fromEntries(
+  Object.entries(fixtureAdvanceDetails).map(([id, detail]) => [
+    id,
+    detail.documents.map((d) => ({ ...d })),
+  ]),
+);

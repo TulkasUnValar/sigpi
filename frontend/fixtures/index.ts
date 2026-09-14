@@ -13,8 +13,10 @@ import { fixtureProjects, type FixtureProject } from "@/fixtures/projects";
 import {
   fixtureAdvances,
   fixtureAdvanceDetails,
+  fixtureAdvanceDocuments,
   type FixtureAdvance,
   type FixtureAdvanceDetail,
+  type FixtureAdvanceDocument,
 } from "@/fixtures/advances";
 import {
   fixtureInstitutions,
@@ -134,8 +136,8 @@ export function seedAdapter(): SeedState {
   };
 }
 
-export { fixtureProjects, fixtureAdvances, fixtureAdvanceDetails };
-export type { FixtureProject, FixtureAdvance, FixtureAdvanceDetail };
+export { fixtureProjects, fixtureAdvances, fixtureAdvanceDetails, fixtureAdvanceDocuments };
+export type { FixtureProject, FixtureAdvance, FixtureAdvanceDetail, FixtureAdvanceDocument };
 export {
   fixtureInstitutions,
   fixtureSedes,
