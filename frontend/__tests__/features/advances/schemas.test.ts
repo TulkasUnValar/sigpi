@@ -7,7 +7,11 @@
  *   RN-P02: period_end >= period_start.
  */
 
-import { advanceCreateSchema } from "@/features/advances/schemas";
+import {
+  advanceCreateSchema,
+  advanceEditSchema,
+  advanceFormSchema,
+} from "@/features/advances/schemas";
 
 const validDraft = {
   period_start: "2026-01-01",
@@ -112,9 +116,7 @@ describe("advanceCreateSchema — period dates (RN-P02)", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues.some((i) => i.path[0] === "period_end")).toBe(
-        true,
-      );
+      expect(result.error.issues.some((i) => i.path[0] === "period_end")).toBe(true);
     }
   });
 
@@ -125,5 +127,60 @@ describe("advanceCreateSchema — period dates (RN-P02)", () => {
       period_end: "2026-01-01",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("advanceEditSchema — same rules as create, project stripped (RF-043)", () => {
+  it("accepts the same valid draft as create and coerces the percentage", () => {
+    const result = advanceEditSchema.safeParse(validDraft);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.cumulative_percentage).toBe(25);
+      expect(typeof result.data.cumulative_percentage).toBe("number");
+    }
+  });
+
+  it("strips a project key from the parsed output", () => {
+    const result = advanceEditSchema.safeParse({ ...validDraft, project: "p1" });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("project");
+    }
+  });
+
+  it("rejects the same required-field violations as create", () => {
+    const result = advanceEditSchema.safeParse({ ...validDraft, description: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "description")).toBe(true);
+    }
+  });
+
+  it("rejects period_end before period_start", () => {
+    const result = advanceEditSchema.safeParse({
+      ...validDraft,
+      period_start: "2026-06-01",
+      period_end: "2026-01-01",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("advanceFormSchema — create form with the project select (RF-043/046)", () => {
+  it("accepts a valid draft with a project", () => {
+    const result = advanceFormSchema.safeParse({ ...validDraft, project: "p1" });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.project).toBe("p1");
+      expect(result.data.cumulative_percentage).toBe(25);
+    }
+  });
+
+  it("rejects a missing project", () => {
+    const result = advanceFormSchema.safeParse({ ...validDraft, project: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "project")).toBe(true);
+    }
   });
 });

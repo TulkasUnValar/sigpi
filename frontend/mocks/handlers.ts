@@ -324,6 +324,36 @@ export const handlers = [
     }
     return HttpResponse.json(advance);
   }),
+  // Advance update (PATCH — partial, borrador-only guard like calls)
+  http.patch("http://localhost:8000/api/progress/:id/", async ({ params, request }) => {
+    const id = String(params.id);
+    const advance = fixtureAdvanceDetails[id];
+    if (!advance) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    if (advance.status !== "borrador") {
+      return HttpResponse.json(
+        { detail: "Only advances in borrador can be updated." },
+        { status: 403 },
+      );
+    }
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...advance, ...body, updated_at: new Date().toISOString() };
+    fixtureAdvanceDetails[id] = updated;
+    return HttpResponse.json(updated);
+  }),
+  // Advance delete — gated: only borrador advances
+  http.delete("http://localhost:8000/api/progress/:id/", ({ params }) => {
+    const id = String(params.id);
+    const advance = fixtureAdvanceDetails[id];
+    if (!advance) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    if (advance.status !== "borrador") {
+      return HttpResponse.json(
+        { detail: "Only advances in borrador can be deleted." },
+        { status: 400 },
+      );
+    }
+    delete fixtureAdvanceDetails[id];
+    return new HttpResponse(null, { status: 204 });
+  }),
   // Advance documents — metadata-only CRUD under the progress report (RF-042)
   http.get("http://localhost:8000/api/progress/:id/documents/", ({ params }) =>
     HttpResponse.json(page(advanceDocumentsStore[String(params.id)] ?? [])),

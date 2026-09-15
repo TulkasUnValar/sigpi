@@ -37,6 +37,8 @@ export function useAdvanceDetail(id: string) {
   return useQuery({
     queryKey: queryKeys.advances.detail(institutionId, id),
     queryFn: () => api.get<AdvanceDetail>(`/api/progress/${id}/`, { institutionId }),
+    // Only fetch once an id exists (RF-043 edit seeding).
+    enabled: Boolean(id),
   });
 }
 

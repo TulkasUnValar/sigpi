@@ -5,14 +5,17 @@
  *   Detail MUST show review timeline + state history.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
+import type { AuthUser } from "@/lib/api";
+
+const pushMock = jest.fn();
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/projects/p1/advances/a1",
   useParams: () => ({ id: "p1", advanceId: "a1" }),
-  useRouter: () => ({ push: jest.fn(), prefetch: jest.fn() }),
+  useRouter: () => ({ push: pushMock, prefetch: jest.fn() }),
 }));
 
 jest.mock("next/link", () => {
@@ -24,9 +27,7 @@ jest.mock("next/link", () => {
     }: {
       href: string | { pathname: string };
       children: React.ReactNode;
-    }) => (
-      <a href={typeof href === "string" ? href : href.pathname}>{children}</a>
-    ),
+    }) => <a href={typeof href === "string" ? href : href.pathname}>{children}</a>,
   };
 });
 
@@ -88,16 +89,31 @@ const detail = {
   ],
 };
 
-function renderDetail() {
+function makeUser(id: string): AuthUser {
+  return {
+    id,
+    email: `${id}@example.com`,
+    auth_source: "keycloak",
+    is_superuser: false,
+    is_active: true,
+    active_institution_id: "inst-1",
+    active_role: "researcher",
+    memberships: [],
+  };
+}
+
+function renderDetail(advanceDetail: typeof detail = detail, userId = "u1") {
   useAuthStore.setState({
+    user: makeUser(userId),
     roles: ["director"],
     isAuthenticated: true,
     isLoading: false,
     activeInstitution: { id: "inst-1", name: "Universidad Alpha" },
+    institutions: [],
     centers: [],
   });
 
-  (api.api.get as jest.Mock).mockResolvedValue(detail);
+  (api.api.get as jest.Mock).mockResolvedValue(advanceDetail);
 
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
@@ -130,9 +146,7 @@ describe("AdvanceDetailPage", () => {
   it("renders the review timeline", async () => {
     renderDetail();
 
-    expect(
-      await screen.findByText("Falta justificar la muestra."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Falta justificar la muestra.")).toBeInTheDocument();
     expect(screen.getByText("Línea de revisión")).toBeInTheDocument();
   });
 
@@ -146,11 +160,58 @@ describe("AdvanceDetailPage", () => {
   it("renders director FSM actions for en_revision", async () => {
     renderDetail();
 
-    expect(
-      await screen.findByRole("button", { name: /aprobar/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /rechazar/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /aprobar/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /rechazar/i })).toBeInTheDocument();
+  });
+});
+
+describe("AdvanceDetailPage — edit/delete actions (RF-043/044)", () => {
+  function borradorDetail(overrides: Record<string, unknown> = {}) {
+    return { ...detail, status: "borrador", created_by: "u1", ...overrides };
+  }
+
+  it("shows Editar and Eliminar for a borrador advance viewed by its creator", async () => {
+    renderDetail(borradorDetail());
+
+    const editLink = await screen.findByRole("link", { name: /editar/i });
+    expect(editLink).toHaveAttribute("href", "/projects/p1/advances/a1/edit");
+    expect(screen.getByRole("button", { name: /eliminar/i })).toBeInTheDocument();
+  });
+
+  it("hides Editar and Eliminar outside borrador", async () => {
+    renderDetail();
+
+    expect(await screen.findByText("En revisión")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /editar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /eliminar/i })).not.toBeInTheDocument();
+  });
+
+  it("shows Editar but hides Eliminar for a borrador advance viewed by a non-creator", async () => {
+    renderDetail(borradorDetail(), "u9");
+
+    expect(await screen.findByRole("link", { name: /editar/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /eliminar/i })).not.toBeInTheDocument();
+  });
+
+  it("deletes after a destructive confirmation and redirects to the list", async () => {
+    pushMock.mockClear();
+    renderDetail(borradorDetail());
+
+    fireEvent.click(await screen.findByRole("button", { name: /eliminar/i }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent(/¿Eliminar avance\?/);
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Eliminar" }));
+
+    await waitFor(() => {
+      expect(api.api.delete).toHaveBeenCalledWith(
+        "/api/progress/a1/",
+        expect.objectContaining({ institutionId: "inst-1" }),
+      );
+    });
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/projects/p1/advances");
+    });
   });
 });

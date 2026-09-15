@@ -6,22 +6,42 @@
  * Spec (advances-ui nested list & detail):
  *   Detail MUST show review timeline + state history, plus the FSM action
  *   bar for state transitions.
+ *
+ * RF-043/044: `Editar` renders only for `borrador` advances; `Eliminar`
+ * additionally requires the authenticated creator and confirms through a
+ * destructive ConfirmDialog before DELETE /progress/{id}/.
  */
 
+import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { DocumentsManager, FsmActionBar, useAdvanceDetail } from "@/features/advances";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { getErrorMessage } from "@/lib/errors";
+import { useAuthStore } from "@/store/auth";
+import {
+  DocumentsManager,
+  FsmActionBar,
+  useAdvanceDetail,
+  useDeleteAdvance,
+} from "@/features/advances";
 
 export default function AdvanceDetailPage() {
   const params = useParams<{ id: string; advanceId: string }>();
+  const router = useRouter();
   const projectId = params.id;
   const advanceId = params.advanceId;
+
+  const userId = useAuthStore((s) => s.user?.id);
+  const deleteAdvance = useDeleteAdvance();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const detailQuery = useAdvanceDetail(advanceId);
 
@@ -46,6 +66,21 @@ export default function AdvanceDetailPage() {
   const reviews = advance.reviews ?? [];
   const stateLogs = advance.state_logs ?? [];
 
+  // RF-043: edit is gated to borrador. RF-044: delete is gated to
+  // borrador + creator (the backend 403 remains the backstop).
+  const canEdit = advance.status === "borrador";
+  const canDelete = advance.status === "borrador" && userId === advance.created_by;
+
+  function handleDelete() {
+    deleteAdvance.mutate(advanceId, {
+      onSuccess: () => {
+        toast.success("Avance eliminado.");
+        router.push(`/projects/${projectId}/advances`);
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }
+
   return (
     <AuthenticatedLayout>
       <div className="mb-6">
@@ -60,6 +95,16 @@ export default function AdvanceDetailPage() {
             {advance.period_start} → {advance.period_end}
           </h1>
           <StatusBadge status={advance.status} />
+          {canEdit ? (
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/projects/${projectId}/advances/${advanceId}/edit`}>Editar</Link>
+            </Button>
+          ) : null}
+          {canDelete ? (
+            <Button size="sm" variant="destructive" onClick={() => setDeleteOpen(true)}>
+              Eliminar
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -156,6 +201,17 @@ export default function AdvanceDetailPage() {
           </Card>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="¿Eliminar avance?"
+        description="Esta acción no se puede deshacer. El avance se eliminará permanentemente."
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        destructive
+        onConfirm={handleDelete}
+      />
     </AuthenticatedLayout>
   );
 }

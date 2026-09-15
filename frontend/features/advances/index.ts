@@ -7,6 +7,7 @@
 
 export { FsmActionBar } from "@/features/advances/FsmActionBar";
 export { DocumentsManager } from "@/features/advances/DocumentsManager";
+export { AdvanceForm } from "@/features/advances/AdvanceForm";
 export {
   useActiveInstitutionId,
   useAdvancesList,
@@ -19,6 +20,8 @@ export {
   useCreateAdvanceDocument,
   useUpdateAdvanceDocument,
   useDeleteAdvanceDocument,
+  useUpdateAdvance,
+  useDeleteAdvance,
 } from "@/features/advances/mutations";
 export type { AdvanceTransitionPayload } from "@/features/advances/mutations";
 export {
@@ -35,8 +38,12 @@ export {
   ADVANCE_DOC_TYPE_LABELS,
   ADVANCE_DOC_TYPE_OPTIONS,
 } from "@/features/advances/constants";
-export { advanceCreateSchema } from "@/features/advances/schemas";
-export type { AdvanceDraft } from "@/features/advances/schemas";
+export {
+  advanceCreateSchema,
+  advanceEditSchema,
+  advanceFormSchema,
+} from "@/features/advances/schemas";
+export type { AdvanceDraft, AdvanceFormValues } from "@/features/advances/schemas";
 export type {
   AdvanceList,
   AdvanceDetail,
@@ -44,6 +51,8 @@ export type {
   AdvanceStateLog,
   AdvanceDocument,
   AdvanceDocumentPayload,
+  AdvanceWritableFields,
+  AdvanceEditPayload,
   CreateAdvancePayload,
   Page,
 } from "@/features/advances/types";

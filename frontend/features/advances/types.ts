@@ -96,3 +96,9 @@ export interface CreateAdvancePayload {
   difficulties: string;
   next_steps: string;
 }
+
+/** Writable fields for PATCH /progress/{id}/ — create payload minus project (RF-043). */
+export type AdvanceWritableFields = Omit<CreateAdvancePayload, "project">;
+
+/** Payload for PATCH /progress/{id}/ (RF-043); the backend strips `project`. */
+export type AdvanceEditPayload = AdvanceWritableFields;

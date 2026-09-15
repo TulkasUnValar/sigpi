@@ -19,6 +19,7 @@ import type {
   AdvanceDetail,
   AdvanceDocument,
   AdvanceDocumentPayload,
+  AdvanceEditPayload,
   CreateAdvancePayload,
 } from "@/features/advances/types";
 
@@ -108,6 +109,37 @@ export function useDeleteAdvanceDocument() {
       api.delete<void>(`/api/progress/${advanceId}/documents/${documentId}/`, {
         institutionId,
       }),
+    onSuccess: () => invalidateAdvances(qc),
+  });
+}
+
+// ── Update / delete (RF-043 / RF-044) ─────────────────────
+
+/**
+ * Update a borrador advance's writable fields via PATCH. `project` is not
+ * part of the payload — the backend strips it on update (RF-043). On
+ * success all derived caches invalidate.
+ */
+export function useUpdateAdvance(id: string) {
+  const qc = useQueryClient();
+  const institutionId = useActiveInstitutionId();
+  return useMutation({
+    mutationFn: (payload: AdvanceEditPayload) =>
+      api.patch<AdvanceDetail>(`/api/progress/${id}/`, payload, { institutionId }),
+    onSuccess: () => invalidateAdvances(qc),
+  });
+}
+
+/**
+ * Delete a borrador advance (creator-only; the backend 403 is the
+ * backstop, RF-044). On success all derived caches invalidate; the
+ * caller redirects to the list.
+ */
+export function useDeleteAdvance() {
+  const qc = useQueryClient();
+  const institutionId = useActiveInstitutionId();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<void>(`/api/progress/${id}/`, { institutionId }),
     onSuccess: () => invalidateAdvances(qc),
   });
 }
