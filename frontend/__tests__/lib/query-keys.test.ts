@@ -51,12 +51,7 @@ describe("queryKeys.advances", () => {
   });
 
   it("uses 'all' placeholder when no project filter applies", () => {
-    expect(queryKeys.advances.list("inst-1")).toEqual([
-      "advances",
-      "list",
-      "inst-1",
-      "all",
-    ]);
+    expect(queryKeys.advances.list("inst-1")).toEqual(["advances", "list", "inst-1", "all"]);
   });
 
   it("scopes detail keys by institution and advance id", () => {
@@ -67,6 +62,26 @@ describe("queryKeys.advances", () => {
       "adv-3",
     ]);
   });
+
+  it("scopes document keys under the detail branch", () => {
+    expect(queryKeys.advances.documents("inst-1", "adv-3")).toEqual([
+      "advances",
+      "detail",
+      "inst-1",
+      "adv-3",
+      "documents",
+    ]);
+  });
+
+  it("scopes review keys under the detail branch", () => {
+    expect(queryKeys.advances.reviews("inst-1", "adv-3")).toEqual([
+      "advances",
+      "detail",
+      "inst-1",
+      "adv-3",
+      "reviews",
+    ]);
+  });
 });
 
 describe("queryKeys.dashboard", () => {
@@ -75,18 +90,10 @@ describe("queryKeys.dashboard", () => {
   });
 
   it("scopes the projects KPI key by institution", () => {
-    expect(queryKeys.dashboard.projects("inst-1")).toEqual([
-      "dashboard",
-      "projects",
-      "inst-1",
-    ]);
+    expect(queryKeys.dashboard.projects("inst-1")).toEqual(["dashboard", "projects", "inst-1"]);
   });
 
   it("scopes the progress KPI key by institution", () => {
-    expect(queryKeys.dashboard.progress("inst-1")).toEqual([
-      "dashboard",
-      "progress",
-      "inst-1",
-    ]);
+    expect(queryKeys.dashboard.progress("inst-1")).toEqual(["dashboard", "progress", "inst-1"]);
   });
 });

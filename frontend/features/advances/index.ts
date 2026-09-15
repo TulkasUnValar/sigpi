@@ -8,6 +8,9 @@
 export { FsmActionBar } from "@/features/advances/FsmActionBar";
 export { DocumentsManager } from "@/features/advances/DocumentsManager";
 export { AdvanceForm } from "@/features/advances/AdvanceForm";
+export { AdvanceList, computeCumulativeAverage } from "@/features/advances/AdvanceList";
+export { AdvanceDetail } from "@/features/advances/AdvanceDetail";
+export { canEditAdvance, canDeleteAdvance } from "@/features/advances/permissions";
 export {
   useActiveInstitutionId,
   useAdvancesList,
@@ -45,8 +48,6 @@ export {
 } from "@/features/advances/schemas";
 export type { AdvanceDraft, AdvanceFormValues } from "@/features/advances/schemas";
 export type {
-  AdvanceList,
-  AdvanceDetail,
   AdvanceReview,
   AdvanceStateLog,
   AdvanceDocument,
