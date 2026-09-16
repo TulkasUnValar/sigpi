@@ -41,6 +41,7 @@ env/
 .venv/
 .venv-linux/
 .venv-wsl/
+.venv-*/
 
 # Django
 *.log
