@@ -53,7 +53,7 @@ repos:
     hooks:
       - id: pyright
         name: pyright type checker
-        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/backend && .venv-wsl/bin/pyright'
+        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/backend && .venv-312/bin/pyright'
         language: system
         types: [python]
         files: ^backend/
