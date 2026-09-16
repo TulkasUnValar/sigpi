@@ -67,7 +67,7 @@ repos:
     hooks:
       - id: eslint
         name: eslint
-        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/frontend && ~/.nvm/versions/node/v24.17.0/bin/node node_modules/eslint/bin/eslint.js . --ext .ts,.tsx'
+        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/frontend && node node_modules/eslint/bin/eslint.js . --ext .ts,.tsx'
         language: system
         types_or: [javascript, jsx, ts, tsx]
         files: ^frontend/

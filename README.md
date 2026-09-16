@@ -21,12 +21,12 @@ Services: Django backend (`:8000`), PostgreSQL (`:5432`), Redis (`:6379`), Keycl
 
 ### Virtual Environment
 
-The project is developed inside a Linux container/WSL environment. The canonical virtual environment is:
+The project is developed inside a Linux container/WSL environment. The active virtual environment is:
 
-- **Path**: `backend/.venv-linux`
-- **Python**: 3.12+
+- **Path**: `backend/.venv-312`
+- **Python**: 3.12
 
-The `backend/.venv` directory is a legacy Windows venv and should not be used.
+> **Note:** `backend/.venv-wsl` (Python 3.14) and `backend/.venv-linux` are legacy environments. `.venv-312` is the canonical environment aligned with `pyproject.toml`. `backend/.venv` is a legacy Windows venv and should not be used.
 
 ### Running tests
 

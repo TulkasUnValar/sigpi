@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "SIGPI — Sistema de Información para la Gestión de Proyectos de Investigación"
 requires-python = ">=3.12"
 dependencies = [
-    "django>=5.1,<5.2",
+    "django>=6.0,<6.1",
     "djangorestframework>=3.15,<3.16",
     "psycopg2-binary>=2.9",
     "celery[redis]>=5.4",
