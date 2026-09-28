@@ -27,7 +27,11 @@ dev = [
     "pytest-django>=4.8",
     "pytest-asyncio>=0.24",
     "pytest-cov>=5.0",
-    "ruff>=0.6",
+    # Pinned exactly: ruff's formatter output changes between releases, and an
+    # unbounded range let CI resolve a newer ruff than the ruff-pre-commit
+    # hook, so the two disagreed on formatting. Keep in lockstep with `rev`
+    # in .pre-commit-config.yaml.
+    "ruff==0.16.9",
     "pyright>=1.1",
     "factory-boy>=3.3",
     "responses>=0.25",

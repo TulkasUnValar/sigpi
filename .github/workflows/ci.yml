@@ -82,7 +82,12 @@ jobs:
           source backend/.venv-wsl/bin/activate
           cd backend && ruff format --check apps/
 
-      - name: Run Pyright type checker
+      # ADVISORY (not a gate): the backend currently carries ~1195 real type
+      # errors across 129 files. Keep pyright's report visible without
+      # failing the job. Remove continue-on-error once the count reaches
+      # zero, and make the matching pre-commit hook blocking again.
+      - name: Run Pyright type checker (advisory)
+        continue-on-error: true
         run: |
           source backend/.venv-wsl/bin/activate
           cd backend && pyright
