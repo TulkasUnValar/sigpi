@@ -41,16 +41,16 @@ Chain strategy: pending
 
 ## PR3 — Edit (FR-04…FR-08)
 
-- [ ] 3.1 RED: write `__tests__/features/projects/mutations.test.tsx` — PATCH URL, institution scope, exact payload, both invalidations on success, none on failure (FR-04)
-- [ ] 3.2 Add `UpdateProjectPayload` to `frontend/features/projects/types.ts` (writable scalars only; no `project`/`members`/`documents`)
-- [ ] 3.3 Add `useUpdateProject(id)` to `frontend/features/projects/mutations.ts` reusing `invalidateProjects`
-- [ ] 3.4 RED (route threat case): write `__tests__/features/projects/edit-page.test.tsx` — loading/not-found in-page, detail seeding, success redirect, terminal edit gating
-- [ ] 3.5 Add `app/projects/[id]/edit/page.tsx` (products edit-page pattern) consuming `useProjectDetail` + `ProjectForm` via barrel
-- [ ] 3.6 Add gated `Editar` link to `ProjectDetail` actions (non-admin; not `cerrado`/`rechazado`/`cancelado`) (FR-06)
-- [ ] 3.7 RED: write `__tests__/features/projects/project-form.test.tsx` — zod rejection, dependent-select resets, 400 `setError`, 403 toast/no redirect, writable-field exclusion (FR-05/FR-07)
-- [ ] 3.8 Add edit schema rules to `frontend/features/projects/schemas.ts`; create `frontend/features/projects/ProjectForm.tsx` (RHF + Controller selects, `buildUpdatePayload` mapping empty group/line → null) (FR-05/FR-07)
-- [ ] 3.9 Extend `frontend/features/projects/index.ts` exports (ProjectForm, useUpdateProject, UpdateProjectPayload)
-- [ ] 3.10 Gate: all projects tests green, coverage ≥80%, `npx tsc --noEmit` (FR-08)
+- [x] 3.1 RED: write `__tests__/features/projects/mutations.test.tsx` — PATCH URL, institution scope, exact payload, both invalidations on success, none on failure (FR-04)
+- [x] 3.2 Add `UpdateProjectPayload` to `frontend/features/projects/types.ts` (writable scalars only; no `project`/`members`/`documents`)
+- [x] 3.3 Add `useUpdateProject(id)` to `frontend/features/projects/mutations.ts` reusing `invalidateProjects`
+- [x] 3.4 RED (route threat case): write `__tests__/features/projects/edit-page.test.tsx` — loading/not-found in-page, detail seeding, success redirect, terminal edit gating
+- [x] 3.5 Add `app/projects/[id]/edit/page.tsx` (products edit-page pattern) consuming `useProjectDetail` + `ProjectForm` via barrel
+- [x] 3.6 Add gated `Editar` link to `ProjectDetail` actions (non-admin; not `cerrado`/`rechazado`/`cancelado`) (FR-06)
+- [x] 3.7 RED: write `__tests__/features/projects/project-form.test.tsx` — zod rejection, dependent-select resets, 400 `setError`, 403 toast/no redirect, writable-field exclusion (FR-05/FR-07)
+- [x] 3.8 Add edit schema rules to `frontend/features/projects/schemas.ts`; create `frontend/features/projects/ProjectForm.tsx` (RHF + `Controller` selects, `buildUpdatePayload` mapping empty group/line → null) (FR-05/FR-07)
+- [x] 3.9 Extend `frontend/features/projects/index.ts` exports (ProjectForm, useUpdateProject, UpdateProjectPayload)
+- [x] 3.10 Gate: all projects tests green, coverage ≥80%, `npx tsc --noEmit` (FR-08)
 
 ## Review
 
