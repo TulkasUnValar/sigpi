@@ -131,7 +131,11 @@ class Notification(models.Model):
         indexes = [
             models.Index(
                 fields=["recipient", "is_read", "-created_at"],
-                name="idx_notif_recipient_read_created",
+                # Must stay <= 30 characters: Django's models.E034 check
+                # rejects longer index names, and migrate aborts entirely
+                # when it fires (silently green on SQLite, fatal on
+                # PostgreSQL, which is what CI uses).
+                name="idx_notif_recip_read_created",
             ),
         ]
 

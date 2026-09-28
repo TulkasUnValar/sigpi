@@ -164,7 +164,7 @@ class TestNotificationMeta:
     def test_recipient_read_created_index_registered(self):
         """Composite index (recipient, is_read, -created_at) exists."""
         index_names = {i.name for i in Notification._meta.indexes}
-        assert "idx_notif_recipient_read_created" in index_names
+        assert "idx_notif_recip_read_created" in index_names
 
     def test_event_type_indexed(self):
         """event_type is indexed (max 50, indexed per design)."""
