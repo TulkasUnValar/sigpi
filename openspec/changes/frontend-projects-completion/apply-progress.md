@@ -245,9 +245,14 @@
 - **Radix `Select` in jsdom**: option selection must wait for the async options (`findByRole("option")`); asserting a closed trigger's text is only reliable once the option data has resolved.
 - **Pre-commit prettier hook**: as in PR1/PR2, it runs via non-login bash and could not resolve `node` (`exit 127`). Resolved with a temporary `node` shim OUTSIDE the repo (`/mnt/c/Users/Usuario/.local/bin/node`), removed after committing. No `--no-verify` used.
 
+## Batch 4 - Review Closeout (tasks 4.1 → 4.2)
+
+- [x] 4.1 Review-budget confirmation: all three PRs exceed the 400-line budget (PR1 915 raw / 594 copy-aware; PR2 1217 raw / 625 copy-aware; PR3 1490 raw / 1490 copy-aware). `size:exception` was requested per PR and explicitly approved by the maintainer (PR1 on 2026-09-28, then PR2 + PR3 together). No code, comment, blank line, or test was removed or restyled to fit the budget.
+- [x] 4.2 Barrel-consumption verification: the four `app/projects` routes (`page.tsx`, `new/page.tsx`, `[id]/page.tsx`, `[id]/edit/page.tsx`) all import from `@/features/projects`. Test imports match the `products`/`advances` reference pattern — `index.test.ts` asserts the barrel contract; `wizard.test.tsx` and `project-form.test.tsx` import components from the barrel; unit tests import their own module file and route tests import the route entry point (which is the unit under test). No test reaches into route-internal implementation. Verified by grep across `frontend/__tests__` and `frontend/app`.
+
 ## Remaining Tasks
 
-- [ ] 4.1 → 4.2 — Review
+None — 22/22 tasks complete.
 
 ## Workload / PR Boundary
 
@@ -260,4 +265,4 @@
 
 ## Status
 
-20/22 tasks complete (PR1 1.1–1.6, PR2 2.1–2.4, and PR3 3.1–3.10 fully done). Ready for review (4.1–4.2).
+22/22 tasks complete (PR1 1.1–1.6, PR2 2.1–2.4, PR3 3.1–3.10, review 4.1–4.2). Ready for archive.

@@ -54,5 +54,5 @@ Chain strategy: pending
 
 ## Review
 
-- [ ] 4.1 Confirm each PR diff stays ≤400 changed lines (rename-aware review); escalate to `size:exception` if raw count blocks
-- [ ] 4.2 Verify no test imports page internals directly — all consume the barrel (FR-01)
+- [x] 4.1 Confirm each PR diff stays ≤400 changed lines (rename-aware review); escalate to `size:exception` if raw count blocks — all three exceed: PR1 915 raw / 594 copy-aware, PR2 1217 raw / 625 copy-aware, PR3 1490 raw. `size:exception` maintainer-approved for PR1, PR2, and PR3.
+- [x] 4.2 Verify no test imports page internals directly — all consume the barrel (FR-01) — verified: all four `app/projects` routes import from `@/features/projects`; `index.test.ts` asserts the barrel contract; `wizard.test.tsx`/`project-form.test.tsx` import components from the barrel. Unit tests import their own module and route tests import the route entry point, matching the `products`/`advances` pattern. No test reaches into route-internal implementation.
