@@ -52,13 +52,14 @@ repos:
   - repo: local
     hooks:
       # ADVISORY (not a gate): pyright currently reports ~1195 real type
-      # errors across 129 files, so it must not block commits. `|| true`
-      # keeps the run non-blocking and `verbose: true` still prints the
-      # report. When the error count reaches zero, drop the `|| true` and
-      # turn this back into a gate.
+      # errors across 129 files, so it must not block commits. The pipeline
+      # exits with tail's status (0) and `|| true` states that intent, while
+      # `tail -3` prints just the summary line instead of dumping all 1195
+      # errors on every backend commit. When the count reaches zero, drop
+      # the pipe and `|| true` and turn this back into a gate.
       - id: pyright
         name: pyright type checker (advisory)
-        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/backend && .venv-312/bin/pyright || true'
+        entry: bash -lc 'cd /home/tulkasubuntu/01-sigpi/backend && .venv-312/bin/pyright 2>&1 | tail -3 || true'
         language: system
         types: [python]
         files: ^backend/
