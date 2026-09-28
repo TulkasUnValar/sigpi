@@ -13,7 +13,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import { useActiveInstitutionId } from "@/features/projects/queries";
-import type { CreateProjectPayload, ProjectDetail } from "@/features/projects/types";
+import type {
+  CreateProjectPayload,
+  ProjectDetail,
+  UpdateProjectPayload,
+} from "@/features/projects/types";
 
 /** Invalidate every query derived from the projects resource. */
 function invalidateProjects(qc: ReturnType<typeof useQueryClient>) {
@@ -32,6 +36,23 @@ export function useCreateProject() {
 }
 
 /**
+ * Update a project — PATCH /api/projects/{id}/ (FR-04).
+ *
+ * Sends the writable scalar fields under the active institution scope.
+ * On success both the projects and dashboard caches are invalidated; on
+ * failure the cache is left untouched so a 400/403 cannot corrupt it.
+ */
+export function useUpdateProject(id: string) {
+  const qc = useQueryClient();
+  const institutionId = useActiveInstitutionId();
+  return useMutation({
+    mutationFn: (payload: UpdateProjectPayload) =>
+      api.patch<ProjectDetail>(`/api/projects/${id}/`, payload, { institutionId }),
+    onSuccess: () => invalidateProjects(qc),
+  });
+}
+
+/**
  * Trigger a project FSM transition. `action` is the DRF endpoint action
  * (e.g. "approve", "reject"). The current state is returned by the API;
  * on success all derived caches are invalidated.
@@ -41,9 +62,13 @@ export function useProjectTransition() {
   const institutionId = useActiveInstitutionId();
   return useMutation({
     mutationFn: ({ id, action }: { id: string; action: string }) =>
-      api.post<ProjectDetail>(`/api/projects/${id}/${action}/`, {}, {
-        institutionId,
-      }),
+      api.post<ProjectDetail>(
+        `/api/projects/${id}/${action}/`,
+        {},
+        {
+          institutionId,
+        },
+      ),
     onSuccess: () => invalidateProjects(qc),
   });
 }
