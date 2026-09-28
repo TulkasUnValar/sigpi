@@ -61,9 +61,18 @@ def _make_membership(user: User, institution: Institution, role_name: str) -> In
     )
 
 
-def _make_event(institution, *, user=None, project_id=None, entity_type="project",
-                entity_id=None, action="CREATE", event_type=AuditEventType.CREATE,
-                timestamp=None, **overrides) -> AuditEvent:
+def _make_event(
+    institution,
+    *,
+    user=None,
+    project_id=None,
+    entity_type="project",
+    entity_id=None,
+    action="CREATE",
+    event_type=AuditEventType.CREATE,
+    timestamp=None,
+    **overrides,
+) -> AuditEvent:
     """Create an AuditEvent row directly (bypasses signals — test data only)."""
     defaults = {
         "event_type": event_type,
@@ -215,7 +224,9 @@ class TestAuditFilters:
         _make_event(institution, entity_type="project", entity_id=target_entity)
         _make_event(institution, entity_type="project", entity_id=uuid.uuid4())
 
-        response = api_client.get(_url(), {"entity_type": "project", "entity_id": str(target_entity)})
+        response = api_client.get(
+            _url(), {"entity_type": "project", "entity_id": str(target_entity)}
+        )
 
         assert response.status_code == 200
         assert response.data["count"] == 1

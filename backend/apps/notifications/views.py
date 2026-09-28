@@ -75,9 +75,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self) -> QuerySet:
         """Own notifications only — enforced for every user, incl. superusers."""
-        return Notification.objects.filter(recipient=self.request.user).select_related(
-            "template"
-        )
+        return Notification.objects.filter(recipient=self.request.user).select_related("template")
 
     def get_serializer_class(self):
         """List uses the summary payload; detail and actions use the full one."""
@@ -101,9 +99,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     def read_all(self, request: Request) -> Response:
         """Mark all own unread notifications as read. Idempotent."""
         now = timezone.now()
-        updated = self.get_queryset().filter(is_read=False).update(
-            is_read=True, read_at=now
-        )
+        updated = self.get_queryset().filter(is_read=False).update(is_read=True, read_at=now)
         return Response({"updated": updated})
 
     @action(detail=False, methods=["get"])

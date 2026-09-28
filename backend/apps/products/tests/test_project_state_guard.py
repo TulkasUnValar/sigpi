@@ -103,7 +103,9 @@ class TestProductsProjectStateGuard:
         "blocked_status",
         ["borrador", "enviado", "en_revision", "observado"],
     )
-    def test_create_rejects_pre_approval_project(self, db, api_client, institution, center, admin_user, pi, blocked_status):
+    def test_create_rejects_pre_approval_project(
+        self, db, api_client, institution, center, admin_user, pi, blocked_status
+    ):
         """perform_create raises PermissionDenied for pre-approval projects."""
         project = _make_project(institution, center, pi, status=blocked_status)
         _login(api_client, admin_user, institution)
@@ -129,7 +131,9 @@ class TestProductsProjectStateGuard:
         "allowed_status",
         ["aprobado", "en_ejecucion", "suspendido", "finalizado", "en_cierre"],
     )
-    def test_create_allows_approved_and_active(self, db, api_client, institution, center, admin_user, pi, allowed_status):
+    def test_create_allows_approved_and_active(
+        self, db, api_client, institution, center, admin_user, pi, allowed_status
+    ):
         """perform_create succeeds for approved-or-active projects."""
         project = _make_project(institution, center, pi, status=allowed_status)
         _login(api_client, admin_user, institution)

@@ -386,13 +386,9 @@ class TestBudgetOverrunEndToEnd:
         exec_user = _make_user("exec@test.edu")
         line = _make_line(inst, approved=Decimal("1000.00"))
 
-        BudgetService.add_execution(
-            line, Decimal("900.00"), date(2026, 4, 1), user=exec_user
-        )
+        BudgetService.add_execution(line, Decimal("900.00"), date(2026, 4, 1), user=exec_user)
         with pytest.raises(ValidationError):
-            BudgetService.add_execution(
-                line, Decimal("200.00"), date(2026, 5, 1), user=exec_user
-            )
+            BudgetService.add_execution(line, Decimal("200.00"), date(2026, 5, 1), user=exec_user)
 
         notification = Notification.objects.get(recipient=admin)
         assert notification.event_type == "BUDGET_OVERRUN_ATTEMPTED"
@@ -408,9 +404,7 @@ class TestBudgetOverrunEndToEnd:
         director = _make_user("director@test.edu")
         line = _make_line(inst, approved=Decimal("1000.00"))
 
-        BudgetService.add_execution(
-            line, Decimal("900.00"), date(2026, 4, 1), user=exec_user
-        )
+        BudgetService.add_execution(line, Decimal("900.00"), date(2026, 4, 1), user=exec_user)
         BudgetService.add_execution(
             line,
             Decimal("200.00"),
@@ -440,9 +434,7 @@ class TestReadAndUnreadEndToEnd:
 
         client = Client()
         _login(client, director, inst)
-        response = client.post(
-            reverse("notifications:notification-read", args=[notification.pk])
-        )
+        response = client.post(reverse("notifications:notification-read", args=[notification.pk]))
 
         assert response.status_code == 200
         notification.refresh_from_db()
@@ -463,9 +455,11 @@ class TestReadAndUnreadEndToEnd:
         assert unread.status_code == 200
         assert unread.json() == {"count": 2}
 
-        first = Notification.objects.filter(
-            recipient=director, event_type="PROJECT_SUBMITTED"
-        ).order_by("created_at").first()
+        first = (
+            Notification.objects.filter(recipient=director, event_type="PROJECT_SUBMITTED")
+            .order_by("created_at")
+            .first()
+        )
         client.post(reverse("notifications:notification-read", args=[first.pk]))
 
         unread = client.get(reverse("notifications:notification-unread-count"))
@@ -486,12 +480,13 @@ class TestEmailEnqueueEndToEnd:
         director, pi_user, project = _make_director_and_project(inst)
         UserPreference.objects.create(user=director, channel="email", enabled=False)
 
-        with mock.patch(
-            "apps.notifications.receivers.transaction.on_commit",
-            side_effect=lambda fn: fn(),
-        ), mock.patch(
-            "apps.notifications.receivers.dispatch_notification.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.notifications.receivers.transaction.on_commit",
+                side_effect=lambda fn: fn(),
+            ),
+            mock.patch("apps.notifications.receivers.dispatch_notification.delay") as delay,
+        ):
             ProjectService.submit(project, pi_user)
 
         delay.assert_not_called()
@@ -505,12 +500,13 @@ class TestEmailEnqueueEndToEnd:
         inst = _make_institution()
         director, pi_user, project = _make_director_and_project(inst)
 
-        with mock.patch(
-            "apps.notifications.receivers.transaction.on_commit",
-            side_effect=lambda fn: fn(),
-        ), mock.patch(
-            "apps.notifications.receivers.dispatch_notification.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.notifications.receivers.transaction.on_commit",
+                side_effect=lambda fn: fn(),
+            ),
+            mock.patch("apps.notifications.receivers.dispatch_notification.delay") as delay,
+        ):
             ProjectService.submit(project, pi_user)
 
         notification = Notification.objects.get(recipient=director)

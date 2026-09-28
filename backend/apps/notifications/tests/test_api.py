@@ -155,9 +155,7 @@ class TestNotificationList:
         assert data["count"] == 3
         assert {item["id"] for item in data["results"]} == {str(n.id) for n in own}
 
-    def test_list_default_ordering_newest_first(
-        self, api_client, institution, owner_user
-    ):
+    def test_list_default_ordering_newest_first(self, api_client, institution, owner_user):
         base = timezone.now()
         n1 = _make_notification(owner_user, institution)
         n2 = _make_notification(owner_user, institution)
@@ -334,7 +332,9 @@ class TestReadAll:
         assert first.is_read is True
         assert second.is_read is True
 
-    def test_read_all_does_not_touch_other_users(self, api_client, institution, owner_user, other_user):
+    def test_read_all_does_not_touch_other_users(
+        self, api_client, institution, owner_user, other_user
+    ):
         mine = _make_notification(owner_user, institution)
         theirs = _make_notification(other_user, institution)
         _login(api_client, owner_user, institution)
@@ -397,9 +397,7 @@ class TestPreferences:
     def test_preference_retrieve_own(self, api_client, institution, owner_user):
         pref = UserPreference.objects.create(user=owner_user)
         _login(api_client, owner_user, institution)
-        r = api_client.get(
-            reverse("notifications:notification-preference-detail", args=[pref.id])
-        )
+        r = api_client.get(reverse("notifications:notification-preference-detail", args=[pref.id]))
         assert r.status_code == 200
         assert r.json()["enabled"] is True
         assert r.json()["channel"] == "email"
@@ -420,7 +418,5 @@ class TestPreferences:
     def test_preference_cross_user_404(self, api_client, institution, owner_user, other_user):
         pref = UserPreference.objects.create(user=other_user)
         _login(api_client, owner_user, institution)
-        r = api_client.get(
-            reverse("notifications:notification-preference-detail", args=[pref.id])
-        )
+        r = api_client.get(reverse("notifications:notification-preference-detail", args=[pref.id]))
         assert r.status_code == 404

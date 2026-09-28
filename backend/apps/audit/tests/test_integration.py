@@ -89,9 +89,7 @@ def center(db, institution) -> ResearchCenter:
 
 @pytest.fixture
 def user(db, institution) -> User:
-    user = User.objects.create_user(
-        email="actor@integ.test", auth_source="local", password="pass"
-    )
+    user = User.objects.create_user(email="actor@integ.test", auth_source="local", password="pass")
     # Writable role so the user may request a document download via the API.
     InstitutionMembership.objects.create(
         user=user,
@@ -116,7 +114,9 @@ def researcher(db, institution) -> Researcher:
 
 @pytest.fixture
 def auditor(db, institution) -> User:
-    user = User.objects.create_user(email="auditor@integ.test", auth_source="local", password="pass")
+    user = User.objects.create_user(
+        email="auditor@integ.test", auth_source="local", password="pass"
+    )
     InstitutionMembership.objects.create(
         user=user,
         institution=institution,
@@ -161,9 +161,7 @@ def _audit_url():
 
 
 class TestProjectCrudCapture:
-    def test_create_project_emits_create_event(
-        self, db, institution, center, researcher, user
-    ):
+    def test_create_project_emits_create_event(self, db, institution, center, researcher, user):
         with audit_context(user=user, institution_id=institution.id, ip_address="10.0.0.5"):
             project = _make_project(institution, center, researcher)
 
@@ -191,9 +189,7 @@ class TestProjectCrudCapture:
         assert event.old_values.get("title") == "Proyecto de Auditoría"
         assert event.new_values.get("title") == "Título Actualizado"
 
-    def test_delete_project_emits_delete_event(
-        self, db, institution, center, researcher, user
-    ):
+    def test_delete_project_emits_delete_event(self, db, institution, center, researcher, user):
         with audit_context(user=user, institution_id=institution.id):
             project = _make_project(institution, center, researcher)
         project_id = project.pk
@@ -213,9 +209,7 @@ class TestProjectCrudCapture:
 
 
 class TestDocumentDownloadCapture:
-    def test_download_emits_download_event(
-        self, db, api_client, institution, user, fake_storage
-    ):
+    def test_download_emits_download_event(self, db, api_client, institution, user, fake_storage):
         _login(api_client, user, institution)
         doc_type = DocumentType.objects.get(code="informe_final")
         doc = DocumentFactory(institution=institution, doc_type=doc_type, created_by=user)
@@ -303,7 +297,9 @@ class TestAuditLogQuery:
     ):
         with audit_context(user=user, institution_id=institution.id):
             _make_project(institution, center, researcher)
-        other = User.objects.create_user(email="other@integ.test", auth_source="local", password="pass")
+        other = User.objects.create_user(
+            email="other@integ.test", auth_source="local", password="pass"
+        )
         with audit_context(user=other, institution_id=institution.id):
             _make_project(institution, center, researcher)
 
@@ -320,7 +316,9 @@ class TestAuditLogQuery:
     ):
         with audit_context(user=user, institution_id=institution.id):
             _make_project(institution, center, researcher)
-        other = User.objects.create_user(email="other@integ.test", auth_source="local", password="pass")
+        other = User.objects.create_user(
+            email="other@integ.test", auth_source="local", password="pass"
+        )
         with audit_context(user=other, institution_id=institution.id):
             _make_project(institution, center, researcher)
 

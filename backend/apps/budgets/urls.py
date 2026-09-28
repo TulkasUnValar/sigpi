@@ -110,24 +110,21 @@ project_nested = [
 
 app_name = "budgets"
 
-urlpatterns = (
-    router.urls
-    + [
-        path(
-            "budgets/<uuid:budget_pk>/",
-            include(
-                budget_nested
-                + [
-                    path(
-                        "lines/<uuid:line_pk>/",
-                        include(line_nested),
-                    ),
-                ]
-            ),
+urlpatterns = router.urls + [
+    path(
+        "budgets/<uuid:budget_pk>/",
+        include(
+            budget_nested
+            + [
+                path(
+                    "lines/<uuid:line_pk>/",
+                    include(line_nested),
+                ),
+            ]
         ),
-        path(
-            "projects/<uuid:project_pk>/",
-            include(project_nested),
-        ),
-    ]
-)
+    ),
+    path(
+        "projects/<uuid:project_pk>/",
+        include(project_nested),
+    ),
+]

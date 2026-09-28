@@ -34,11 +34,12 @@ def _run_on_commit(fn):
 
 class TestProjectSignals:
     def test_post_save_enqueues_index_document_on_commit(self, db):
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.index_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.index_document.delay") as delay,
+        ):
             project = ProjectFactory()
 
         on_commit.assert_called()
@@ -48,11 +49,12 @@ class TestProjectSignals:
         project = ProjectFactory()
         project_pk = str(project.pk)  # Django nulls pk after post_delete
 
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.delete_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.delete_document.delay") as delay,
+        ):
             project.delete()
 
         on_commit.assert_called()
@@ -67,11 +69,12 @@ class TestProjectSignals:
         delay.assert_not_called()
 
     def test_enqueue_error_swallowed_so_sender_commits(self, db):
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ), mock.patch(
-            "apps.search.signals.index_document.delay",
-            side_effect=RuntimeError("broker down"),
+        with (
+            mock.patch("apps.search.signals.transaction.on_commit", side_effect=_run_on_commit),
+            mock.patch(
+                "apps.search.signals.index_document.delay",
+                side_effect=RuntimeError("broker down"),
+            ),
         ):
             project = ProjectFactory()  # must not raise
 
@@ -80,11 +83,12 @@ class TestProjectSignals:
 
 class TestResearcherSignals:
     def test_post_save_enqueues_index_document_on_commit(self, db):
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.index_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.index_document.delay") as delay,
+        ):
             researcher = ResearcherFactory()
 
         on_commit.assert_called()
@@ -94,11 +98,12 @@ class TestResearcherSignals:
         researcher = ResearcherFactory()
         researcher_pk = str(researcher.pk)  # Django nulls pk after post_delete
 
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.delete_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.delete_document.delay") as delay,
+        ):
             researcher.delete()
 
         on_commit.assert_called()
@@ -107,11 +112,12 @@ class TestResearcherSignals:
 
 class TestProductSignals:
     def test_post_save_enqueues_index_document_on_commit(self, db):
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.index_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.index_document.delay") as delay,
+        ):
             product = ProductFactory()
 
         on_commit.assert_called()
@@ -121,11 +127,12 @@ class TestProductSignals:
         product = ProductFactory()
         product_pk = str(product.pk)  # Django nulls pk after post_delete
 
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.delete_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.delete_document.delay") as delay,
+        ):
             product.delete()
 
         on_commit.assert_called()
@@ -134,11 +141,12 @@ class TestProductSignals:
 
 class TestCallSignals:
     def test_post_save_enqueues_index_document_on_commit(self, db):
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.index_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.index_document.delay") as delay,
+        ):
             call = CallFactory()
 
         on_commit.assert_called()
@@ -148,11 +156,12 @@ class TestCallSignals:
         call = CallFactory()
         call_pk = str(call.pk)  # Django nulls pk after post_delete
 
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.delete_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.delete_document.delay") as delay,
+        ):
             call.delete()
 
         on_commit.assert_called()
@@ -161,11 +170,12 @@ class TestCallSignals:
 
 class TestAdvanceSignals:
     def test_post_save_enqueues_index_document_on_commit(self, db):
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.index_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.index_document.delay") as delay,
+        ):
             report = ProgressReportFactory()
 
         on_commit.assert_called()
@@ -175,11 +185,12 @@ class TestAdvanceSignals:
         report = ProgressReportFactory()
         report_pk = str(report.pk)  # Django nulls pk after post_delete
 
-        with mock.patch(
-            "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
-        ) as on_commit, mock.patch(
-            "apps.search.signals.delete_document.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.search.signals.transaction.on_commit", side_effect=_run_on_commit
+            ) as on_commit,
+            mock.patch("apps.search.signals.delete_document.delay") as delay,
+        ):
             report.delete()
 
         on_commit.assert_called()

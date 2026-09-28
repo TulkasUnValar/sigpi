@@ -233,8 +233,7 @@ class TestRLSEnforcementPostgres:
     def test_rls_enabled_on_table(self):
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT relrowsecurity FROM pg_class "
-                "WHERE relname = 'accounts_auditevent'"
+                "SELECT relrowsecurity FROM pg_class WHERE relname = 'accounts_auditevent'"
             )
             row = cursor.fetchone()
         assert row is not None and row[0] is True

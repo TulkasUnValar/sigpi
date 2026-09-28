@@ -51,9 +51,7 @@ class _UnauthorizedOverrunError(ValidationError):
         self.line = line
         self.amount = amount
         self.user = user
-        super().__init__(
-            "Execution exceeds the line's approved amount and requires authorization."
-        )
+        super().__init__("Execution exceeds the line's approved amount and requires authorization.")
 
 
 # ──────────────────────────────────────────────
@@ -148,9 +146,9 @@ class BudgetService:
             with transaction.atomic():
                 locked_line = BudgetLine.objects.select_for_update().get(pk=line.pk)
                 current_sum = (
-                    BudgetExecution.objects.filter(line=locked_line).aggregate(
-                        total=Sum("amount")
-                    )["total"]
+                    BudgetExecution.objects.filter(line=locked_line).aggregate(total=Sum("amount"))[
+                        "total"
+                    ]
                     or ZERO
                 )
 
@@ -179,9 +177,7 @@ class BudgetService:
                         "budget_id": str(locked_line.budget_id),
                         "amount": str(amount),
                         "executed_at": executed_at.isoformat(),
-                        "authorized_by": (
-                            str(authorized_by.pk) if authorized_by else None
-                        ),
+                        "authorized_by": (str(authorized_by.pk) if authorized_by else None),
                     },
                 )
                 return execution
@@ -223,9 +219,9 @@ class BudgetSummaryService:
             return None
 
         executed = (
-            BudgetExecution.objects.filter(line__budget=budget).aggregate(
-                total=Sum("amount")
-            )["total"]
+            BudgetExecution.objects.filter(line__budget=budget).aggregate(total=Sum("amount"))[
+                "total"
+            ]
             or ZERO
         )
         balance = budget.approved_amount - executed

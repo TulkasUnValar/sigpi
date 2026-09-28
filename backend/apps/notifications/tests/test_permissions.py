@@ -186,7 +186,9 @@ class TestQuerysetEnforcement:
         r = api_client.get(reverse("notifications:notification-detail", args=[notification.id]))
         assert r.status_code == 404
 
-    def test_superuser_cross_user_detail_404(self, api_client, institution, superuser, notification):
+    def test_superuser_cross_user_detail_404(
+        self, api_client, institution, superuser, notification
+    ):
         _login(api_client, superuser, institution)
         r = api_client.get(reverse("notifications:notification-detail", args=[notification.id]))
         assert r.status_code == 404

@@ -32,7 +32,9 @@ from apps.budgets.models import (
 def _make_user():
     from apps.accounts.models import User
 
-    return User.objects.create_user(email=f"svc_{User.objects.count()}@test.edu", auth_source="local")
+    return User.objects.create_user(
+        email=f"svc_{User.objects.count()}@test.edu", auth_source="local"
+    )
 
 
 # ──────────────────────────────────────────────────────────
@@ -104,7 +106,9 @@ class TestBudgetServiceUpdate:
 
         with patch("apps.budgets.services.AuditEventEmitter") as mock_class:
             mock_emitter = mock_class.return_value
-            updated = BudgetService.update(budget, user, name="Updated", approved_amount=Decimal("2000.00"))
+            updated = BudgetService.update(
+                budget, user, name="Updated", approved_amount=Decimal("2000.00")
+            )
 
         assert updated.name == "Updated"
         assert updated.approved_amount == Decimal("2000.00")
@@ -172,7 +176,12 @@ class TestBudgetServiceAddExecution:
         user = _make_user()
 
         with patch("apps.budgets.services.AuditEventEmitter"):
-            BudgetService.add_execution(line=line, amount=Decimal("1000.00"), executed_at=datetime.date(2026, 5, 1), user=user)
+            BudgetService.add_execution(
+                line=line,
+                amount=Decimal("1000.00"),
+                executed_at=datetime.date(2026, 5, 1),
+                user=user,
+            )
 
         assert BudgetExecution.objects.filter(line=line).count() == 1
 

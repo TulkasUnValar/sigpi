@@ -391,14 +391,10 @@ class TestBudgetOverrunAttemptedSignal:
             inst = _make_institution()
             user = _make_user("exec@test.edu")
             line = _make_line(inst, approved=Decimal("1000.00"))
-            BudgetService.add_execution(
-                line, Decimal("900.00"), date(2026, 4, 1), user=user
-            )
+            BudgetService.add_execution(line, Decimal("900.00"), date(2026, 4, 1), user=user)
 
             with pytest.raises(ValidationError):
-                BudgetService.add_execution(
-                    line, Decimal("200.00"), date(2026, 5, 1), user=user
-                )
+                BudgetService.add_execution(line, Decimal("200.00"), date(2026, 5, 1), user=user)
 
             assert len(spy) == 1
             _, kwargs = spy.last()
@@ -420,9 +416,7 @@ class TestBudgetOverrunAttemptedSignal:
             user = _make_user("exec@test.edu")
             director = _make_user("director@test.edu")
             line = _make_line(inst, approved=Decimal("1000.00"))
-            BudgetService.add_execution(
-                line, Decimal("900.00"), date(2026, 4, 1), user=user
-            )
+            BudgetService.add_execution(line, Decimal("900.00"), date(2026, 4, 1), user=user)
 
             execution = BudgetService.add_execution(
                 line,
@@ -447,9 +441,7 @@ class TestBudgetOverrunAttemptedSignal:
             user = _make_user("exec@test.edu")
             line = _make_line(inst, approved=Decimal("1000.00"))
 
-            BudgetService.add_execution(
-                line, Decimal("400.00"), date(2026, 5, 1), user=user
-            )
+            BudgetService.add_execution(line, Decimal("400.00"), date(2026, 5, 1), user=user)
 
             assert len(spy) == 0
         finally:

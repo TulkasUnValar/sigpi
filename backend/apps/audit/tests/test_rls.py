@@ -114,8 +114,7 @@ class TestRLSPolicySQL:
         return "\n".join(
             val
             for attr_name in dir(mod)
-            if isinstance((val := getattr(mod, attr_name)), str)
-            and "tenant_isolation" in val
+            if isinstance((val := getattr(mod, attr_name)), str) and "tenant_isolation" in val
         )
 
     def test_enable_rls_on_audit_table(self, db):
@@ -144,9 +143,7 @@ class TestRLSPolicySQL:
         assert f"CREATE POLICY superadmin_bypass ON {TABLE}" in sql, (
             f"superadmin_bypass policy missing for '{TABLE}'"
         )
-        assert "sigpi.bypass_rls" in sql, (
-            "superadmin_bypass must check sigpi.bypass_rls"
-        )
+        assert "sigpi.bypass_rls" in sql, "superadmin_bypass must check sigpi.bypass_rls"
 
     def test_every_policy_is_droppable(self, db):
         """Reverse SQL must DROP POLICY IF EXISTS for each policy."""
@@ -196,7 +193,9 @@ class TestRLSEnforcement:
     def test_user_a_cannot_read_institution_y_events(self, db):
         """Setting sigpi.institution_id to X hides institution Y rows."""
         with connection.cursor() as cursor:
-            cursor.execute("SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'")
+            cursor.execute(
+                "SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'"
+            )
         with connection.cursor() as cursor:
             cursor.execute("SET LOCAL sigpi.bypass_rls = false")
         # Enforced at the DB layer: a SELECT must return 0 rows because no
@@ -209,7 +208,9 @@ class TestRLSEnforcement:
     def test_superadmin_bypass_sees_all_rows(self, db):
         """Setting sigpi.bypass_rls = true reveals all rows regardless of tenant."""
         with connection.cursor() as cursor:
-            cursor.execute("SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'")
+            cursor.execute(
+                "SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'"
+            )
         with connection.cursor() as cursor:
             cursor.execute("SET LOCAL sigpi.bypass_rls = true")
         with connection.cursor() as cursor:

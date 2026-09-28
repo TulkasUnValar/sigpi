@@ -38,9 +38,7 @@ def email_channel_enabled(user) -> bool:
     Default is enabled when no preference row exists (spec: enabled
     default true — "Default: both enabled").
     """
-    preference = UserPreference.objects.filter(
-        user=user, channel=NotificationChannel.EMAIL
-    ).first()
+    preference = UserPreference.objects.filter(user=user, channel=NotificationChannel.EMAIL).first()
     return preference is None or preference.enabled
 
 
@@ -72,19 +70,13 @@ def dispatch_notification(self, notification_id):
     )
 
     try:
-        notification = Notification.objects.select_related("recipient").get(
-            pk=notification_id
-        )
+        notification = Notification.objects.select_related("recipient").get(pk=notification_id)
     except Notification.DoesNotExist:
-        logger.warning(
-            "Notification %s not found; skipping dispatch", notification_id
-        )
+        logger.warning("Notification %s not found; skipping dispatch", notification_id)
         return {"status": "skipped", "reason": "notification_not_found"}
 
     if not email_channel_enabled(notification.recipient):
-        logger.info(
-            "Email disabled for %s; skipping dispatch", notification.recipient.email
-        )
+        logger.info("Email disabled for %s; skipping dispatch", notification.recipient.email)
         return {"status": "skipped", "reason": "email_disabled"}
 
     log, _ = NotificationLog.objects.update_or_create(

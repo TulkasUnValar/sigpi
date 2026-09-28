@@ -142,9 +142,7 @@ class TestNotificationCreation:
         user = _make_user()
         template = _make_template()
 
-        notification = _make_notification(
-            inst, user, template, event_type="DOCUMENT_SIGNED"
-        )
+        notification = _make_notification(inst, user, template, event_type="DOCUMENT_SIGNED")
 
         assert "DOCUMENT_SIGNED" in str(notification)
         assert user.email in str(notification)
@@ -175,9 +173,7 @@ class TestNotificationMeta:
 
     def test_no_generic_foreign_key(self):
         """Entity links are explicit columns, never a GenericForeignKey."""
-        assert not any(
-            isinstance(f, GenericForeignKey) for f in Notification._meta.private_fields
-        )
+        assert not any(isinstance(f, GenericForeignKey) for f in Notification._meta.private_fields)
 
     def test_unique_event_tuple_enforced(self, db):
         """Duplicate event tuple for the same recipient raises IntegrityError."""

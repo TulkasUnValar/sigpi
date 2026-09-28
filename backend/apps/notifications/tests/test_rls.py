@@ -93,8 +93,7 @@ class TestRLSMigrationExists:
         """Migration 0002_rls must exist on disk."""
         migration = _get_migration()
         assert migration is not None, (
-            "Migration 0002_rls not found. "
-            "Expected at: apps/notifications/migrations/0002_rls.py"
+            "Migration 0002_rls not found. Expected at: apps/notifications/migrations/0002_rls.py"
         )
 
     def test_depends_on_0001(self, db):
@@ -225,9 +224,7 @@ class TestRLSPolicySQL:
         assert "FROM accounts_institutionmembership" in sql, (
             "UserPreference subquery must reference accounts_institutionmembership."
         )
-        assert "is_active" in sql, (
-            "UserPreference subquery must filter on active memberships."
-        )
+        assert "is_active" in sql, "UserPreference subquery must filter on active memberships."
 
     def test_template_uses_global_policy(self, db):
         """NotificationTemplate is catalog data — explicit global policy."""
@@ -448,9 +445,7 @@ class TestRLSEnforcement:
 
         _set_rls_context(postgres_rls, inst_b.pk, bypass=True)
         _make_membership(user_b, inst_b, role)
-        pref = UserPreference.objects.create(
-            user=user_b, channel="email", enabled=False
-        )
+        pref = UserPreference.objects.create(user=user_b, channel="email", enabled=False)
 
         # user_b has no active membership in institution A → preference hidden.
         _set_rls_context(postgres_rls, inst_a.pk, bypass=False)

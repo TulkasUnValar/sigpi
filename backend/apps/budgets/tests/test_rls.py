@@ -190,8 +190,7 @@ class TestRLSPolicySQL:
         # line; funding sources reach Institution via project. All subquery the
         # session institution through a parent chain, never a direct column.
         assert "SELECT id FROM budgets_budget" in sql, (
-            "Line/attachment/execution child tables must subquery budgets_budget "
-            "by institution_id."
+            "Line/attachment/execution child tables must subquery budgets_budget by institution_id."
         )
         assert "SELECT id FROM projects_project" in sql, (
             "FundingSource must subquery projects_project by institution_id."

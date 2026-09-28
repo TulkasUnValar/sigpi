@@ -223,9 +223,7 @@ class BudgetLineViewSet(viewsets.ModelViewSet):
         if budget is not None:
             for permission in self.get_permissions():
                 if not permission.has_object_permission(request, self, budget):
-                    self.permission_denied(
-                        request, message=getattr(permission, "message", None)
-                    )
+                    self.permission_denied(request, message=getattr(permission, "message", None))
             return
         super().check_object_permissions(request, obj)
 
@@ -270,9 +268,7 @@ class BudgetExecutionViewSet(viewsets.ModelViewSet):
         line_pk = self.kwargs.get("line_pk")
         if line_pk:
             scoped_budgets = _scoped_budgets(self.request)
-            return BudgetExecution.objects.filter(
-                line_id=line_pk, line__budget__in=scoped_budgets
-            )
+            return BudgetExecution.objects.filter(line_id=line_pk, line__budget__in=scoped_budgets)
         return BudgetExecution.objects.none()
 
     def check_object_permissions(self, request, obj):
@@ -281,9 +277,7 @@ class BudgetExecutionViewSet(viewsets.ModelViewSet):
             budget = line.budget
             for permission in self.get_permissions():
                 if not permission.has_object_permission(request, self, budget):
-                    self.permission_denied(
-                        request, message=getattr(permission, "message", None)
-                    )
+                    self.permission_denied(request, message=getattr(permission, "message", None))
             return
         super().check_object_permissions(request, obj)
 
@@ -340,9 +334,7 @@ class BudgetAttachmentViewSet(viewsets.ModelViewSet):
         if budget is not None:
             for permission in self.get_permissions():
                 if not permission.has_object_permission(request, self, budget):
-                    self.permission_denied(
-                        request, message=getattr(permission, "message", None)
-                    )
+                    self.permission_denied(request, message=getattr(permission, "message", None))
             return
         super().check_object_permissions(request, obj)
 
@@ -392,9 +384,7 @@ class FundingSourceViewSet(viewsets.ModelViewSet):
             # Reuse the project's institution via a lightweight check object
             for permission in self.get_permissions():
                 if not permission.has_object_permission(request, self, project):
-                    self.permission_denied(
-                        request, message=getattr(permission, "message", None)
-                    )
+                    self.permission_denied(request, message=getattr(permission, "message", None))
             return
         super().check_object_permissions(request, obj)
 

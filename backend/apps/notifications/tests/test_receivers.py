@@ -291,9 +291,7 @@ class TestProjectSubmittedReceiver:
         from apps.notifications.models import NotificationTemplate
 
         inst, director, project = self._setup()
-        NotificationTemplate.objects.filter(code="PROJECT_SUBMITTED").update(
-            is_active=False
-        )
+        NotificationTemplate.objects.filter(code="PROJECT_SUBMITTED").update(is_active=False)
 
         _emit_project_submitted(project, director)
 
@@ -496,9 +494,10 @@ class TestReceiverContracts:
         _make_membership(admin, inst, admin_role)
         line = _make_line(inst, approved=Decimal("1000.00"), project=project)
 
-        with mock.patch("django.core.mail.send_mail") as send_mail, mock.patch(
-            "smtplib.SMTP"
-        ) as smtp:
+        with (
+            mock.patch("django.core.mail.send_mail") as send_mail,
+            mock.patch("smtplib.SMTP") as smtp,
+        ):
             _emit_project_submitted(project, director)
             _emit_progress_observed(report, director)
             _emit_document_signed(document, signer)
@@ -521,9 +520,7 @@ class TestReceiverContracts:
 
         from apps.notifications import receivers
 
-        with mock.patch.object(
-            receivers, "resolve_director", side_effect=RuntimeError("boom")
-        ):
+        with mock.patch.object(receivers, "resolve_director", side_effect=RuntimeError("boom")):
             _emit_project_submitted(project, director)  # must not raise
 
         assert Notification.objects.count() == 0

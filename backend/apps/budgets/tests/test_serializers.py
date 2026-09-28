@@ -176,9 +176,7 @@ class TestBudgetExecutionSerializer:
         from apps.budgets.serializers import BudgetExecutionSerializer
         from apps.budgets.tests.conftest import BudgetExecutionFactory
 
-        ex = BudgetExecutionFactory(
-            amount="400.00", executed_at=datetime.date(2026, 5, 1)
-        )
+        ex = BudgetExecutionFactory(amount="400.00", executed_at=datetime.date(2026, 5, 1))
         data = BudgetExecutionSerializer(ex).data
 
         assert data["amount"] == "400.00"

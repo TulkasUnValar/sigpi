@@ -37,8 +37,7 @@ class IsNotificationOwner(BasePermission):
 
     def has_object_permission(self, request: Request, view, obj) -> bool:
         return (
-            request.user.is_authenticated
-            and getattr(obj, "recipient_id", None) == request.user.id
+            request.user.is_authenticated and getattr(obj, "recipient_id", None) == request.user.id
         )
 
 

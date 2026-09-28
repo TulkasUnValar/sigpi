@@ -52,7 +52,9 @@ def _make_project(institution, center, pi, **overrides):
         expected_results=overrides.get("expected_results", "Valid expected results."),
         keywords=overrides.get("keywords", "ai, research"),
         start_date=overrides.get("start_date", __import__("datetime").date(2025, 1, 1)),
-        estimated_end_date=overrides.get("estimated_end_date", __import__("datetime").date(2025, 12, 31)),
+        estimated_end_date=overrides.get(
+            "estimated_end_date", __import__("datetime").date(2025, 12, 31)
+        ),
     )
 
 
@@ -77,7 +79,9 @@ class TestWorkflowCompletedSignal:
         project = _make_project(inst, center, pi)
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
-        instance = __import__("apps.project_workflow.models", fromlist=["WorkflowInstance"]).WorkflowInstance.objects.create(
+        instance = __import__(
+            "apps.project_workflow.models", fromlist=["WorkflowInstance"]
+        ).WorkflowInstance.objects.create(
             project_id=project.id,
             institution=inst,
             template=template,
@@ -107,7 +111,9 @@ class TestWorkflowCompletedSignal:
         project = _make_project(inst, center, pi)
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
-        instance = __import__("apps.project_workflow.models", fromlist=["WorkflowInstance"]).WorkflowInstance.objects.create(
+        instance = __import__(
+            "apps.project_workflow.models", fromlist=["WorkflowInstance"]
+        ).WorkflowInstance.objects.create(
             project_id=project.id,
             institution=inst,
             template=template,
@@ -136,7 +142,9 @@ class TestWorkflowCompletedSignal:
         project = _make_project(inst, center, pi, status="aprobado")
         template = WorkflowTemplate.objects.create(institution=inst, name="T1")
         step1 = WorkflowStep.objects.create(template=template, order=1, name="S1", deadline_days=7)
-        instance = __import__("apps.project_workflow.models", fromlist=["WorkflowInstance"]).WorkflowInstance.objects.create(
+        instance = __import__(
+            "apps.project_workflow.models", fromlist=["WorkflowInstance"]
+        ).WorkflowInstance.objects.create(
             project_id=project.id,
             institution=inst,
             template=template,

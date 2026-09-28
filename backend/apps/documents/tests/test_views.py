@@ -339,9 +339,7 @@ class TestPresign:
         assert r.status_code == 200
         assert len(r.json()["results"]) == 2
 
-    def test_list_without_membership_returns_empty(
-        self, api_client, institution, write_user
-    ):
+    def test_list_without_membership_returns_empty(self, api_client, institution, write_user):
         """Authenticated user with session institution but no active membership → empty."""
         nomad = User.objects.create_user(email="nomad@test.edu", auth_source="local", password="p")
         _login(api_client, nomad, institution)

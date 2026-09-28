@@ -227,14 +227,17 @@ class TestDispatchRetry:
     def test_delivery_failure_persists_last_error_and_attempt_count(self, db):
         notification = _make_notification()
 
-        with mock.patch(
-            "apps.notifications.tasks._deliver_email_stub",
-            side_effect=RuntimeError("smtp down"),
-        ), mock.patch.object(
-            dispatch_notification,
-            "retry",
-            side_effect=RuntimeError("smtp down"),
-        ) as retry_mock:
+        with (
+            mock.patch(
+                "apps.notifications.tasks._deliver_email_stub",
+                side_effect=RuntimeError("smtp down"),
+            ),
+            mock.patch.object(
+                dispatch_notification,
+                "retry",
+                side_effect=RuntimeError("smtp down"),
+            ) as retry_mock,
+        ):
             with pytest.raises(RuntimeError):
                 dispatch_notification(str(notification.pk))
 
@@ -247,14 +250,17 @@ class TestDispatchRetry:
     def test_retry_uses_exponential_backoff_countdown(self, db):
         notification = _make_notification()
 
-        with mock.patch(
-            "apps.notifications.tasks._deliver_email_stub",
-            side_effect=RuntimeError("boom"),
-        ), mock.patch.object(
-            dispatch_notification,
-            "retry",
-            side_effect=RuntimeError("boom"),
-        ) as retry_mock:
+        with (
+            mock.patch(
+                "apps.notifications.tasks._deliver_email_stub",
+                side_effect=RuntimeError("boom"),
+            ),
+            mock.patch.object(
+                dispatch_notification,
+                "retry",
+                side_effect=RuntimeError("boom"),
+            ) as retry_mock,
+        ):
             with pytest.raises(RuntimeError):
                 dispatch_notification(str(notification.pk))
 
@@ -276,12 +282,13 @@ class TestReceiverEnqueuesDispatch:
     def test_receiver_enqueues_task_on_transaction_commit(self, db):
         inst, director, project = _make_director_project()
 
-        with mock.patch(
-            "apps.notifications.receivers.transaction.on_commit",
-            side_effect=lambda fn: fn(),
-        ) as on_commit, mock.patch(
-            "apps.notifications.receivers.dispatch_notification.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.notifications.receivers.transaction.on_commit",
+                side_effect=lambda fn: fn(),
+            ) as on_commit,
+            mock.patch("apps.notifications.receivers.dispatch_notification.delay") as delay,
+        ):
             _emit_project_submitted(project, director)
 
         on_commit.assert_called_once()
@@ -292,12 +299,13 @@ class TestReceiverEnqueuesDispatch:
         inst, director, project = _make_director_project()
         UserPreference.objects.create(user=director, channel="email", enabled=False)
 
-        with mock.patch(
-            "apps.notifications.receivers.transaction.on_commit",
-            side_effect=lambda fn: fn(),
-        ), mock.patch(
-            "apps.notifications.receivers.dispatch_notification.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.notifications.receivers.transaction.on_commit",
+                side_effect=lambda fn: fn(),
+            ),
+            mock.patch("apps.notifications.receivers.dispatch_notification.delay") as delay,
+        ):
             _emit_project_submitted(project, director)
 
         delay.assert_not_called()
@@ -307,12 +315,13 @@ class TestReceiverEnqueuesDispatch:
     def test_only_created_rows_enqueue_once(self, db):
         inst, director, project = _make_director_project()
 
-        with mock.patch(
-            "apps.notifications.receivers.transaction.on_commit",
-            side_effect=lambda fn: fn(),
-        ), mock.patch(
-            "apps.notifications.receivers.dispatch_notification.delay"
-        ) as delay:
+        with (
+            mock.patch(
+                "apps.notifications.receivers.transaction.on_commit",
+                side_effect=lambda fn: fn(),
+            ),
+            mock.patch("apps.notifications.receivers.dispatch_notification.delay") as delay,
+        ):
             _emit_project_submitted(project, director)
             _emit_project_submitted(project, director)  # dedup — no re-enqueue
 
