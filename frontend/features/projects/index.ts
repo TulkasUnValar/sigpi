@@ -7,6 +7,7 @@
 
 export { ProjectList } from "@/features/projects/ProjectList";
 export { ProjectDetail } from "@/features/projects/ProjectDetail";
+export { ProjectWizard } from "@/features/projects/ProjectWizard";
 export { FsmActionBar } from "@/features/projects/FsmActionBar";
 export {
   useActiveInstitutionId,

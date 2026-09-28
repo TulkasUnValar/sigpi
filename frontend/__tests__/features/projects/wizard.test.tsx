@@ -48,7 +48,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import NewProjectPage from "@/app/projects/new/page";
+import { ProjectWizard } from "@/features/projects";
 
 const centers = [
   { id: "c1", name: "Centro A", code: "CA" },
@@ -102,7 +102,7 @@ function renderWizard() {
 
   return render(
     <QueryClientProvider client={qc}>
-      <NewProjectPage />
+      <ProjectWizard />
     </QueryClientProvider>,
   );
 }
@@ -131,7 +131,7 @@ async function fillBasicStep() {
   });
 }
 
-describe("NewProjectPage — validation", () => {
+describe("ProjectWizard — validation", () => {
   it("blocks advancing when the basic step is invalid", async () => {
     renderWizard();
     await screen.findByLabelText(/título/i);
@@ -145,7 +145,7 @@ describe("NewProjectPage — validation", () => {
   });
 });
 
-describe("NewProjectPage — submit", () => {
+describe("ProjectWizard — submit", () => {
   it("submits a valid project, POSTs, and redirects to the detail page", async () => {
     (api.api.post as jest.Mock).mockResolvedValue({ id: "p-new" });
 
@@ -187,7 +187,7 @@ describe("NewProjectPage — submit", () => {
   });
 });
 
-describe("NewProjectPage — paginated researcher options", () => {
+describe("ProjectWizard — paginated researcher options", () => {
   it("renders PI options mapped from the paginated results, not the raw envelope", async () => {
     renderWizard();
     await screen.findByLabelText(/título/i);
