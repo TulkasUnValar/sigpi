@@ -75,6 +75,7 @@
 
 - `ts-jest` in this repo does not fail the suite on type-only errors (the first `index.test.ts` run passed while `tsc` reported `TS2749`/`TS2300`). `tsc --noEmit` is the authoritative type gate here; it is green after the alias fix.
 - The `coverage ≥80% for the module` wording in task 1.6 is not independently satisfiable by a behavior-preserving extraction because the module was already at 67.74% branches before PR1. Resolved by validating the repo's enforced `jest --coverage` gate (green) and reporting both numbers transparently.
+- **Review budget overage (`size:exception`)**: PR1 lands at 915 raw / 594 copy-aware changed lines, above the 400-line budget. The forecast assumed rename detection would collapse the move to ~115 effective, but the routes must remain (`app/projects/page.tsx`, `app/projects/[id]/page.tsx` stay as thin wrappers), so git reports the extracted components as copies of the pages rather than renames — the page-side deletions still count. The change is one cohesive, independently revertible work unit (6 files); it cannot be split further without splitting the extraction itself. Recommendation: accept `size:exception` for PR1 rather than compress the code or split the extraction artificially.
 
 ## Remaining Tasks
 
@@ -87,7 +88,8 @@
 - **Mode**: stacked PR slice (`stacked-to-main`, PR1 → `main`)
 - **Current work unit**: PR1 Structure — extract `ProjectList`/`ProjectDetail`, add barrel, thin pages, barrel test
 - **Boundary**: starts from clean `main`; ends with extracted components + barrel + thin pages + `index.test.ts` and all PR1 gates green
-- **Estimated review budget impact**: raw diff ≈ 850 lines, rename-aware ≈ 115 effective (git pairs each extracted component with the page it replaces); within the 400-line rename-aware budget
+- **Authored changed-line count** (`git diff --numstat main...HEAD -- frontend`): **915** (558 additions + 357 deletions). Copy/rename-aware view (`git diff -C --find-copies-harder`): **594** (203 additions + 391 deletions).
+- **Review budget**: both counts exceed the 400-line budget → **`size:exception` recommended**. See Issues Found. The extraction is one cohesive work unit; the raw count is dominated by pure moves (UI deleted from the pages, re-added in the components) that copy detection discounts but cannot fully eliminate while the routes remain as thin wrappers.
 
 ## Status
 
