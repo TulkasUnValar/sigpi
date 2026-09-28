@@ -9,6 +9,7 @@
  */
 
 import {
+  canEditProject,
   getProjectActions,
   isDestructiveAction,
   type ProjectAction,
@@ -25,9 +26,7 @@ describe("getProjectActions — en_revision (director)", () => {
   });
 
   it("does not show owner-only actions (submit/finalize) to a director", () => {
-    const names = getProjectActions("en_revision", ["director"]).map(
-      (a) => a.name,
-    );
+    const names = getProjectActions("en_revision", ["director"]).map((a) => a.name);
     expect(names).not.toContain("submit");
     expect(names).not.toContain("finalize");
   });
@@ -40,16 +39,12 @@ describe("getProjectActions — en_revision (director)", () => {
 
 describe("getProjectActions — owner-gated states", () => {
   it("shows submit for the owner on borrador", () => {
-    const names = getProjectActions("borrador", ["researcher"]).map(
-      (a) => a.name,
-    );
+    const names = getProjectActions("borrador", ["researcher"]).map((a) => a.name);
     expect(names).toContain("submit");
   });
 
   it("shows resubmit for the owner on observado", () => {
-    const names = getProjectActions("observado", ["researcher"]).map(
-      (a) => a.name,
-    );
+    const names = getProjectActions("observado", ["researcher"]).map((a) => a.name);
     expect(names).toContain("resubmit");
   });
 
@@ -75,17 +70,31 @@ describe("getProjectActions — terminal states", () => {
 
 describe("getProjectActions — cancel requires admin", () => {
   it("shows cancel only to an admin on an active state", () => {
-    const names = getProjectActions("en_ejecucion", ["admin"]).map(
-      (a) => a.name,
-    );
+    const names = getProjectActions("en_ejecucion", ["admin"]).map((a) => a.name);
     expect(names).toContain("cancel");
   });
 
   it("hides cancel from a director", () => {
-    const names = getProjectActions("en_ejecucion", ["director"]).map(
-      (a) => a.name,
-    );
+    const names = getProjectActions("en_ejecucion", ["director"]).map((a) => a.name);
     expect(names).not.toContain("cancel");
+  });
+});
+
+describe("canEditProject — RN-011 terminal gate", () => {
+  it("allows editing any non-terminal state for any role", () => {
+    expect(canEditProject("en_revision", ["researcher"])).toBe(true);
+    expect(canEditProject("borrador", ["director"])).toBe(true);
+  });
+
+  it("blocks a terminal state for non-admin roles", () => {
+    expect(canEditProject("cerrado", ["researcher"])).toBe(false);
+    expect(canEditProject("rechazado", ["director"])).toBe(false);
+    expect(canEditProject("cancelado", ["researcher"])).toBe(false);
+  });
+
+  it("allows admin+ to edit a terminal state (backend bypass)", () => {
+    expect(canEditProject("cerrado", ["admin"])).toBe(true);
+    expect(canEditProject("cancelado", ["superadmin"])).toBe(true);
   });
 });
 
