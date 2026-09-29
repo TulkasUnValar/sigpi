@@ -165,14 +165,7 @@ class TestRLSPolicySQL:
 # ──────────────────────────────────────────────
 
 
-def _is_postgresql():
-    return connection.vendor == "postgresql"
-
-
-@pytest.mark.skipif(
-    not _is_postgresql(),
-    reason="Requires PostgreSQL with RLS support",
-)
+@pytest.mark.usefixtures("postgres_app_role")
 class TestRLSEnforcement:
     """Cross-institution isolation at the database level (PostgreSQL only)."""
 

@@ -216,9 +216,7 @@ class TestMigration0009RLSStructure:
 
 
 @pytest.mark.django_db
-@pytest.mark.skipif(
-    connection.vendor != "postgresql", reason="RLS requires PostgreSQL — SQLite in tests"
-)
+@pytest.mark.usefixtures("postgres_app_role")
 class TestRLSEnforcementPostgres:
     """Actual RLS enforcement — PostgreSQL only."""
 

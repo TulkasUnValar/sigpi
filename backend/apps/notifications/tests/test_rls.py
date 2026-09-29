@@ -24,7 +24,6 @@ import importlib
 import inspect
 import uuid
 
-import pytest
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
 
@@ -345,14 +344,6 @@ def _set_rls_context(connection, institution_id, bypass=False):
         )
 
 
-@pytest.fixture
-def postgres_rls(db):
-    """PostgreSQL-only RLS enforcement context — skip on SQLite."""
-    if connection.vendor != "postgresql":
-        pytest.skip("RLS enforcement requires PostgreSQL")
-    return connection
-
-
 class TestRLSEnforcement:
     """Cross-institution isolation tests — PostgreSQL only (skip on SQLite).
 
@@ -364,7 +355,7 @@ class TestRLSEnforcement:
     RLS guarantees cross-institution isolation plus the superadmin bypass.
     """
 
-    def test_cross_institution_notification_invisible(self, db, postgres_rls):
+    def test_cross_institution_notification_invisible(self, postgres_app_role):
         """A Notification from another institution is not visible."""
         inst_a = _make_institution("A1")
         inst_b = _make_institution("B1")
@@ -372,34 +363,34 @@ class TestRLSEnforcement:
         user_b = _make_user("b@test.edu")
 
         # Rows are created under bypass so INSERT WITH CHECK cannot block.
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=True)
         notif_a = _make_notification(user_a, inst_a)
         notif_b = _make_notification(user_b, inst_b)
 
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=False)
         visible = list(Notification.objects.all())
 
         assert notif_a in visible
         assert notif_b not in visible
 
-    def test_user_a_cannot_read_user_b_notifications(self, db, postgres_rls):
+    def test_user_a_cannot_read_user_b_notifications(self, postgres_app_role):
         """User A's tenant session cannot read user B's notification (RN cross-tenant)."""
         inst_a = _make_institution("A1")
         inst_b = _make_institution("B1")
         user_a = _make_user("a@test.edu")
         user_b = _make_user("b@test.edu")
 
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=True)
         notif_a = _make_notification(user_a, inst_a)
-        _set_rls_context(postgres_rls, inst_b.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_b.pk, bypass=True)
         notif_b = _make_notification(user_b, inst_b)
 
         # User A acts inside institution A — user B's notification lives in B.
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=False)
         assert Notification.objects.filter(pk=notif_a.pk).exists()
         assert not Notification.objects.filter(pk=notif_b.pk).exists()
 
-    def test_admin_can_read_any_notification(self, db, postgres_rls):
+    def test_admin_can_read_any_notification(self, postgres_app_role):
         """An admin of an institution can read ANY row of that institution.
 
         RLS filters by institution, not recipient: a notification for
@@ -411,22 +402,24 @@ class TestRLSEnforcement:
         admin = _make_user("admin@test.edu")
         other = _make_user("other@test.edu")
         admin_role = _make_role("Admin Institucional", 2)
-        _make_membership(admin, inst, admin_role)
 
-        _set_rls_context(postgres_rls, inst.pk, bypass=True)
+        # Membership rows are RLS-protected: create them under bypass so the
+        # INSERT WITH CHECK cannot block, exactly like the notifications below.
+        _set_rls_context(postgres_app_role, inst.pk, bypass=True)
+        _make_membership(admin, inst, admin_role)
         # The notification belongs to ANOTHER recipient in the same institution.
         notif_other = _make_notification(other, inst)
 
-        _set_rls_context(postgres_rls, inst.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst.pk, bypass=False)
         assert Notification.objects.filter(pk=notif_other.pk).exists()
 
-    def test_cross_institution_log_invisible(self, db, postgres_rls):
+    def test_cross_institution_log_invisible(self, postgres_app_role):
         """A NotificationLog of another institution's notification is hidden."""
         inst_a = _make_institution("A1")
         inst_b = _make_institution("B1")
         user_b = _make_user("b@test.edu")
 
-        _set_rls_context(postgres_rls, inst_b.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_b.pk, bypass=True)
         notif_b = _make_notification(user_b, inst_b)
         log = NotificationLog.objects.create(
             notification=notif_b,
@@ -435,51 +428,51 @@ class TestRLSEnforcement:
             status="sent",
         )
 
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=False)
         assert not NotificationLog.objects.filter(pk=log.pk).exists()
 
-    def test_cross_institution_preference_invisible(self, db, postgres_rls):
+    def test_cross_institution_preference_invisible(self, postgres_app_role):
         """A preference of a user without membership in the institution is hidden."""
         inst_a = _make_institution("A1")
         inst_b = _make_institution("B1")
         user_b = _make_user("b@test.edu")
         role = _make_role("Investigador", 4)
 
-        _set_rls_context(postgres_rls, inst_b.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_b.pk, bypass=True)
         _make_membership(user_b, inst_b, role)
         pref = UserPreference.objects.create(user=user_b, channel="email", enabled=False)
 
         # user_b has no active membership in institution A → preference hidden.
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=False)
         assert not UserPreference.objects.filter(pk=pref.pk).exists()
 
         # Back in institution B (active membership) → visible again.
-        _set_rls_context(postgres_rls, inst_b.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst_b.pk, bypass=False)
         assert UserPreference.objects.filter(pk=pref.pk).exists()
 
-    def test_template_catalog_visible_to_all(self, db, postgres_rls):
+    def test_template_catalog_visible_to_all(self, postgres_app_role):
         """Templates (catalog data) remain visible under tenant isolation."""
         inst_a = _make_institution("A1")
 
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=False)
         assert NotificationTemplate.objects.count() >= 4
 
-    def test_superadmin_bypass_sees_all(self, db, postgres_rls):
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
         """Superadmin bypass flag makes all rows visible."""
         inst_a = _make_institution("A1")
         inst_b = _make_institution("B1")
         user_a = _make_user("a@test.edu")
         user_b = _make_user("b@test.edu")
 
-        _set_rls_context(postgres_rls, inst_b.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_b.pk, bypass=True)
         notif_b = _make_notification(user_b, inst_b)
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=True)
         notif_a = _make_notification(user_a, inst_a)
 
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=False)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=False)
         assert not Notification.objects.filter(pk=notif_b.pk).exists()
         assert Notification.objects.filter(pk=notif_a.pk).exists()
 
-        _set_rls_context(postgres_rls, inst_a.pk, bypass=True)
+        _set_rls_context(postgres_app_role, inst_a.pk, bypass=True)
         assert Notification.objects.filter(pk=notif_b.pk).exists()
         assert Notification.objects.filter(pk=notif_a.pk).exists()
