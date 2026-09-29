@@ -34,10 +34,10 @@ Chain strategy: pending
 
 ## PR2 — Wizard (FR-03)
 
-- [ ] 2.1 Create `frontend/features/projects/ProjectWizard.tsx` — move 604-line wizard from `app/projects/new/page.tsx` (read-only) with zero behavior change
-- [ ] 2.2 Rewrite `app/projects/new/page.tsx` as thin wrapper rendering `ProjectWizard` via barrel
-- [ ] 2.3 Update `__tests__/features/projects/wizard.test.tsx` to import `ProjectWizard` from barrel, assertions unchanged
-- [ ] 2.4 Gate: wizard suite green, `npx tsc --noEmit` (FR-08)
+- [x] 2.1 Create `frontend/features/projects/ProjectWizard.tsx` — move 604-line wizard from `app/projects/new/page.tsx` (read-only) with zero behavior change
+- [x] 2.2 Rewrite `app/projects/new/page.tsx` as thin wrapper rendering `ProjectWizard` via barrel
+- [x] 2.3 Update `__tests__/features/projects/wizard.test.tsx` to import `ProjectWizard` from barrel, assertions unchanged
+- [x] 2.4 Gate: wizard suite green, `npx tsc --noEmit` (FR-08)
 
 ## PR3 — Edit (FR-04…FR-08)
 
