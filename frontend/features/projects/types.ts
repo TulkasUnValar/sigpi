@@ -124,3 +124,26 @@ export interface CreateProjectPayload {
   start_date: string;
   estimated_end_date: string;
 }
+
+/**
+ * Payload for PATCH /projects/{id}/ (FR-04).
+ *
+ * Writable scalar fields only. The project relation and the nested
+ * `members` / `documents` collections are never part of an update — they
+ * are managed through their own endpoints, so this type must not expose
+ * them.
+ */
+export interface UpdateProjectPayload {
+  title: string;
+  abstract: string;
+  objectives: string;
+  methodology: string;
+  expected_results: string;
+  keywords: string;
+  start_date: string;
+  estimated_end_date: string;
+  center: string;
+  group: string | null;
+  line: string | null;
+  principal_investigator: string;
+}

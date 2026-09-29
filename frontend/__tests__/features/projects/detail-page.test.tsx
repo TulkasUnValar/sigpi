@@ -27,9 +27,7 @@ jest.mock("next/link", () => {
     }: {
       href: string | { pathname: string };
       children: React.ReactNode;
-    }) => (
-      <a href={typeof href === "string" ? href : href.pathname}>{children}</a>
-    ),
+    }) => <a href={typeof href === "string" ? href : href.pathname}>{children}</a>,
   };
 });
 
@@ -73,10 +71,23 @@ const detail = {
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
   members: [
-    { id: "m1", project: "p1", researcher: "r1", role: "co_investigator", joined_at: "2026-01-01T00:00:00Z" },
+    {
+      id: "m1",
+      project: "p1",
+      researcher: "r1",
+      role: "co_investigator",
+      joined_at: "2026-01-01T00:00:00Z",
+    },
   ],
   documents: [
-    { id: "d1", project: "p1", name: "Propuesta.pdf", doc_type: "proposal", external_url: "https://example.com/p.pdf", uploaded_at: "2026-01-01T00:00:00Z" },
+    {
+      id: "d1",
+      project: "p1",
+      name: "Propuesta.pdf",
+      doc_type: "proposal",
+      external_url: "https://example.com/p.pdf",
+      uploaded_at: "2026-01-01T00:00:00Z",
+    },
   ],
 };
 
@@ -85,7 +96,13 @@ const observations = {
   next: null,
   previous: null,
   results: [
-    { id: "o1", project: "p1", observed_by: "u1", observation_text: "Falta metodología.", created_at: "2026-01-02T00:00:00Z" },
+    {
+      id: "o1",
+      project: "p1",
+      observed_by: "u1",
+      observation_text: "Falta metodología.",
+      created_at: "2026-01-02T00:00:00Z",
+    },
   ],
 };
 
@@ -94,13 +111,21 @@ const stateHistory = {
   next: null,
   previous: null,
   results: [
-    { id: "s1", project: "p1", from_state: "borrador", to_state: "enviado", triggered_by: "u1", reason: "", created_at: "2026-01-01T00:00:00Z" },
+    {
+      id: "s1",
+      project: "p1",
+      from_state: "borrador",
+      to_state: "enviado",
+      triggered_by: "u1",
+      reason: "",
+      created_at: "2026-01-01T00:00:00Z",
+    },
   ],
 };
 
-function renderDetail() {
+function renderDetail(overrides: { status?: string; roles?: string[] } = {}) {
   useAuthStore.setState({
-    roles: ["director"],
+    roles: overrides.roles ?? ["director"],
     isAuthenticated: true,
     isLoading: false,
     activeInstitution: { id: "inst-1", name: "Universidad Alpha" },
@@ -110,9 +135,11 @@ function renderDetail() {
   (api.api.get as jest.Mock).mockImplementation((path: string) => {
     if (path.includes("/observations/")) return Promise.resolve(observations);
     if (path.includes("/state_history/")) return Promise.resolve(stateHistory);
-    if (path.includes("/documents/")) return Promise.resolve({ count: 0, next: null, previous: null, results: [] });
-    if (path.includes("/members/")) return Promise.resolve({ count: 0, next: null, previous: null, results: [] });
-    return Promise.resolve(detail);
+    if (path.includes("/documents/"))
+      return Promise.resolve({ count: 0, next: null, previous: null, results: [] });
+    if (path.includes("/members/"))
+      return Promise.resolve({ count: 0, next: null, previous: null, results: [] });
+    return Promise.resolve({ ...detail, status: overrides.status ?? detail.status });
   });
 
   const qc = new QueryClient({
@@ -157,5 +184,28 @@ describe("ProjectDetailPage", () => {
     // State history tab.
     await user.click(screen.getByRole("tab", { name: /historial/i }));
     expect(await screen.findByText(/enviado/i)).toBeInTheDocument();
+  });
+});
+
+describe("ProjectDetailPage — edit link gating (FR-06)", () => {
+  it("shows an Editar link to the edit route for a non-terminal project", async () => {
+    renderDetail({ status: "en_revision", roles: ["director"] });
+
+    const link = await screen.findByRole("link", { name: /editar/i });
+    expect(link).toHaveAttribute("href", "/projects/p1/edit");
+  });
+
+  it("hides the Editar link for a terminal project for a non-admin", async () => {
+    renderDetail({ status: "cerrado", roles: ["researcher"] });
+    await screen.findByText("Proyecto Alpha");
+
+    expect(screen.queryByRole("link", { name: /editar/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the Editar link for a terminal project for an admin (backend bypass)", async () => {
+    renderDetail({ status: "rechazado", roles: ["admin"] });
+
+    const link = await screen.findByRole("link", { name: /editar/i });
+    expect(link).toHaveAttribute("href", "/projects/p1/edit");
   });
 });

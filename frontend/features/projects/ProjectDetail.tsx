@@ -10,13 +10,17 @@
  *   advances pattern); behavior is unchanged.
  */
 
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { useAuthStore } from "@/store/auth";
 import { FsmActionBar } from "@/features/projects/FsmActionBar";
+import { canEditProject } from "@/features/projects/fsm";
 import {
   useProjectDetail,
   useProjectObservations,
@@ -28,6 +32,7 @@ interface ProjectDetailProps {
 }
 
 export function ProjectDetail({ id }: ProjectDetailProps) {
+  const roles = useAuthStore((s) => s.roles);
   const detailQuery = useProjectDetail(id);
   const observationsQuery = useProjectObservations(id);
   const historyQuery = useProjectStateHistory(id);
@@ -49,6 +54,10 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
   const observations = observationsQuery.data?.results ?? [];
   const history = historyQuery.data?.results ?? [];
 
+  // RN-011: terminal projects are not editable for non-admins; the backend
+  // 403 remains the backstop.
+  const canEdit = canEditProject(project.status, roles);
+
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -56,9 +65,16 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
           <h1 className="text-2xl font-semibold">{project.title}</h1>
           <StatusBadge status={project.status} />
         </div>
-        <Button asChild variant="outline" size="sm">
-          <a href={`/projects/${id}/advances`}>Ver avances</a>
-        </Button>
+        <div className="flex items-center gap-2">
+          {canEdit ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/projects/${id}/edit`}>Editar</Link>
+            </Button>
+          ) : null}
+          <Button asChild variant="outline" size="sm">
+            <a href={`/projects/${id}/advances`}>Ver avances</a>
+          </Button>
+        </div>
       </div>
 
       <div className="mb-6">

@@ -152,14 +152,25 @@ export const PROJECT_ACTIONS: ProjectAction[] = [
 /** Terminal states — no outbound transitions. */
 const TERMINAL_STATES = new Set(["cerrado", "rechazado", "cancelado"]);
 
+/** Roles that bypass the terminal-state edit lock (RN-011: admin+). */
+const ADMIN_ROLES = new Set(["admin", "superadmin"]);
+
+/**
+ * Whether the viewer may edit a project in `state`.
+ *
+ * RN-011: a terminal project rejects mutations from non-admin users; the
+ * backend allows admin+ to bypass. The backend 403 remains the backstop.
+ */
+export function canEditProject(state: string, roles: string[]): boolean {
+  if (!TERMINAL_STATES.has(state)) return true;
+  return roles.some((role) => ADMIN_ROLES.has(role));
+}
+
 /**
  * Return the actions visible for a project in `state` for a user with
  * `roles`. Filters by source state and allowed role.
  */
-export function getProjectActions(
-  state: string,
-  roles: string[],
-): ProjectAction[] {
+export function getProjectActions(state: string, roles: string[]): ProjectAction[] {
   if (TERMINAL_STATES.has(state)) return [];
 
   const roleSet = new Set(roles);

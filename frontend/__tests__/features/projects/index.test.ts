@@ -14,12 +14,15 @@ import type {
   Page,
   ProjectDetailModel,
   ProjectListRow,
+  UpdateProjectPayload,
 } from "@/features/projects";
 
 describe("features/projects barrel", () => {
   it("re-exports the extracted components", () => {
     expect(typeof barrel.ProjectList).toBe("function");
     expect(typeof barrel.ProjectDetail).toBe("function");
+    expect(typeof barrel.ProjectWizard).toBe("function");
+    expect(typeof barrel.ProjectForm).toBe("function");
     expect(typeof barrel.FsmActionBar).toBe("function");
   });
 
@@ -38,6 +41,34 @@ describe("features/projects barrel", () => {
   it("re-exports the mutations", () => {
     expect(typeof barrel.useCreateProject).toBe("function");
     expect(typeof barrel.useProjectTransition).toBe("function");
+    expect(typeof barrel.useUpdateProject).toBe("function");
+  });
+
+  it("re-exports the edit gating helper with working behavior", () => {
+    expect(barrel.canEditProject("en_revision", ["researcher"])).toBe(true);
+    expect(barrel.canEditProject("cerrado", ["researcher"])).toBe(false);
+  });
+
+  it("re-exports the edit schema and payload builder with working behavior", () => {
+    const invalid = barrel.projectFormSchema.safeParse({ title: "" });
+    expect(invalid.success).toBe(false);
+
+    const payload = barrel.buildUpdatePayload({
+      title: "Título",
+      abstract: "Resumen",
+      objectives: "Objetivos",
+      methodology: "Método",
+      expected_results: "Resultados",
+      keywords: "",
+      start_date: "2026-01-01",
+      estimated_end_date: "2027-01-01",
+      center: "c1",
+      group: "",
+      line: "",
+      principal_investigator: "r1",
+    });
+    expect(payload.group).toBeNull();
+    expect(payload.line).toBeNull();
   });
 
   it("re-exports the FSM helpers with working behavior", () => {
@@ -109,8 +140,24 @@ describe("features/projects barrel", () => {
       estimated_end_date: "2027-01-01",
     };
 
+    const updatePayload: UpdateProjectPayload = {
+      title: "Proyecto Alpha",
+      abstract: "Resumen",
+      objectives: "Objetivos",
+      methodology: "Método",
+      expected_results: "Resultados",
+      keywords: "",
+      start_date: "2026-01-01",
+      estimated_end_date: "2027-01-01",
+      center: "c1",
+      group: null,
+      line: null,
+      principal_investigator: "pi-1",
+    };
+
     expect(page.results[0]?.id).toBe("p1");
     expect(detail.status).toBe("borrador");
     expect(payload.center).toBe("c1");
+    expect(updatePayload.group).toBeNull();
   });
 });

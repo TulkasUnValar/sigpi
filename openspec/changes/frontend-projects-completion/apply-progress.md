@@ -149,19 +149,120 @@
 - **Review budget overage (`size:exception`, MAINTAINER-APPROVED)**: PR2 lands at 1217 raw (622+/595-) / 625 copy-aware (24+/601-) changed lines, above the 400 budget. As with PR1, copy detection collapses the move to the component, but the deleted inline page body still counts at file granularity; the route must remain as a thin wrapper. One cohesive, independently revertible work unit — it cannot be split further without splitting the extraction. Maintainer approved `size:exception` for PR1 and PR2 (PR3 pre-approved).
 - Pre-commit prettier hook runs non-login `bash` via Windows Python and cannot resolve `node`; resolved with a temporary `node` shim OUTSIDE the repo (`/mnt/c/Users/Usuario/.local/bin/node`), removed after committing. No `--no-verify` used.
 
+## Batch 3 — PR3 Edit (tasks 3.1 → 3.10)
+
+- **Mode**: Strict TDD (`openspec/config.yaml` → `strict_tdd: true`, coverage floor 80%)
+- **Date**: 2026-09-28
+- **Branch**: `feature/projects-frontend-pr3-edit` (stacked on PR2 `feature/projects-frontend-pr2-wizard` @ `eb692ee`; `stacked-to-main` — PR3 targets the PR2 branch until PR1/PR2 merge)
+- **Store**: hybrid — canonical artifact in `openspec/`, mirrored to Engram (`sdd/frontend-projects-completion/apply-progress`)
+- **Commits**: `9516aa3 feat(projects): add useUpdateProject + UpdateProjectPayload`; `f229c98 feat(projects): add project edit form + route with gated link`
+
+### Completed Tasks
+
+- [x] 3.1 RED: `__tests__/features/projects/mutations.test.tsx` — PATCH URL, institution scope, exact payload, both invalidations on success, none on failure (FR-04)
+- [x] 3.2 `UpdateProjectPayload` in `types.ts` — writable scalars only; no `project`/`members`/`documents`
+- [x] 3.3 `useUpdateProject(id)` in `mutations.ts`, reusing `invalidateProjects`
+- [x] 3.4 RED (route threat case): `__tests__/features/projects/edit-page.test.tsx` — loading/not-found in-page, detail seeding, success redirect, terminal edit gating
+- [x] 3.5 `app/projects/[id]/edit/page.tsx` (products edit-page pattern) consuming `useProjectDetail` + `ProjectForm` via the barrel
+- [x] 3.6 Gated `Editar` link on `ProjectDetail` actions (RN-011) (FR-06)
+- [x] 3.7 RED: `__tests__/features/projects/project-form.test.tsx` — zod rejection, dependent-select resets, 400 `setError`, 403 toast/no redirect, writable-field exclusion (FR-05/FR-07)
+- [x] 3.8 Edit schema + `ProjectForm` (RHF + `Controller` selects, `buildUpdatePayload` mapping empty group/line → null) (FR-05/FR-07)
+- [x] 3.9 Barrel exports: `ProjectForm`, `useUpdateProject`, `UpdateProjectPayload` (+ `projectFormSchema`, `buildUpdatePayload`, `ProjectFormValues`, `canEditProject`)
+- [x] 3.10 Gate: all projects tests green, coverage ≥80%, `tsc --noEmit` (FR-08)
+
+### Files Changed
+
+| File | Action | What Was Done |
+|------|--------|---------------|
+| `frontend/features/projects/types.ts` | Modified | Added `UpdateProjectPayload` — the 12 writable scalars only (excludes `project`/`members`/`documents`). |
+| `frontend/features/projects/mutations.ts` | Modified | Added `useUpdateProject(id)` — `PATCH /api/projects/{id}/` with the active institution scope; `invalidateProjects` on success only. |
+| `frontend/features/projects/schemas.ts` | Modified | Added `projectFormSchema` (create-equivalent zod rules + date-order refine), `ProjectFormValues`, and `buildUpdatePayload` (empty group/line → `null`). |
+| `frontend/features/projects/ProjectForm.tsx` | Created | RHF + `Controller` edit form seeded from the detail; dependent center→group→line + PI selects with resets; 400 `setError`, 403 toast, success redirect. |
+| `frontend/features/projects/fsm.ts` | Modified | Added pure `canEditProject(state, roles)` (RN-011 terminal gate, admin+ bypass) reusing `TERMINAL_STATES`; Prettier normalized pre-existing drift. |
+| `frontend/features/projects/ProjectDetail.tsx` | Modified | Added the gated `Editar` link (non-terminal, or admin in terminal) beside "Ver avances". |
+| `frontend/features/projects/index.ts` | Modified | Barrel exports for `ProjectForm`, `useUpdateProject`, `UpdateProjectPayload`, `canEditProject`, `projectFormSchema`, `buildUpdatePayload`, `ProjectFormValues`. |
+| `frontend/app/projects/[id]/edit/page.tsx` | Created | Thin route: loading/not-found in-page, terminal gate (non-admin), `ProjectForm` via barrel, back link. |
+| `frontend/__tests__/features/projects/mutations.test.tsx` | Created | `useUpdateProject` contract (URL, exact payload, scope, both invalidations, failure no-op). |
+| `frontend/__tests__/features/projects/project-form.test.tsx` | Created | Seeding, zod rejection, dependent-select resets, exact payload/exclusion, 400 `setError`, 403 toast, `buildUpdatePayload`. |
+| `frontend/__tests__/features/projects/edit-page.test.tsx` | Created | Route loading/not-found, seeding, PATCH+redirect, terminal gate (non-admin refuses / admin allows). |
+| `frontend/__tests__/features/projects/detail-page.test.tsx` | Modified | Added `Editar` link gating cases (non-terminal shows; terminal non-admin hides; terminal admin shows). |
+| `frontend/__tests__/features/projects/fsm.test.ts` | Modified | Added `canEditProject` RN-011 cases. |
+| `frontend/__tests__/features/projects/index.test.ts` | Modified | Pinned `ProjectForm`, `useUpdateProject`, `canEditProject`, `projectFormSchema`, `buildUpdatePayload`, `UpdateProjectPayload`. |
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| 3.1 | `mutations.test.tsx` | Unit | ✅ 7 suites / 39 tests (pre-PR3) | ✅ Written — 3/3 failed: `useUpdateProject is not a function` | ✅ 3/3 passed after 3.2 + 3.3 | ✅ 3 cases (exact payload + scope + both invalidations; exclusion; failure leaves cache) | ✅ Clean |
+| 3.2 | `mutations.test.tsx` | Unit | N/A (new type) | ✅ Same RED (payload type consumed by 3.1) | ✅ `tsc --noEmit` clean | ➖ Single (type contract) | ✅ Clean |
+| 3.3 | `mutations.test.tsx` | Unit | ✅ 7 / 39 | ✅ Same RED (see 3.1) | ✅ 3/3 passed | ✅ See 3.1 | ✅ Clean |
+| 3.4 | `edit-page.test.tsx` | Integration | ✅ 7 / 39 | ✅ Written — suite failed to run: `Could not locate module @/app/projects/[id]/edit/page` | ✅ 5/5 passed after 3.5 + 3.6 | ✅ 5 cases (loading, not-found, seeding+redirect, terminal non-admin, terminal admin) | ✅ Clean |
+| 3.5 | `edit-page.test.tsx` | Integration | ✅ 7 / 39 | ✅ Same RED (route missing) | ✅ 5/5 passed | ✅ See 3.4 | ✅ Clean |
+| 3.6 | `detail-page.test.tsx` + `fsm.test.ts` | Integration + Unit | ✅ 7 / 39 | ✅ Written — `Unable to find role="link" name /editar/i`; `canEditProject is not a function` | ✅ detail 5/5, fsm 17/17 after helper + link | ✅ non-terminal shows / terminal non-admin hides / terminal admin shows | ✅ Clean |
+| 3.7 | `project-form.test.tsx` | Integration | ✅ 7 / 39 | ✅ Written — 9/9 failed: `Element type is invalid … got: undefined` (ProjectForm) + `buildUpdatePayload is not a function` | ✅ 9/9 passed after 3.8 | ✅ 9 cases (seeding, zod ×2, resets ×2, payload, 400, 403, builder) | ✅ Clean (test mock path-order fix; see Issues) |
+| 3.8 | `project-form.test.tsx` | Integration | ✅ 7 / 39 | ✅ Same RED (see 3.7) | ✅ 9/9 passed | ✅ See 3.7 | ✅ Clean |
+| 3.9 | `index.test.ts` | Unit | ✅ 7 / 39 | ➖ Structural export task — the `ProjectForm` barrel export was driven RED by 3.7; the remaining exports were added during their producers' GREEN. Contract assertions were GREEN-only. | ✅ barrel suite 7/7 | ➖ Contract-only | ✅ Clean |
+| 3.10 | Gate | — | ✅ 7 / 39 | — | ✅ focused 3 suites / 17 tests; projects 10 suites / 64 tests; full repo 136 suites / 1030 tests; `tsc --noEmit` clean | — | — |
+
+### Work Unit Evidence
+
+| Evidence | Required value |
+|---|---|
+| Focused test command and exact result | `./node_modules/.bin/jest __tests__/features/projects/mutations.test.tsx __tests__/features/projects/project-form.test.tsx __tests__/features/projects/edit-page.test.tsx` → **3 suites / 17 tests passed**. Projects folder: `./node_modules/.bin/jest __tests__/features/projects` → **10 suites / 64 tests passed**. |
+| Runtime harness command/scenario and exact result | `N/A` — frontend feature slice with no server/runtime boundary; the route contract is covered by rendering the real `/projects/[id]/edit` page through `AuthenticatedLayout` and exercising PATCH + redirect against a mocked `@/lib/api` (the repo's projects/products test convention; MSW is not used). |
+| Rollback boundary | Revert `frontend/features/projects/{ProjectForm.tsx, mutations.ts, schemas.ts, types.ts, index.ts, fsm.ts, ProjectDetail.tsx}`, `frontend/app/projects/[id]/edit/page.tsx`, and the test files (`mutations.test.tsx`, `project-form.test.tsx`, `edit-page.test.tsx`, plus the link/gating additions in `detail-page.test.tsx`, `fsm.test.ts`, `index.test.ts`); the detail loses the edit link and the route/mutation disappear, with no other module affected. |
+
+### Test Summary
+
+- **Total tests written (this batch)**: 25 new cases — mutations 3, project-form 9, edit-page 5, fsm 3, detail-page 3, index 2
+- **Total tests passing (projects folder)**: 64 (was 39 pre-PR3)
+- **Layers used**: Unit (mutations, fsm, index) + Integration (project-form, edit-page, detail-page)
+- **Approval tests** (refactoring): None — PR3 adds behavior (no behavior-preserving refactors)
+- **Pure functions created**: 3 (`buildUpdatePayload`, `canEditProject`, `projectFormSchema`)
+
+### Coverage Evidence
+
+| Scope | Statements | Branches | Functions | Lines | Result |
+|-------|-----------|----------|-----------|-------|--------|
+| Repo `jest --coverage` (enforced gate) | 92.85% | 88.12% | 82.00% | 93.80% | ✅ ≥80% on all metrics, 136 suites / 1030 tests |
+| `features/projects/**` module (full run) | 88.10% | 81.22% | 75.90% | 89.10% | functions below 80 (pre-existing) |
+| `features/projects/**` module (projects-only run) | 88.10% | 80.84% | 75.90% | 89.10% | functions below 80 (pre-existing) |
+
+**Coverage note**: PR3's authored files are well covered — `ProjectForm.tsx` 100% statements / 81.53% branches / 100% functions / 100% lines; `schemas.ts` 100/100/100/100; `fsm.ts` 100/100/100/100; `mutations.ts` 90.9/100/80/90.9. The module-in-isolation functions metric (75.9%) remains below 80 because of pre-existing uncovered handlers in `FsmActionBar.tsx` (30% funcs), `ProjectList.tsx` (54.54%), and `ProjectWizard.tsx` (58.62%) — none authored by PR3. The repo-enforced `jest --coverage` global gate passes on all four metrics.
+
+### Deviations from Design
+
+- **Route-level terminal gate (defense in depth)**: the design specified the edit link gate on `ProjectDetail`; task 3.4's "route threat case" additionally required the `/projects/[id]/edit` route to refuse the form for a terminal project (non-admin). Implemented with a shared helper so direct navigation cannot bypass the link gate; the backend 403 remains the backstop.
+- **`canEditProject` helper in `fsm.ts`**: a pure `canEditProject(state, roles)` reuses the existing `TERMINAL_STATES` set (RN-011) and is used by both `ProjectDetail` and the edit route. Exported from the barrel. This extends the declared rollback boundary with `fsm.ts` and `fsm.test.ts`.
+- **Admin+ bypass in terminal states**: RN-011 rejects terminal mutations only for non-admin users; the exploration note says "hide edit for terminal states unless admin". The gate therefore hides the link/route for non-admin terminal cases and keeps them for `admin`/`superadmin`.
+- **Edit link location**: the link lives in `features/projects/ProjectDetail.tsx` (where PR1 extracted the detail UI), not `app/projects/[id]/page.tsx` as the task's rollback note listed.
+- **Prettier drift**: the pre-commit hook checks staged files, so the files PR3 stages had to be Prettier-clean. `fsm.ts`, `mutations.ts`, `schemas.ts`, `detail-page.test.tsx`, and `fsm.test.ts` carried pre-existing formatting drift; Prettier normalized it (whitespace/line-wrap only) alongside PR3's changes.
+
+### Issues Found
+
+- **Review budget overage (`size:exception`, MAINTAINER-APPROVED for PR3)**: PR3 lands at **1490 raw changed lines (1447 additions + 43 deletions)**; the copy-aware view is identical (PR3 has no renames/moves). This exceeds the 400-line budget. It is one cohesive, independently revertible work unit (edit capability: mutation + type + schema + form + route + gated link + their tests); it cannot be split further without splitting the edit capability itself. Maintainer pre-approved `size:exception` for PR3; no code, comments, or tests were compressed to fit.
+- **Test-mock gotcha**: the hierarchy endpoints nest the parent segment (`/api/centers/{id}/groups/`, `/api/groups/{id}/lines/`), so a mock matcher that checks `/centers/` before `/groups/` silently returns centers for the groups request. Matchers must test the leaf path first (`/lines/` → `/groups/` → `/centers/`). The pre-existing `wizard.test.tsx` mock has this latent ordering issue, but it never opens the group select, so it never surfaced.
+- **Radix `Select` in jsdom**: option selection must wait for the async options (`findByRole("option")`); asserting a closed trigger's text is only reliable once the option data has resolved.
+- **Pre-commit prettier hook**: as in PR1/PR2, it runs via non-login bash and could not resolve `node` (`exit 127`). Resolved with a temporary `node` shim OUTSIDE the repo (`/mnt/c/Users/Usuario/.local/bin/node`), removed after committing. No `--no-verify` used.
+
+## Batch 4 - Review Closeout (tasks 4.1 → 4.2)
+
+- [x] 4.1 Review-budget confirmation: all three PRs exceed the 400-line budget (PR1 915 raw / 594 copy-aware; PR2 1217 raw / 625 copy-aware; PR3 1490 raw / 1490 copy-aware). `size:exception` was requested per PR and explicitly approved by the maintainer (PR1 on 2026-09-28, then PR2 + PR3 together). No code, comment, blank line, or test was removed or restyled to fit the budget.
+- [x] 4.2 Barrel-consumption verification: the four `app/projects` routes (`page.tsx`, `new/page.tsx`, `[id]/page.tsx`, `[id]/edit/page.tsx`) all import from `@/features/projects`. Test imports match the `products`/`advances` reference pattern — `index.test.ts` asserts the barrel contract; `wizard.test.tsx` and `project-form.test.tsx` import components from the barrel; unit tests import their own module file and route tests import the route entry point (which is the unit under test). No test reaches into route-internal implementation. Verified by grep across `frontend/__tests__` and `frontend/app`.
+
 ## Remaining Tasks
 
-- [ ] 3.1 → 3.10 — PR3 Edit capability
-- [ ] 4.1 → 4.2 — Review
+None — 22/22 tasks complete.
 
 ## Workload / PR Boundary
 
 - **Mode**: stacked PR slices (`stacked-to-main`; PR1 → `main`, PR2 → PR1 branch until PR1 merges)
 - **PR1 boundary**: starts from clean `main`; ends with extracted `ProjectList`/`ProjectDetail` + barrel + thin pages + `index.test.ts` (commits `f4cc12a`, `d4e5adc`, `d60dc90`). Raw 915 / copy-aware 594 → `size:exception` (maintainer-approved).
 - **PR2 boundary**: starts from PR1 HEAD `d60dc90`; ends with `ProjectWizard` extracted, thin `new/page.tsx`, updated wizard test (commit `a1fd0ab`).
-- **Authored changed-line count** (`git diff --stat d60dc90...HEAD -- frontend`): **1217** (622 additions + 595 deletions). Copy/rename-aware view (`git diff -C --find-copies-harder`): **625** (24 additions + 601 deletions).
-- **Review budget**: both counts exceed the 400-line budget → **`size:exception` (maintainer-approved)**. See Issues Found.
+- **PR3 boundary**: starts from PR2 HEAD `eb692ee`; ends with `useUpdateProject` + `UpdateProjectPayload`, `projectFormSchema` + `ProjectForm`, the `/projects/[id]/edit` route, the gated `Editar` link, and their tests (commits `9516aa3`, `f229c98`).
+- **Authored changed-line count** (`git diff --stat eb692ee...HEAD -- frontend`): **1490** (1447 additions + 43 deletions). Copy/rename-aware view (`git diff -C --find-copies-harder`): **1490** (identical — PR3 has no renames/moves).
+- **Review budget**: all three PRs exceed the 400-line budget → **`size:exception` (maintainer-approved for PR1, PR2, and PR3)**. See Issues Found.
 
 ## Status
 
-10/22 tasks complete (PR1 1.1–1.6 and PR2 2.1–2.4 fully done). Ready for PR3.
+22/22 tasks complete (PR1 1.1–1.6, PR2 2.1–2.4, PR3 3.1–3.10, review 4.1–4.2). Ready for archive.
