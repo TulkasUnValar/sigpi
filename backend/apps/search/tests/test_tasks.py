@@ -2,8 +2,10 @@
 
 Covers the task contract from design.md (Interfaces / Contracts):
 
-- ``index_document(index_name, object_id)`` performs a fresh DB lookup
-  and projects the row into Meilisearch via the sync client
+- ``index_document(index_name, object_id, institution_id)`` performs a fresh DB
+  lookup and projects the row into Meilisearch via the sync client; the lookup
+  runs inside an explicit tenant context, so ``institution_id`` is required and
+  a missing value fails loudly
 - a missing object is harmless for index tasks (no client call, no raise)
 - ``delete_document(index_name, object_id)`` removes the document by
   string ID and does not require the row to exist
@@ -34,7 +36,7 @@ class TestIndexDocumentTask:
         project = ProjectFactory(title="Biotecnología aplicada")
 
         with mock.patch("apps.search.tasks.get_client") as get_client:
-            result = index_document("projects", str(project.pk))
+            result = index_document("projects", str(project.pk), str(project.institution_id))
 
         index = get_client.return_value.index
         index.assert_called_once_with("projects")
@@ -49,7 +51,7 @@ class TestIndexDocumentTask:
         missing_id = str(uuid.uuid4())
 
         with mock.patch("apps.search.tasks.get_client") as get_client:
-            result = index_document("projects", missing_id)
+            result = index_document("projects", missing_id, str(uuid.uuid4()))
 
         assert result is None
         get_client.return_value.index.assert_not_called()
@@ -62,7 +64,7 @@ class TestIndexDocumentTask:
             get_client.return_value.index.return_value.add_documents.side_effect = error
             with mock.patch.object(index_document, "retry", side_effect=error) as retry_mock:
                 with pytest.raises(RuntimeError):
-                    index_document("projects", str(project.pk))
+                    index_document("projects", str(project.pk), str(project.institution_id))
 
         retry_mock.assert_called_once()
         kwargs = retry_mock.call_args.kwargs
@@ -79,10 +81,38 @@ class TestIndexDocumentTask:
                 # Second attempt (retries=1): countdown must be 60×2^1.
                 # apply() runs eagerly and captures the failure (it does not
                 # propagate — task_eager_propagates is False in tests).
-                result = index_document.apply(args=["projects", str(project.pk)], retries=1)
+                result = index_document.apply(
+                    args=["projects", str(project.pk), str(project.institution_id)],
+                    retries=1,
+                )
 
         assert result.state == "FAILURE"
         assert retry_mock.call_args.kwargs["countdown"] == 60 * (2**1)
+
+
+class TestIndexDocumentRequiresInstitution:
+    """index_document fails loudly without an institution; never silently skips."""
+
+    def test_missing_institution_raises(self, db):
+        project = ProjectFactory()
+
+        with pytest.raises(ValueError, match="institution_id"):
+            index_document("projects", str(project.pk))
+
+    def test_none_institution_raises(self, db):
+        project = ProjectFactory()
+
+        with pytest.raises(ValueError, match="institution_id"):
+            index_document("projects", str(project.pk), None)
+
+    def test_missing_institution_never_calls_the_client(self, db):
+        project = ProjectFactory()
+
+        with mock.patch("apps.search.tasks.get_client") as get_client:
+            with pytest.raises(ValueError):
+                index_document("projects", str(project.pk))
+
+        get_client.assert_not_called()
 
 
 class TestDeleteDocumentTask:

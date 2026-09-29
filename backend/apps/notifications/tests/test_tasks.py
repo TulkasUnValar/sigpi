@@ -162,7 +162,7 @@ class TestDispatchNotificationTask:
     def test_creates_notification_log_with_status_sent(self, db):
         notification = _make_notification()
 
-        result = dispatch_notification(str(notification.pk))
+        result = dispatch_notification(str(notification.pk), str(notification.institution_id))
 
         assert result["status"] == NotificationLogStatus.SENT
         log = NotificationLog.objects.get(notification=notification)
@@ -173,7 +173,7 @@ class TestDispatchNotificationTask:
         assert log.last_error is None
 
     def test_missing_notification_is_skipped_gracefully(self, db, caplog):
-        result = dispatch_notification(str(uuid.uuid4()))
+        result = dispatch_notification(str(uuid.uuid4()), str(uuid.uuid4()))
 
         assert result["status"] == "skipped"
         assert result["reason"] == "notification_not_found"
@@ -188,7 +188,7 @@ class TestDispatchNotificationTask:
             enabled=False,
         )
 
-        result = dispatch_notification(str(notification.pk))
+        result = dispatch_notification(str(notification.pk), str(notification.institution_id))
 
         assert result["status"] == "skipped"
         assert result["reason"] == "email_disabled"
@@ -197,7 +197,7 @@ class TestDispatchNotificationTask:
     def test_no_preference_row_defaults_to_email_enabled(self, db):
         notification = _make_notification()
 
-        result = dispatch_notification(str(notification.pk))
+        result = dispatch_notification(str(notification.pk), str(notification.institution_id))
 
         assert result["status"] == NotificationLogStatus.SENT
         assert NotificationLog.objects.filter(notification=notification).exists()
@@ -210,10 +210,39 @@ class TestDispatchNotificationTask:
             enabled=True,
         )
 
-        result = dispatch_notification(str(notification.pk))
+        result = dispatch_notification(str(notification.pk), str(notification.institution_id))
 
         assert result["status"] == NotificationLogStatus.SENT
         assert NotificationLog.objects.filter(notification=notification).exists()
+
+
+# ──────────────────────────────────────────────
+# Missing institution — fail loudly
+# ──────────────────────────────────────────────
+
+
+class TestDispatchRequiresInstitution:
+    """A dispatch with no institution fails loudly, never silently skips."""
+
+    def test_missing_institution_raises(self, db):
+        notification = _make_notification()
+
+        with pytest.raises(ValueError, match="institution_id"):
+            dispatch_notification(str(notification.pk))
+
+    def test_none_institution_raises(self, db):
+        notification = _make_notification()
+
+        with pytest.raises(ValueError, match="institution_id"):
+            dispatch_notification(str(notification.pk), None)
+
+    def test_missing_institution_writes_no_log(self, db):
+        notification = _make_notification()
+
+        with pytest.raises(ValueError):
+            dispatch_notification(str(notification.pk))
+
+        assert NotificationLog.objects.count() == 0
 
 
 # ──────────────────────────────────────────────
@@ -239,7 +268,7 @@ class TestDispatchRetry:
             ) as retry_mock,
         ):
             with pytest.raises(RuntimeError):
-                dispatch_notification(str(notification.pk))
+                dispatch_notification(str(notification.pk), str(notification.institution_id))
 
         retry_mock.assert_called_once()
         log = NotificationLog.objects.get(notification=notification)
@@ -262,7 +291,7 @@ class TestDispatchRetry:
             ) as retry_mock,
         ):
             with pytest.raises(RuntimeError):
-                dispatch_notification(str(notification.pk))
+                dispatch_notification(str(notification.pk), str(notification.institution_id))
 
         kwargs = retry_mock.call_args.kwargs
         assert kwargs["countdown"] == 60 * (2**0)  # first retry: 60×2^0
@@ -293,7 +322,7 @@ class TestReceiverEnqueuesDispatch:
 
         on_commit.assert_called_once()
         notification = Notification.objects.get(recipient=director)
-        delay.assert_called_once_with(str(notification.pk))
+        delay.assert_called_once_with(str(notification.pk), str(notification.institution_id))
 
     def test_email_disabled_does_not_enqueue(self, db):
         inst, director, project = _make_director_project()

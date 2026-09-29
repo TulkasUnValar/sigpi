@@ -40,6 +40,7 @@ after a dropped connection does not silently lose the tenant scope.
 
 import contextvars
 import logging
+from contextlib import contextmanager
 
 from django.db.backends.signals import connection_created
 from django.dispatch import receiver
@@ -97,6 +98,37 @@ def clear(connection) -> None:
         apply_to(connection, None, False)
     except Exception:
         logger.warning("Failed to clear the request tenant context", exc_info=True)
+
+
+@contextmanager
+def tenant_context(connection, institution_id, bypass=False):
+    """Activate a tenant context for database work outside an HTTP request.
+
+    Celery tasks run with no request, so no middleware ever writes the RLS
+    GUCs the policies read. The institution cannot be discovered from inside
+    the task either: reading the row that carries it would require the very
+    tenant context the task is trying to establish. The enqueuer therefore
+    passes the institution in explicitly, on the request/audit context where
+    it is still known, and the task activates it around its own reads.
+
+    Clearing in ``finally`` is mandatory, not cosmetic. ``apply_to`` writes
+    the GUCs at connection scope (see the module docstring), so a value
+    outlives the statement that set it and would otherwise be inherited by
+    whatever runs next on the same pooled worker connection — potentially a
+    task for another tenant.
+
+    On non-PostgreSQL backends (SQLite in local tests) this is a no-op: RLS
+    is a PostgreSQL feature and there are no GUCs to write.
+    """
+    if connection.vendor != "postgresql":
+        yield
+        return
+
+    activate(connection, institution_id, bypass)
+    try:
+        yield
+    finally:
+        clear(connection)
 
 
 @receiver(connection_created)

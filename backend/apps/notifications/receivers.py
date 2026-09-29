@@ -92,13 +92,21 @@ def _enqueue_email_dispatch(notification, recipient):
     transaction; on_commit fires only when the transaction commits.
     Email is skipped when the recipient opted out via UserPreference
     (the task double-checks the same preference before dispatching).
+
+    The owning institution travels with the message: the task runs with no
+    request and cannot read the protected notification table to discover it
+    (that read needs the tenant context the argument is meant to establish).
+    ``institution_id`` is read here, while the row is in hand, and closed over
+    because the audit context is gone by the time on_commit fires.
     """
     if not email_channel_enabled(recipient):
         logger.debug("Email disabled for %s; not enqueuing dispatch", recipient.email)
         return
 
+    institution_id = notification.institution_id
+
     def _enqueue():
-        dispatch_notification.delay(str(notification.pk))
+        dispatch_notification.delay(str(notification.pk), str(institution_id))
 
     transaction.on_commit(_enqueue)
 

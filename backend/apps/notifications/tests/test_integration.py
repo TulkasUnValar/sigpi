@@ -513,4 +513,6 @@ class TestEmailEnqueueEndToEnd:
         # NOTE: on_commit is called by other apps too (search receivers
         # register on every indexed save) — assert the notifications
         # dispatch was enqueued exactly once, which is the contract here.
-        delay.assert_called_once_with(str(notification.pk))
+        # The owning institution travels with the message so the task can
+        # establish its tenant context.
+        delay.assert_called_once_with(str(notification.pk), str(notification.institution_id))
