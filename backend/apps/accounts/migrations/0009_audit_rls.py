@@ -31,7 +31,7 @@ CREATE POLICY tenant_isolation ON {TABLE}
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {TABLE};
 CREATE POLICY superadmin_bypass ON {TABLE}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL = f"""

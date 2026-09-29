@@ -58,7 +58,7 @@ CREATE POLICY tenant_isolation ON {PARENT_TABLE}
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {PARENT_TABLE};
 CREATE POLICY superadmin_bypass ON {PARENT_TABLE}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL += f"""
@@ -83,7 +83,7 @@ CREATE POLICY tenant_isolation ON budgets_budgetline
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetline;
 CREATE POLICY superadmin_bypass ON budgets_budgetline
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 
 -- Enable RLS on budgets_budgetattachment
 ALTER TABLE budgets_budgetattachment ENABLE ROW LEVEL SECURITY;
@@ -97,7 +97,7 @@ CREATE POLICY tenant_isolation ON budgets_budgetattachment
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetattachment;
 CREATE POLICY superadmin_bypass ON budgets_budgetattachment
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 # budgets_budgetexecution: reach Budget via line_id → budget_id.
@@ -117,7 +117,7 @@ CREATE POLICY tenant_isolation ON budgets_budgetexecution
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetexecution;
 CREATE POLICY superadmin_bypass ON budgets_budgetexecution
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 # budgets_fundingsource: reach institution via project_id → project.institution_id.
@@ -134,7 +134,7 @@ CREATE POLICY tenant_isolation ON budgets_fundingsource
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_fundingsource;
 CREATE POLICY superadmin_bypass ON budgets_fundingsource
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL += """
