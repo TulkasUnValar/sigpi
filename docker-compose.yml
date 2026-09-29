@@ -22,16 +22,30 @@ services:
       - POSTGRES_PASSWORD=sigpi
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      # Runtime connects as the least-privilege role so row-level security
-      # actually applies. The role is created by migration 0010 (NOLOGIN) and
-      # made login-capable by migration 0012; neither sets a password. Set it
-      # once after the first `migrate`, as the owning user:
-      #   docker compose exec db psql -U sigpi -d sigpi \
-      #     -c "ALTER ROLE sigpi_app PASSWORD 'sigpi_app';"
-      # An init script mounted into `db` cannot do this: /docker-entrypoint-initdb.d
-      # runs at cluster init, before any migration has created the role.
-      - POSTGRES_APP_USER=sigpi_app
-      - POSTGRES_APP_PASSWORD=sigpi_app
+      # Row-level security only applies when the runtime connects as the
+      # least-privilege role, so enabling it here is a deliberate opt-in. The
+      # role is created by migration 0010 (NOLOGIN) and made login-capable by
+      # migration 0012; neither sets a password.
+      #
+      # Do NOT set POSTGRES_APP_USER in this service's environment by default:
+      # settings prefer it, so EVERY manage.py command in the container would
+      # then connect as sigpi_app, which has no DDL rights and cannot migrate.
+      # Enable it per invocation, in this order:
+      #
+      #   1. migrate as the owner:
+      #      docker compose run --rm -e POSTGRES_APP_USER= backend \
+      #        python manage.py migrate
+      #   2. give the role a password, as the owning user:
+      #      docker compose exec db psql -U sigpi -d sigpi \
+      #        -c "ALTER ROLE sigpi_app PASSWORD 'sigpi_app';"
+      #   3. then run anything else with the switch on, e.g.
+      #      docker compose run --rm -e POSTGRES_APP_USER=sigpi_app \
+      #        -e POSTGRES_APP_PASSWORD=sigpi_app backend
+      #
+      # An init script mounted into `db` cannot create the role, because
+      # /docker-entrypoint-initdb.d runs at cluster init, before any migration
+      # has created it. CI verifies the role end to end in the
+      # `backend-app-role-rls` job, so a developer does not need it locally.
       - REDIS_URL=redis://redis:6379/0
       - OIDC_RP_CLIENT_ID=sigpi-app
       - OIDC_RP_CLIENT_SECRET=dev-client-secret
