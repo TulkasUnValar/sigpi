@@ -112,7 +112,7 @@ def center(db, institution):
 class TestSwitchInstitution:
     """POST /auth/switch-institution/ — Switch active institution."""
 
-    def test_switch_requires_authentication(self, api_client):
+    def test_switch_requires_authentication(self, db, api_client):
         """Unauthenticated users cannot switch institution."""
         url = reverse("switch_institution")
         response = api_client.post(
@@ -311,7 +311,7 @@ class TestAuthMeUpdated:
 class TestOIDCCallback:
     """GET /auth/callback/ — OIDC authorization code callback."""
 
-    def test_callback_endpoint_exists(self, api_client):
+    def test_callback_endpoint_exists(self, db, api_client):
         """The OIDC callback URL is registered."""
         url = reverse("oidc_callback")
         # Callback is handled by mozilla-django-oidc which requires
@@ -321,6 +321,7 @@ class TestOIDCCallback:
         # mozilla-django-oidc will fail to validate, resulting in error
         assert response.status_code in (302, 400, 403)
 
+    @pytest.mark.django_db
     @patch("mozilla_django_oidc.views.OIDCAuthenticationCallbackView.get")
     def test_callback_delegates_to_oidc_view(self, mock_get, api_client):
         """The callback URL routes to mozilla-django-oidc callback view."""

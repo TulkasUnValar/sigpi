@@ -174,7 +174,7 @@ class TestResearchProductViewSet:
         assert r.status_code == 200
         assert len(r.json()["results"]) >= 1
 
-    def test_list_unauthenticated(self, api_client):
+    def test_list_unauthenticated(self, db, api_client):
         r = api_client.get(reverse("products:product-list"))
         assert r.status_code in (401, 403)
 

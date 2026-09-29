@@ -138,7 +138,7 @@ class TestBudgetCRUD:
         )
         assert r.status_code == 403
 
-    def test_list_unauthenticated(self, api_client):
+    def test_list_unauthenticated(self, db, api_client):
         r = api_client.get(reverse("budgets:budget-list"))
         assert r.status_code == 403
 

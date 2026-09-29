@@ -10,6 +10,7 @@ Design reference: openspec/changes/auth/design.md — TenantMiddleware, PostgreS
 """
 
 import uuid
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
@@ -450,3 +451,37 @@ class TestTenantRLSMiddleware:
         assert result.status_code == 200
         assert result.content == b"After RLS"
         assert tenant_context.get_context() is None
+
+    def test_activation_failure_is_not_served(self, db, institution, user_with_membership):
+        """An activation failure rejects the request instead of serving it.
+
+        ``vendor`` is forced to ``postgresql`` so the middleware reaches the
+        activation path on SQLite too; ``activate`` is patched to raise. The
+        view must never run, and the exception must propagate so Django's
+        error handling responds and records the traceback (fail closed).
+        """
+        from config.middleware.tenant import TenantRLSMiddleware
+
+        served = []
+        request = self._build_request(
+            RequestFactory(),
+            user=user_with_membership,
+            institution_id=str(institution.id),
+        )
+
+        def view(request):
+            served.append(True)
+            return HttpResponse("OK")
+
+        with (
+            mock.patch.object(connection, "vendor", "postgresql"),
+            mock.patch.object(
+                tenant_context,
+                "activate",
+                side_effect=RuntimeError("tenant context down"),
+            ),
+        ):
+            with pytest.raises(RuntimeError, match="tenant context down"):
+                TenantRLSMiddleware(view)(request)
+
+        assert served == [], "The request was served despite a failed tenant context."

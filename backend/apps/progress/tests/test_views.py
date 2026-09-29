@@ -326,7 +326,7 @@ class TestProgressViewSetList:
         assert response.status_code == 200
         assert len(_result_list(response)) == 0  # No reports in this institution
 
-    def test_list_unauthenticated_returns_redirect(self, api_client):
+    def test_list_unauthenticated_returns_redirect(self, db, api_client):
         """Unauthenticated GET returns redirect to login."""
         url = reverse("progressreport-list")
         response = api_client.get(url)

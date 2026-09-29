@@ -283,7 +283,7 @@ class TestProjectViewSetCRUD:
         titles = [p["title"] for p in data["results"]]
         assert project_borrador.title in titles
 
-    def test_list_unauthenticated(self, api_client):
+    def test_list_unauthenticated(self, db, api_client):
         r = api_client.get(reverse("projects:project-list"))
         assert r.status_code in (401, 403)
 

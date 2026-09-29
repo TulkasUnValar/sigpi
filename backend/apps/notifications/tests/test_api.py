@@ -139,7 +139,7 @@ class TestNotificationList:
         r = api_client.get(reverse("notifications:notification-list"))
         assert r.status_code == 400
 
-    def test_list_unauthenticated_denied(self, api_client):
+    def test_list_unauthenticated_denied(self, db, api_client):
         r = api_client.get(reverse("notifications:notification-list"))
         assert r.status_code == 403
 

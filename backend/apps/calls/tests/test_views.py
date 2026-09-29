@@ -217,7 +217,7 @@ class TestCallViewSetCRUD:
         titles = [c["title"] for c in data["results"]]
         assert "Other Call" in titles
 
-    def test_list_unauthenticated(self, api_client):
+    def test_list_unauthenticated(self, db, api_client):
         r = api_client.get(reverse("calls:call-list"))
         assert r.status_code == 403
 

@@ -47,14 +47,14 @@ def local_user(db):
 class TestKeycloakHealthView:
     """Keycloak availability health-check endpoint."""
 
-    def test_health_endpoint_returns_json(self, api_client):
+    def test_health_endpoint_returns_json(self, db, api_client):
         """GET /auth/keycloak-status/ returns a JSON response."""
         url = reverse("keycloak_health")
         response = api_client.get(url)
         assert response.status_code == 200
         assert "application/json" in response["Content-Type"]
 
-    def test_health_endpoint_has_status_field(self, api_client):
+    def test_health_endpoint_has_status_field(self, db, api_client):
         """The health response includes a 'status' field."""
         url = reverse("keycloak_health")
         response = api_client.get(url)
@@ -75,7 +75,7 @@ class TestLocalLoginView:
     def login_url(self):
         return reverse("local_login")
 
-    def test_login_requires_post(self, api_client, login_url):
+    def test_login_requires_post(self, db, api_client, login_url):
         """GET requests to the login endpoint are not allowed."""
         response = api_client.get(login_url)
         assert response.status_code == 405  # Method Not Allowed
@@ -112,7 +112,7 @@ class TestLocalLoginView:
         )
         assert response.status_code == 401
 
-    def test_login_with_missing_fields(self, api_client, login_url):
+    def test_login_with_missing_fields(self, db, api_client, login_url):
         """Missing email or password returns 400."""
         response = api_client.post(
             login_url,
@@ -149,12 +149,12 @@ class TestAccountLinkingView:
     def linking_url(self):
         return reverse("account_linking")
 
-    def test_linking_requires_post(self, api_client, linking_url):
+    def test_linking_requires_post(self, db, api_client, linking_url):
         """GET requests to the linking endpoint are not allowed."""
         response = api_client.get(linking_url)
         assert response.status_code == 405
 
-    def test_linking_requires_authentication(self, api_client, linking_url):
+    def test_linking_requires_authentication(self, db, api_client, linking_url):
         """Unlinked user cannot access the linking endpoint."""
         response = api_client.post(
             linking_url,
@@ -176,7 +176,7 @@ class TestAuthMeView:
     def me_url(self):
         return reverse("auth_me")
 
-    def test_me_requires_authentication(self, api_client, me_url):
+    def test_me_requires_authentication(self, db, api_client, me_url):
         """Unauthenticated users get 401."""
         response = api_client.get(me_url)
         assert response.status_code == 401
