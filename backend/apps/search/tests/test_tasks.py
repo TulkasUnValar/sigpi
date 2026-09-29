@@ -60,9 +60,7 @@ class TestIndexDocumentTask:
 
         with mock.patch("apps.search.tasks.get_client") as get_client:
             get_client.return_value.index.return_value.add_documents.side_effect = error
-            with mock.patch.object(
-                index_document, "retry", side_effect=error
-            ) as retry_mock:
+            with mock.patch.object(index_document, "retry", side_effect=error) as retry_mock:
                 with pytest.raises(RuntimeError):
                     index_document("projects", str(project.pk))
 
@@ -77,15 +75,11 @@ class TestIndexDocumentTask:
 
         with mock.patch("apps.search.tasks.get_client") as get_client:
             get_client.return_value.index.return_value.add_documents.side_effect = error
-            with mock.patch.object(
-                index_document, "retry", side_effect=error
-            ) as retry_mock:
+            with mock.patch.object(index_document, "retry", side_effect=error) as retry_mock:
                 # Second attempt (retries=1): countdown must be 60×2^1.
                 # apply() runs eagerly and captures the failure (it does not
                 # propagate — task_eager_propagates is False in tests).
-                result = index_document.apply(
-                    args=["projects", str(project.pk)], retries=1
-                )
+                result = index_document.apply(args=["projects", str(project.pk)], retries=1)
 
         assert result.state == "FAILURE"
         assert retry_mock.call_args.kwargs["countdown"] == 60 * (2**1)
@@ -121,9 +115,7 @@ class TestDeleteDocumentTask:
 
         with mock.patch("apps.search.tasks.get_client") as get_client:
             get_client.return_value.index.return_value.delete_document.side_effect = error
-            with mock.patch.object(
-                delete_document, "retry", side_effect=error
-            ) as retry_mock:
+            with mock.patch.object(delete_document, "retry", side_effect=error) as retry_mock:
                 with pytest.raises(RuntimeError):
                     delete_document("products", str(uuid.uuid4()))
 

@@ -129,9 +129,7 @@ class TestBudgetCRUD:
         assert data["status"] == BudgetStatus.DRAFT
         assert data["institution"] == str(institution.id)
 
-    def test_create_denied_for_researcher(
-        self, api_client, institution, researcher_user, project
-    ):
+    def test_create_denied_for_researcher(self, api_client, institution, researcher_user, project):
         _login(api_client, researcher_user, institution)
         r = api_client.post(
             reverse("budgets:budget-list"),
@@ -156,9 +154,7 @@ class TestBudgetCRUD:
         )
         assert r.status_code == 409
 
-    def test_retrieve_budget_as_researcher(
-        self, api_client, institution, researcher_user, project
-    ):
+    def test_retrieve_budget_as_researcher(self, api_client, institution, researcher_user, project):
         budget = Budget.objects.create(
             project=project, institution=institution, name="Budget", approved_amount="500.00"
         )
@@ -255,7 +251,9 @@ class TestBudgetLineViewSet:
         BudgetLine.objects.create(budget=budget, name="A", approved_amount="100.00")
         BudgetLine.objects.create(budget=budget, name="B", approved_amount="200.00")
         _login(api_client, researcher_user, institution)
-        r = api_client.get(reverse("budgets:budget-line-list", kwargs={"budget_pk": str(budget.pk)}))
+        r = api_client.get(
+            reverse("budgets:budget-line-list", kwargs={"budget_pk": str(budget.pk)})
+        )
         assert r.status_code == 200
         assert len(r.json()["results"]) == 2
 
@@ -318,9 +316,7 @@ class TestBudgetLineViewSet:
             name="Foreign",
             approved_amount="100.00",
         )
-        BudgetLine.objects.create(
-            budget=other_budget, name="Secret Line", approved_amount="10.00"
-        )
+        BudgetLine.objects.create(budget=other_budget, name="Secret Line", approved_amount="10.00")
         _login(api_client, researcher_user, institution)
         r = api_client.get(
             reverse("budgets:budget-line-list", kwargs={"budget_pk": str(other_budget.pk)})
@@ -339,14 +335,10 @@ class TestBudgetExecutionViewSet:
         budget = Budget.objects.create(
             project=project, institution=institution, name="Budget", approved_amount=amount
         )
-        line = BudgetLine.objects.create(
-            budget=budget, name="Rubro", approved_amount=amount
-        )
+        line = BudgetLine.objects.create(budget=budget, name="Rubro", approved_amount=amount)
         return budget, line
 
-    def test_create_execution_within_limit(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_create_execution_within_limit(self, api_client, institution, admin_user, project):
         budget, line = self._make_budget_and_line(institution, project)
         _login(api_client, admin_user, institution)
         r = api_client.post(
@@ -360,9 +352,7 @@ class TestBudgetExecutionViewSet:
         assert r.status_code == 201
         assert r.json()["amount"] == "400.00"
 
-    def test_execution_overrun_without_auth_400(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_execution_overrun_without_auth_400(self, api_client, institution, admin_user, project):
         budget, line = self._make_budget_and_line(institution, project)
         BudgetExecution.objects.create(
             line=line, amount="900.00", executed_at=datetime.date(2026, 4, 1)
@@ -378,9 +368,7 @@ class TestBudgetExecutionViewSet:
         )
         assert r.status_code == 400
 
-    def test_execution_overrun_with_auth_201(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_execution_overrun_with_auth_201(self, api_client, institution, admin_user, project):
         budget, line = self._make_budget_and_line(institution, project)
         BudgetExecution.objects.create(
             line=line, amount="900.00", executed_at=datetime.date(2026, 4, 1)
@@ -441,9 +429,7 @@ class TestBudgetExecutionViewSet:
 
 
 class TestBudgetAttachmentViewSet:
-    def test_create_attachment_as_admin(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_create_attachment_as_admin(self, api_client, institution, admin_user, project):
         budget = Budget.objects.create(
             project=project, institution=institution, name="Budget", approved_amount="1000.00"
         )
@@ -474,9 +460,7 @@ class TestBudgetAttachmentViewSet:
         )
         assert r.status_code == 400
 
-    def test_delete_attachment_as_admin(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_delete_attachment_as_admin(self, api_client, institution, admin_user, project):
         budget = Budget.objects.create(
             project=project, institution=institution, name="Budget", approved_amount="1000.00"
         )
@@ -500,9 +484,7 @@ class TestBudgetAttachmentViewSet:
 
 
 class TestFundingSourceViewSet:
-    def test_add_funding_source_as_admin(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_add_funding_source_as_admin(self, api_client, institution, admin_user, project):
         _login(api_client, admin_user, institution)
         r = api_client.post(
             reverse("budgets:funding-source-list", kwargs={"project_pk": str(project.id)}),
@@ -512,9 +494,7 @@ class TestFundingSourceViewSet:
         assert r.status_code == 201
         assert r.json()["name"] == "Gov Grant"
 
-    def test_add_second_source_allowed(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_add_second_source_allowed(self, api_client, institution, admin_user, project):
         FundingSource.objects.create(project=project, name="First", amount="1000.00")
         _login(api_client, admin_user, institution)
         r = api_client.post(
@@ -525,9 +505,7 @@ class TestFundingSourceViewSet:
         assert r.status_code == 201
         assert FundingSource.objects.filter(project=project).count() == 2
 
-    def test_list_funding_sources(
-        self, api_client, institution, researcher_user, project
-    ):
+    def test_list_funding_sources(self, api_client, institution, researcher_user, project):
         FundingSource.objects.create(project=project, name="A", amount="1000.00")
         FundingSource.objects.create(project=project, name="B", amount="2000.00")
         _login(api_client, researcher_user, institution)
@@ -537,9 +515,7 @@ class TestFundingSourceViewSet:
         assert r.status_code == 200
         assert len(r.json()["results"]) == 2
 
-    def test_delete_funding_source_as_admin(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_delete_funding_source_as_admin(self, api_client, institution, admin_user, project):
         source = FundingSource.objects.create(project=project, name="A", amount="1000.00")
         _login(api_client, admin_user, institution)
         r = api_client.delete(
@@ -551,9 +527,7 @@ class TestFundingSourceViewSet:
         assert r.status_code == 204
         assert not FundingSource.objects.filter(pk=source.pk).exists()
 
-    def test_update_funding_source_as_admin(
-        self, api_client, institution, admin_user, project
-    ):
+    def test_update_funding_source_as_admin(self, api_client, institution, admin_user, project):
         source = FundingSource.objects.create(project=project, name="A", amount="1000.00")
         _login(api_client, admin_user, institution)
         r = api_client.patch(
@@ -576,9 +550,7 @@ class TestFundingSourceViewSet:
         FundingSource.objects.create(project=other_project, name="Secret", amount="10.00")
         _login(api_client, researcher_user, institution)
         r = api_client.get(
-            reverse(
-                "budgets:funding-source-list", kwargs={"project_pk": str(other_project.id)}
-            )
+            reverse("budgets:funding-source-list", kwargs={"project_pk": str(other_project.id)})
         )
         assert r.status_code == 200
         assert r.json()["results"] == []

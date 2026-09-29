@@ -44,9 +44,7 @@ def _enqueue(index_name, object_id, task):
         try:
             task.delay(index_name, str(object_id))
         except Exception:
-            logger.exception(
-                "Failed to enqueue %s for %s %s", task.name, index_name, object_id
-            )
+            logger.exception("Failed to enqueue %s for %s %s", task.name, index_name, object_id)
 
     transaction.on_commit(_on_commit)
 

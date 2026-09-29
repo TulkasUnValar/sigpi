@@ -1,13 +1,12 @@
 """
-RLS (Row-Level Security) policies for workflow-scoped tables.
+RLS (Row-Level Security) policies for product-scoped tables.
 
-Implements tenant isolation for all 4 workflow tables:
-- project_workflow_workflowtemplate (parent: direct institution_id)
-- project_workflow_workflowinstance (parent: direct institution_id)
-- project_workflow_workflowstep (child: subquery via template_id)
-- project_workflow_workflowaction (child: subquery via instance_id)
+Implements tenant isolation for all 3 product tables:
+- products_researchproduct (parent: direct institution_id)
+- products_productauthor (child: subquery via product_id)
+- products_productattachment (child: subquery via product_id)
 
-Design reference: openspec/changes/project_workflow/design.md — RLS Policies
+Design reference: openspec/changes/products/design.md — RLS Policies
 Pattern reference: apps/projects/migrations/0002_rls_policies.py
 
 Policies applied:
@@ -16,6 +15,13 @@ Policies applied:
 
 Note: RLS is a PostgreSQL feature. On SQLite (test environment),
 these operations are wrapped in a conditional that checks the DB engine.
+
+These policies previously lived in accounts/0004_rls_policies.py, which
+applied the direct `institution_id` predicate to every table in its list.
+The two child tables have no institution_id column, so on a fresh
+PostgreSQL database that migration aborted migrate with
+`column "institution_id" does not exist`. SQLite never noticed because the
+whole block is skipped there.
 """
 
 from django.db import migrations
@@ -27,68 +33,57 @@ def _is_postgresql(schema_editor):
     return engine == "postgresql"
 
 
-# ── Parent tables (direct institution_id column) ──────────────────────
+# ── Parent table (direct institution_id column) ─────────────────────────
 
-PARENT_TABLES = [
-    "project_workflow_workflowtemplate",
-    "project_workflow_workflowinstance",
+PARENT_TABLE = "products_researchproduct"
+
+# ── Child tables (no institution_id — reach via product_id FK) ──────────
+
+CHILD_TABLES = [
+    "products_productauthor",
+    "products_productattachment",
 ]
-
-# ── Child tables (no institution_id — reach via FK) ─────────────────────
-
-CHILD_TABLES_SQL = {
-    "project_workflow_workflowstep": """
-        template_id IN (
-            SELECT id FROM project_workflow_workflowtemplate
-            WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
-        )
-    """,
-    "project_workflow_workflowaction": """
-        instance_id IN (
-            SELECT id FROM project_workflow_workflowinstance
-            WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
-        )
-    """,
-}
 
 ENABLE_RLS_SQL = ""
 DISABLE_RLS_SQL = ""
 
 # ── Parent table policies ──────────────────────────────────────────────
 
-for table in PARENT_TABLES:
-    ENABLE_RLS_SQL += f"""
--- Enable RLS on {table}
-ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
+ENABLE_RLS_SQL += f"""
+-- Enable RLS on parent table
+ALTER TABLE {PARENT_TABLE} ENABLE ROW LEVEL SECURITY;
 
 -- Policy: users see only their institution's rows
-DROP POLICY IF EXISTS tenant_isolation ON {table};
-CREATE POLICY tenant_isolation ON {table}
+DROP POLICY IF EXISTS tenant_isolation ON {PARENT_TABLE};
+CREATE POLICY tenant_isolation ON {PARENT_TABLE}
     USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
-DROP POLICY IF EXISTS superadmin_bypass ON {table};
-CREATE POLICY superadmin_bypass ON {table}
+DROP POLICY IF EXISTS superadmin_bypass ON {PARENT_TABLE};
+CREATE POLICY superadmin_bypass ON {PARENT_TABLE}
     USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
-    DISABLE_RLS_SQL += f"""
-DROP POLICY IF EXISTS tenant_isolation ON {table};
-DROP POLICY IF EXISTS superadmin_bypass ON {table};
-ALTER TABLE {table} DISABLE ROW LEVEL SECURITY;
+DISABLE_RLS_SQL += f"""
+DROP POLICY IF EXISTS tenant_isolation ON {PARENT_TABLE};
+DROP POLICY IF EXISTS superadmin_bypass ON {PARENT_TABLE};
+ALTER TABLE {PARENT_TABLE} DISABLE ROW LEVEL SECURITY;
 """
 
-# ── Child table policies (subquery via FK) ─────────────────────────────
+# ── Child table policies (subquery via product_id) ──────────────────────
 
-for table, subquery in CHILD_TABLES_SQL.items():
+for table in CHILD_TABLES:
     ENABLE_RLS_SQL += f"""
 -- Enable RLS on {table}
 ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
 
--- Policy: users see only rows linked to parents in their institution
+-- Policy: users see only rows linked to products in their institution
 DROP POLICY IF EXISTS tenant_isolation ON {table};
 CREATE POLICY tenant_isolation ON {table}
-    USING ({subquery.strip()});
+    USING (product_id IN (
+        SELECT id FROM products_researchproduct
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
+    ));
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {table};
@@ -117,7 +112,7 @@ def remove_rls(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("project_workflow", "0001_initial"),
+        ("products", "0001_initial"),
     ]
 
     operations = [

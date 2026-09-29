@@ -150,5 +150,7 @@ class TestReportRendererValidateEntity:
         superuser = User.objects.create_superuser(email="su@test.edu", password="su123")
 
         renderer = ReportRenderer()
-        result = renderer.validate_entity("project", str(project_b.pk), institution_a.id, user=superuser)
+        result = renderer.validate_entity(
+            "project", str(project_b.pk), institution_a.id, user=superuser
+        )
         assert result == institution_b.id

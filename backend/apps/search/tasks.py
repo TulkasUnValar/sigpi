@@ -52,18 +52,14 @@ def index_document(self, index_name, object_id):
     try:
         instance = model.objects.get(pk=object_id)
     except model.DoesNotExist:
-        logger.warning(
-            "Search index: %s object %s not found; skipping", index_name, object_id
-        )
+        logger.warning("Search index: %s object %s not found; skipping", index_name, object_id)
         return None
 
     document = to_document(index_name, instance)
     try:
         get_client().index(index_name).add_documents([document])
     except Exception as exc:
-        logger.exception(
-            "Meilisearch index failed for %s %s", index_name, object_id
-        )
+        logger.exception("Meilisearch index failed for %s %s", index_name, object_id)
         raise self.retry(
             exc=exc,
             countdown=RETRY_BACKOFF_BASE_SECONDS * (2**self.request.retries),
@@ -81,9 +77,7 @@ def delete_document(self, index_name, object_id):
     try:
         get_client().index(index_name).delete_document(str(object_id))
     except Exception as exc:
-        logger.exception(
-            "Meilisearch delete failed for %s %s", index_name, object_id
-        )
+        logger.exception("Meilisearch delete failed for %s %s", index_name, object_id)
         raise self.retry(
             exc=exc,
             countdown=RETRY_BACKOFF_BASE_SECONDS * (2**self.request.retries),

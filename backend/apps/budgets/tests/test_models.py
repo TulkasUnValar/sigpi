@@ -341,7 +341,9 @@ class TestBudgetExecutionFields:
         inst = _make_institution("TU")
         budget = _make_budget(inst)
         line = BudgetLine.objects.create(budget=budget, name="Personal", approved_amount=1000.00)
-        BudgetExecution.objects.create(line=line, amount=100.00, executed_at=datetime.date(2026, 1, 1))
+        BudgetExecution.objects.create(
+            line=line, amount=100.00, executed_at=datetime.date(2026, 1, 1)
+        )
         line.delete()
         assert BudgetExecution.objects.count() == 0
 

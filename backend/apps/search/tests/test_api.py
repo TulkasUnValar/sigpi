@@ -38,9 +38,7 @@ from apps.institutions.tests.conftest import InstitutionFactory
 
 
 def _make_user(email: str, **extra) -> User:
-    return User.objects.create_user(
-        email=email, auth_source="local", password="pass", **extra
-    )
+    return User.objects.create_user(email=email, auth_source="local", password="pass", **extra)
 
 
 def _login(client: Client, user: User, institution=None) -> None:
@@ -100,9 +98,7 @@ class TestSearchApiTenantIsolation:
         forged_a = InstitutionFactory()
 
         with mock.patch("apps.search.views.get_client") as get_client:
-            search_mock = _mock_search(
-                get_client, _search_results([], "biotecnología", total=0)
-            )
+            search_mock = _mock_search(get_client, _search_results([], "biotecnología", total=0))
             response = client.get(
                 _search_url(),
                 {
@@ -131,9 +127,7 @@ class TestSearchApiTenantIsolation:
 
         with mock.patch("apps.search.views.get_client") as get_client:
             search_mock = _mock_search(get_client, _search_results([], "x", total=0))
-            response = client.get(
-                _search_url(), {"q": "x", "index": "researchers"}
-            )
+            response = client.get(_search_url(), {"q": "x", "index": "researchers"})
 
         assert response.status_code == 200
         kwargs = search_mock.call_args.kwargs
@@ -193,9 +187,7 @@ class TestSearchApiValidation:
     def test_non_object_filters_returns_400(self):
         client, _ = self._logged_in()
 
-        response = client.get(
-            _search_url(), {"q": "x", "index": "projects", "filters": "[1, 2]"}
-        )
+        response = client.get(_search_url(), {"q": "x", "index": "projects", "filters": "[1, 2]"})
 
         assert response.status_code == 400
 

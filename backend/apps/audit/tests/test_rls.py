@@ -114,8 +114,7 @@ class TestRLSPolicySQL:
         return "\n".join(
             val
             for attr_name in dir(mod)
-            if isinstance((val := getattr(mod, attr_name)), str)
-            and "tenant_isolation" in val
+            if isinstance((val := getattr(mod, attr_name)), str) and "tenant_isolation" in val
         )
 
     def test_enable_rls_on_audit_table(self, db):
@@ -133,9 +132,10 @@ class TestRLSPolicySQL:
         assert f"CREATE POLICY tenant_isolation ON {TABLE}" in sql, (
             f"tenant_isolation policy missing for '{TABLE}'"
         )
-        assert "institution_id = current_setting('sigpi.institution_id')::uuid" in sql, (
-            "tenant_isolation must filter by sigpi.institution_id"
-        )
+        assert (
+            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
+            in sql
+        ), "tenant_isolation must filter by sigpi.institution_id"
 
     def test_superadmin_bypass_policy(self, db):
         mod = _get_module()
@@ -144,9 +144,7 @@ class TestRLSPolicySQL:
         assert f"CREATE POLICY superadmin_bypass ON {TABLE}" in sql, (
             f"superadmin_bypass policy missing for '{TABLE}'"
         )
-        assert "sigpi.bypass_rls" in sql, (
-            "superadmin_bypass must check sigpi.bypass_rls"
-        )
+        assert "sigpi.bypass_rls" in sql, "superadmin_bypass must check sigpi.bypass_rls"
 
     def test_every_policy_is_droppable(self, db):
         """Reverse SQL must DROP POLICY IF EXISTS for each policy."""
@@ -167,14 +165,7 @@ class TestRLSPolicySQL:
 # ──────────────────────────────────────────────
 
 
-def _is_postgresql():
-    return connection.vendor == "postgresql"
-
-
-@pytest.mark.skipif(
-    not _is_postgresql(),
-    reason="Requires PostgreSQL with RLS support",
-)
+@pytest.mark.usefixtures("postgres_app_role")
 class TestRLSEnforcement:
     """Cross-institution isolation at the database level (PostgreSQL only)."""
 
@@ -196,7 +187,9 @@ class TestRLSEnforcement:
     def test_user_a_cannot_read_institution_y_events(self, db):
         """Setting sigpi.institution_id to X hides institution Y rows."""
         with connection.cursor() as cursor:
-            cursor.execute("SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'")
+            cursor.execute(
+                "SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'"
+            )
         with connection.cursor() as cursor:
             cursor.execute("SET LOCAL sigpi.bypass_rls = false")
         # Enforced at the DB layer: a SELECT must return 0 rows because no
@@ -209,7 +202,9 @@ class TestRLSEnforcement:
     def test_superadmin_bypass_sees_all_rows(self, db):
         """Setting sigpi.bypass_rls = true reveals all rows regardless of tenant."""
         with connection.cursor() as cursor:
-            cursor.execute("SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'")
+            cursor.execute(
+                "SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'"
+            )
         with connection.cursor() as cursor:
             cursor.execute("SET LOCAL sigpi.bypass_rls = true")
         with connection.cursor() as cursor:

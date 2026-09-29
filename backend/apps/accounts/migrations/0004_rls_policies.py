@@ -24,12 +24,14 @@ def _is_postgresql(schema_editor):
 
 # Tables that currently exist in the schema with institution_id column.
 # New tables should be added here when their models are created.
+#
+# Tables owned by another app get their RLS in that app's own migration,
+# following the per-app pattern (institutions/0003, projects/0002,
+# researchers/0002, products/0002). This list is only for tables whose
+# owning app has no RLS migration of its own.
 TENANT_SCOPED_TABLES = [
     "institutions_researchcenter",  # FK to institution
     "accounts_institutionmembership",  # FK to institution
-    "products_researchproduct",  # institution-scoped
-    "products_productauthor",  # via product → institution
-    "products_productattachment",  # via product → institution
 ]
 
 # Tables planned for future phases (included as comments for documentation):
@@ -38,7 +40,6 @@ TENANT_SCOPED_TABLES = [
 # "progress_progressreport",
 # "budgets_budget",
 # "calls_call",
-# "products_researchproduct",
 # "documents_document",
 
 ENABLE_RLS_SQL = ""
@@ -52,12 +53,12 @@ ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
 -- Policy: users see only their institution's rows
 DROP POLICY IF EXISTS tenant_isolation ON {table};
 CREATE POLICY tenant_isolation ON {table}
-    USING (institution_id = current_setting('sigpi.institution_id')::uuid);
+    USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {table};
 CREATE POLICY superadmin_bypass ON {table}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
     DISABLE_RLS_SQL += f"""

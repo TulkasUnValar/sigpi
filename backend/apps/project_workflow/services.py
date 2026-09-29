@@ -126,8 +126,14 @@ class WorkflowService:
         If there is no next step (single-step workflow), call complete_workflow.
         """
         with transaction.atomic():
+            # of=("self",) locks only the WorkflowInstance row, which is the
+            # row these methods mutate. `current_step` is nullable, so
+            # select_related("current_step") emits a LEFT OUTER JOIN, and
+            # PostgreSQL rejects FOR UPDATE on the nullable side of an outer
+            # join. SQLite ignores FOR UPDATE entirely, so this only ever
+            # failed on PostgreSQL. Every method below uses the same shape.
             instance = (
-                WorkflowInstance.objects.select_for_update()
+                WorkflowInstance.objects.select_for_update(of=("self",))
                 .select_related("current_step", "template")
                 .get(pk=instance_id)
             )
@@ -174,7 +180,7 @@ class WorkflowService:
                 instance = instance_id_or_obj
             else:
                 instance = (
-                    WorkflowInstance.objects.select_for_update()
+                    WorkflowInstance.objects.select_for_update(of=("self",))
                     .select_related("current_step")
                     .get(pk=instance_id_or_obj)
                 )
@@ -250,7 +256,7 @@ class WorkflowService:
                 instance = instance_id_or_obj
             else:
                 instance = (
-                    WorkflowInstance.objects.select_for_update()
+                    WorkflowInstance.objects.select_for_update(of=("self",))
                     .select_related("current_step")
                     .get(pk=instance_id_or_obj)
                 )
@@ -277,7 +283,7 @@ class WorkflowService:
                 instance = instance_id_or_obj
             else:
                 instance = (
-                    WorkflowInstance.objects.select_for_update()
+                    WorkflowInstance.objects.select_for_update(of=("self",))
                     .select_related("current_step")
                     .get(pk=instance_id_or_obj)
                 )
@@ -305,7 +311,7 @@ class WorkflowService:
                 instance = instance_id_or_obj
             else:
                 instance = (
-                    WorkflowInstance.objects.select_for_update()
+                    WorkflowInstance.objects.select_for_update(of=("self",))
                     .select_related("template")
                     .get(pk=instance_id_or_obj)
                 )
@@ -350,7 +356,7 @@ class WorkflowService:
                 instance = instance_id_or_obj
             else:
                 instance = (
-                    WorkflowInstance.objects.select_for_update()
+                    WorkflowInstance.objects.select_for_update(of=("self",))
                     .select_related("current_step")
                     .get(pk=instance_id_or_obj)
                 )

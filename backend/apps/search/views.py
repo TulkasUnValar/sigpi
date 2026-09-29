@@ -32,13 +32,9 @@ class SearchAPIView(APIView):
     def get(self, request):
         index_name = request.query_params.get("index")
         if index_name is None:
-            return Response(
-                {"detail": "Missing 'index' query parameter."}, status=400
-            )
+            return Response({"detail": "Missing 'index' query parameter."}, status=400)
         try:
-            client_filters = parse_filters(
-                index_name, request.query_params.get("filters")
-            )
+            client_filters = parse_filters(index_name, request.query_params.get("filters"))
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=400)
 
@@ -49,12 +45,8 @@ class SearchAPIView(APIView):
         # Non-superusers always search within their active institution.
         # The scope is server-owned: client filters cannot override it.
         institution_id = None if request.user.is_superuser else request.institution_id
-        filter_expression = build_filter_expression(
-            client_filters, institution_id=institution_id
-        )
+        filter_expression = build_filter_expression(client_filters, institution_id=institution_id)
 
         index = get_client().index(index_name)
-        results = index.search(
-            query, filter=filter_expression, offset=offset, limit=limit
-        )
+        results = index.search(query, filter=filter_expression, offset=offset, limit=limit)
         return Response(results.model_dump(by_alias=True))

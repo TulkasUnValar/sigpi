@@ -82,9 +82,7 @@ def parse_filters(index_name: str, raw_filters: str | None) -> dict[str, object]
         try:
             attribute = whitelist[key]
         except KeyError:
-            raise ValueError(
-                f"Unsupported filter key for index '{index_name}': '{key}'"
-            ) from None
+            raise ValueError(f"Unsupported filter key for index '{index_name}': '{key}'") from None
         normalized[attribute] = value
     return normalized
 

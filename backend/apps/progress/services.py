@@ -26,9 +26,15 @@ from apps.progress.signals import progress_state_changed
 
 # ── Guard helpers ───────────────────────────────────────
 
-PROGRESS_ALLOWED_PROJECT_STATES = frozenset({
-    "en_ejecucion", "suspendido", "finalizado", "en_cierre", "cerrado",
-})
+PROGRESS_ALLOWED_PROJECT_STATES = frozenset(
+    {
+        "en_ejecucion",
+        "suspendido",
+        "finalizado",
+        "en_cierre",
+        "cerrado",
+    }
+)
 
 
 def _validate_project_state_for_progress(project):

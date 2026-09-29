@@ -57,7 +57,9 @@ class TestProgressProjectStateGuard:
         institution = Institution.objects.create(name="Guard Inst", code="GI001")
         center = ResearchCenter.objects.create(institution=institution, name="Lab", code="LAB")
         user = _make_user()
-        pi = Researcher.objects.create(user=user, institution=institution, first_name="PI", last_name="Test")
+        pi = Researcher.objects.create(
+            user=user, institution=institution, first_name="PI", last_name="Test"
+        )
         return institution, center, pi
 
     # ── Blocked states ───────────────────────────

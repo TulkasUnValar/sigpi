@@ -53,12 +53,12 @@ ALTER TABLE {PARENT_TABLE} ENABLE ROW LEVEL SECURITY;
 -- Policy: users see only their institution's rows
 DROP POLICY IF EXISTS tenant_isolation ON {PARENT_TABLE};
 CREATE POLICY tenant_isolation ON {PARENT_TABLE}
-    USING (institution_id = current_setting('sigpi.institution_id')::uuid);
+    USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {PARENT_TABLE};
 CREATE POLICY superadmin_bypass ON {PARENT_TABLE}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL += f"""
@@ -78,12 +78,12 @@ DROP POLICY IF EXISTS tenant_isolation ON budgets_budgetline;
 CREATE POLICY tenant_isolation ON budgets_budgetline
     USING (budget_id IN (
         SELECT id FROM budgets_budget
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetline;
 CREATE POLICY superadmin_bypass ON budgets_budgetline
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 
 -- Enable RLS on budgets_budgetattachment
 ALTER TABLE budgets_budgetattachment ENABLE ROW LEVEL SECURITY;
@@ -92,12 +92,12 @@ DROP POLICY IF EXISTS tenant_isolation ON budgets_budgetattachment;
 CREATE POLICY tenant_isolation ON budgets_budgetattachment
     USING (budget_id IN (
         SELECT id FROM budgets_budget
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetattachment;
 CREATE POLICY superadmin_bypass ON budgets_budgetattachment
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 # budgets_budgetexecution: reach Budget via line_id → budget_id.
@@ -111,13 +111,13 @@ CREATE POLICY tenant_isolation ON budgets_budgetexecution
         SELECT id FROM budgets_budgetline
         WHERE budget_id IN (
             SELECT id FROM budgets_budget
-            WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+            WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
         )
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetexecution;
 CREATE POLICY superadmin_bypass ON budgets_budgetexecution
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 # budgets_fundingsource: reach institution via project_id → project.institution_id.
@@ -129,12 +129,12 @@ DROP POLICY IF EXISTS tenant_isolation ON budgets_fundingsource;
 CREATE POLICY tenant_isolation ON budgets_fundingsource
     USING (project_id IN (
         SELECT id FROM projects_project
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_fundingsource;
 CREATE POLICY superadmin_bypass ON budgets_fundingsource
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL += """

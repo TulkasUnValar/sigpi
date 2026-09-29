@@ -215,9 +215,8 @@ class TestMigration0009RLSStructure:
 # ──────────────────────────────────────────────────────────
 
 
-@pytest.mark.skipif(
-    connection.vendor != "postgresql", reason="RLS requires PostgreSQL — SQLite in tests"
-)
+@pytest.mark.django_db
+@pytest.mark.usefixtures("postgres_app_role")
 class TestRLSEnforcementPostgres:
     """Actual RLS enforcement — PostgreSQL only."""
 
@@ -233,8 +232,7 @@ class TestRLSEnforcementPostgres:
     def test_rls_enabled_on_table(self):
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT relrowsecurity FROM pg_class "
-                "WHERE relname = 'accounts_auditevent'"
+                "SELECT relrowsecurity FROM pg_class WHERE relname = 'accounts_auditevent'"
             )
             row = cursor.fetchone()
         assert row is not None and row[0] is True

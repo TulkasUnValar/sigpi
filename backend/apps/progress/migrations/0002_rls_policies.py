@@ -47,12 +47,12 @@ ALTER TABLE {PARENT_TABLE} ENABLE ROW LEVEL SECURITY;
 -- Policy: users see only their institution's rows
 DROP POLICY IF EXISTS tenant_isolation ON {PARENT_TABLE};
 CREATE POLICY tenant_isolation ON {PARENT_TABLE}
-    USING (institution_id = current_setting('sigpi.institution_id')::uuid);
+    USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {PARENT_TABLE};
 CREATE POLICY superadmin_bypass ON {PARENT_TABLE}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL += f"""
@@ -73,13 +73,13 @@ DROP POLICY IF EXISTS tenant_isolation ON {table};
 CREATE POLICY tenant_isolation ON {table}
     USING (progress_report_id IN (
         SELECT id FROM progress_progressreport
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {table};
 CREATE POLICY superadmin_bypass ON {table}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
     DISABLE_RLS_SQL += f"""

@@ -50,12 +50,12 @@ ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
 -- Policy: users see only their institution's rows
 DROP POLICY IF EXISTS tenant_isolation ON {table};
 CREATE POLICY tenant_isolation ON {table}
-    USING (institution_id = current_setting('sigpi.institution_id')::uuid);
+    USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {table};
 CREATE POLICY superadmin_bypass ON {table}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
     DISABLE_RLS_SQL += f"""
@@ -75,12 +75,12 @@ DROP POLICY IF EXISTS tenant_isolation ON documents_documentversion;
 CREATE POLICY tenant_isolation ON documents_documentversion
     USING (document_id IN (
         SELECT id FROM documents_document
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON documents_documentversion;
 CREATE POLICY superadmin_bypass ON documents_documentversion
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 # documents_digitalsignature: reach institution via document_version_id
@@ -95,13 +95,13 @@ CREATE POLICY tenant_isolation ON documents_digitalsignature
         SELECT id FROM documents_documentversion
         WHERE document_id IN (
             SELECT id FROM documents_document
-            WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+            WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
         )
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON documents_digitalsignature;
 CREATE POLICY superadmin_bypass ON documents_digitalsignature
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL += """

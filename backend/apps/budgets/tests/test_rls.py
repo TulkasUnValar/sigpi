@@ -178,9 +178,10 @@ class TestRLSPolicySQL:
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
-        assert "institution_id = current_setting" in sql, (
-            "budgets_budget must use direct institution_id filter. Child tables use subquery."
-        )
+        assert (
+            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
+            in sql
+        ), "budgets_budget must use direct institution_id filter. Child tables use subquery."
 
     def test_child_tables_use_subquery(self, db):
         migration = _get_migration()
@@ -190,8 +191,7 @@ class TestRLSPolicySQL:
         # line; funding sources reach Institution via project. All subquery the
         # session institution through a parent chain, never a direct column.
         assert "SELECT id FROM budgets_budget" in sql, (
-            "Line/attachment/execution child tables must subquery budgets_budget "
-            "by institution_id."
+            "Line/attachment/execution child tables must subquery budgets_budget by institution_id."
         )
         assert "SELECT id FROM projects_project" in sql, (
             "FundingSource must subquery projects_project by institution_id."

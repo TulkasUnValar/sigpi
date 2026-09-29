@@ -33,8 +33,8 @@ audit: format check test
 
 # Start development stack
 docker-up:
-	docker-compose up -d
+	docker compose up -d
 
 # Stop development stack
 docker-down:
-	docker-compose down
+	docker compose down

@@ -26,12 +26,12 @@ ALTER TABLE {TABLE} ENABLE ROW LEVEL SECURITY;
 -- Policy: users see only their institution's rows
 DROP POLICY IF EXISTS tenant_isolation ON {TABLE};
 CREATE POLICY tenant_isolation ON {TABLE}
-    USING (institution_id = current_setting('sigpi.institution_id')::uuid);
+    USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {TABLE};
 CREATE POLICY superadmin_bypass ON {TABLE}
-    USING (COALESCE(current_setting('sigpi.bypass_rls', true), 'false')::bool = true);
+    USING (NULLIF(current_setting('sigpi.bypass_rls', true), '')::bool = true);
 """
 
 DISABLE_RLS_SQL = f"""

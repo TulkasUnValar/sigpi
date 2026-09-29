@@ -36,9 +36,16 @@ from apps.products.serializers import (
 
 # ── Guard constants ──────────────────────────────────────
 
-PRODUCT_ALLOWED_PROJECT_STATES = frozenset({
-    "aprobado", "en_ejecucion", "suspendido", "finalizado", "en_cierre", "cerrado",
-})
+PRODUCT_ALLOWED_PROJECT_STATES = frozenset(
+    {
+        "aprobado",
+        "en_ejecucion",
+        "suspendido",
+        "finalizado",
+        "en_cierre",
+        "cerrado",
+    }
+)
 
 
 # ──────────────────────────────────────────────────────────

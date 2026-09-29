@@ -27,9 +27,7 @@ class BudgetFactory(DjangoModelFactory):
     project = factory.SubFactory("apps.projects.tests.conftest.ProjectFactory")
     institution = factory.SelfAttribute("project.institution")
     name = factory.Faker("sentence", nb_words=4)
-    approved_amount = factory.Faker(
-        "pydecimal", left_digits=6, right_digits=2, positive=True
-    )
+    approved_amount = factory.Faker("pydecimal", left_digits=6, right_digits=2, positive=True)
     status = BudgetStatus.DRAFT
 
     class Meta:
@@ -41,9 +39,7 @@ class BudgetLineFactory(DjangoModelFactory):
 
     budget = factory.SubFactory(BudgetFactory)
     name = factory.Faker("word")
-    approved_amount = factory.Faker(
-        "pydecimal", left_digits=6, right_digits=2, positive=True
-    )
+    approved_amount = factory.Faker("pydecimal", left_digits=6, right_digits=2, positive=True)
 
     class Meta:
         model = BudgetLine

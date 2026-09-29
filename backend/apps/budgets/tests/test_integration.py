@@ -77,9 +77,7 @@ class TestBudgetAuditPayloads:
         budget = BudgetFactory(name="Before", approved_amount=Decimal("1000.00"))
         user = _make_user()
 
-        BudgetService.update(
-            budget, user, name="After", approved_amount=Decimal("2500.00")
-        )
+        BudgetService.update(budget, user, name="After", approved_amount=Decimal("2500.00"))
 
         event = AuditEvent.objects.get(event_type=AuditEventType.BUDGET_UPDATED)
         assert event.user == user
@@ -161,9 +159,7 @@ class TestExecutionAtomicBoundaries:
         )
 
         assert execution.authorized_by == authorizer
-        event = AuditEvent.objects.get(
-            event_type=AuditEventType.BUDGET_EXECUTION_ADDED
-        )
+        event = AuditEvent.objects.get(event_type=AuditEventType.BUDGET_EXECUTION_ADDED)
         assert event.details["authorized_by"] == str(authorizer.pk)
 
 
@@ -196,11 +192,8 @@ class TestExecutionConcurrentBoundary:
 
         from apps.budgets.models import BudgetExecution
 
-        total = (
-            BudgetExecution.objects.filter(line=line).aggregate(total=Sum("amount"))[
-                "total"
-            ]
-            or Decimal("0.00")
-        )
+        total = BudgetExecution.objects.filter(line=line).aggregate(total=Sum("amount"))[
+            "total"
+        ] or Decimal("0.00")
         assert results.count("ok") <= 1
         assert total <= line.approved_amount

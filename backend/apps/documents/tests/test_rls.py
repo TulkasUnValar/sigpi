@@ -198,9 +198,10 @@ class TestRLSPolicySQL:
         sql = self._get_all_sql()
         for table in PARENT_TABLES:
             assert f"CREATE POLICY tenant_isolation ON {table}" in sql
-            assert "institution_id = current_setting" in sql, (
-                f"{table} must use direct institution_id filter. Child tables use subquery."
-            )
+            assert (
+                "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
+                in sql
+            ), f"{table} must use direct institution_id filter. Child tables use subquery."
 
     def test_version_child_table_uses_document_subquery(self, db):
         """DocumentVersion must filter via subquery through document_id."""

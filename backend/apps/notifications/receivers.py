@@ -94,9 +94,7 @@ def _enqueue_email_dispatch(notification, recipient):
     (the task double-checks the same preference before dispatching).
     """
     if not email_channel_enabled(recipient):
-        logger.debug(
-            "Email disabled for %s; not enqueuing dispatch", recipient.email
-        )
+        logger.debug("Email disabled for %s; not enqueuing dispatch", recipient.email)
         return
 
     def _enqueue():
@@ -122,13 +120,9 @@ def _create_notifications(
     dispatch is enqueued once per created row on commit, gated on the
     recipient's email preference (Phase 3).
     """
-    template = NotificationTemplate.objects.filter(
-        code=event_type, is_active=True
-    ).first()
+    template = NotificationTemplate.objects.filter(code=event_type, is_active=True).first()
     if template is None:
-        logger.warning(
-            "NotificationTemplate %s missing or inactive; skipping", event_type
-        )
+        logger.warning("NotificationTemplate %s missing or inactive; skipping", event_type)
         return 0
 
     created = 0
@@ -153,9 +147,7 @@ def _create_notifications(
                 created += 1
                 _enqueue_email_dispatch(notification, recipient)
         except Exception:
-            logger.exception(
-                "Failed to create %s notification for %s", event_type, recipient
-            )
+            logger.exception("Failed to create %s notification for %s", event_type, recipient)
     return created
 
 
@@ -212,9 +204,7 @@ def on_progress_state_changed(sender, **kwargs):
 
     recipients = resolve_researcher(report)
     if not recipients:
-        logger.warning(
-            "No author (created_by) for progress report %s; skipping", report.pk
-        )
+        logger.warning("No author (created_by) for progress report %s; skipping", report.pk)
         return
 
     _create_notifications(

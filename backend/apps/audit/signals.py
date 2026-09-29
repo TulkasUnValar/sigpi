@@ -221,9 +221,7 @@ def connect_signals() -> None:
     for model in _tracked_models():
         label = model._meta.label_lower
         pre_save.connect(pre_save_handler, sender=model, dispatch_uid=f"audit_pre_save_{label}")
-        post_save.connect(
-            post_save_handler, sender=model, dispatch_uid=f"audit_post_save_{label}"
-        )
+        post_save.connect(post_save_handler, sender=model, dispatch_uid=f"audit_post_save_{label}")
         post_delete.connect(
             post_delete_handler, sender=model, dispatch_uid=f"audit_post_delete_{label}"
         )
