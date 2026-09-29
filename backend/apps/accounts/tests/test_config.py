@@ -32,12 +32,24 @@ class TestMiddlewareRegistration:
         tenant_idx = middleware_list.index("config.middleware.tenant.TenantMiddleware")
         assert tenant_idx > auth_idx, "TenantMiddleware must run after AuthenticationMiddleware"
 
-    def test_rls_middleware_after_tenant_middleware(self):
-        """TenantRLSMiddleware must run AFTER TenantMiddleware."""
+    def test_rls_middleware_before_tenant_middleware(self):
+        """TenantRLSMiddleware must run immediately BEFORE TenantMiddleware.
+
+        TenantMiddleware reads the RLS-protected membership table, so the
+        tenant GUC must already be on the connection. The middleware is placed
+        directly after AuthenticationMiddleware and directly before
+        TenantMiddleware.
+        """
         middleware_list = settings.MIDDLEWARE
-        tenant_idx = middleware_list.index("config.middleware.tenant.TenantMiddleware")
+        auth_idx = middleware_list.index("django.contrib.auth.middleware.AuthenticationMiddleware")
         rls_idx = middleware_list.index("config.middleware.tenant.TenantRLSMiddleware")
-        assert rls_idx > tenant_idx, "TenantRLSMiddleware must run after TenantMiddleware"
+        tenant_idx = middleware_list.index("config.middleware.tenant.TenantMiddleware")
+        assert rls_idx == auth_idx + 1, (
+            "TenantRLSMiddleware must run immediately after AuthenticationMiddleware"
+        )
+        assert tenant_idx == rls_idx + 1, (
+            "TenantRLSMiddleware must run immediately before TenantMiddleware"
+        )
 
 
 class TestSessionConfig:

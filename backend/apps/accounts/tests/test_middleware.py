@@ -10,16 +10,19 @@ Design reference: openspec/changes/auth/design.md — TenantMiddleware, PostgreS
 """
 
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.db import connection
 from django.http import HttpResponse
 from django.test import RequestFactory
 
 from apps.accounts.models import InstitutionMembership, User
 from apps.accounts.tests._helpers import get_role
 from apps.institutions.models import Institution
+from config import tenant_context
+from config.tenant_context import BYPASS_GUC, TENANT_GUC
 
 # ──────────────────────────────────────────────────────────
 # Fixtures
@@ -318,118 +321,132 @@ class TestTenantRLSMiddleware:
             request.user = user
         return request
 
-    @patch("config.middleware.tenant.connection")
-    def test_sets_institution_id_when_present(
-        self, mock_connection, db, institution, user_with_membership
+    def _capturing_view(self, captured):
+        """A view that records the GUC values present while it runs.
+
+        The GUCs only exist on PostgreSQL, so on SQLite the view records the
+        call and asserts the documented no-op instead.
+        """
+
+        def view(request):
+            captured["called"] = True
+            if connection.vendor == "postgresql":
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT current_setting(%s, true)", [TENANT_GUC])
+                    captured["institution_id"] = cursor.fetchone()[0]
+                    cursor.execute("SELECT current_setting(%s, true)", [BYPASS_GUC])
+                    captured["bypass"] = cursor.fetchone()[0]
+            return HttpResponse("OK")
+
+        return view
+
+    def test_institution_present_reaches_the_connection(
+        self, db, institution, user_with_membership
     ):
-        """When institution_id is set, RLS context is set via SET LOCAL."""
+        """When an institution is in the session, its GUC reaches the connection.
+
+        PostgreSQL-only effect: on SQLite the middleware is a documented no-op.
+        """
         from config.middleware.tenant import TenantRLSMiddleware
 
-        factory = RequestFactory()
+        captured = {}
         request = self._build_request(
-            factory,
+            RequestFactory(),
             user=user_with_membership,
             institution_id=str(institution.id),
         )
 
-        mock_cursor = MagicMock()
-        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        result = TenantRLSMiddleware(self._capturing_view(captured))(request)
 
-        middleware = TenantRLSMiddleware(dummy_get_response)
-        middleware(request)
+        assert result.status_code == 200
+        assert captured["called"] is True
+        if connection.vendor == "postgresql":
+            assert captured["institution_id"] == str(institution.id)
+            assert captured["bypass"] == "false"
+        else:
+            assert tenant_context.get_context() is None
 
-        mock_cursor.execute.assert_called_with(
-            "SET LOCAL sigpi.institution_id = %s",
-            [str(institution.id)],
-        )
+    def test_institution_absent_writes_the_deny_context(self, db, user_with_membership):
+        """Without an institution the GUC is written empty, never left stale.
 
-    @patch("config.middleware.tenant.connection")
-    def test_no_set_when_no_institution(self, mock_connection, db, user_with_membership):
-        """When institution_id is None, no RLS context is set."""
+        PostgreSQL-only effect: on SQLite the middleware is a documented no-op.
+        """
         from config.middleware.tenant import TenantRLSMiddleware
 
-        factory = RequestFactory()
+        captured = {}
         request = self._build_request(
-            factory,
+            RequestFactory(),
             user=user_with_membership,
             institution_id=None,
         )
 
-        middleware = TenantRLSMiddleware(dummy_get_response)
-        middleware(request)
+        TenantRLSMiddleware(self._capturing_view(captured))(request)
 
-        # cursor should not be created for institution_id=None
-        mock_connection.cursor.assert_not_called()
+        assert captured["called"] is True
+        if connection.vendor == "postgresql":
+            assert captured["institution_id"] == ""
+            assert captured["bypass"] == "false"
+        else:
+            assert tenant_context.get_context() is None
 
-    @patch("config.middleware.tenant.connection")
-    def test_sets_bypass_for_superuser(self, mock_connection, db, institution):
-        """Superuser gets bypass_rls set."""
+    def test_superuser_gets_bypass(self, db, institution):
+        """An authenticated superuser gets bypass_rls = 'true' on the connection.
+
+        PostgreSQL-only effect: on SQLite the middleware is a documented no-op.
+        """
         from config.middleware.tenant import TenantRLSMiddleware
 
         user = User.objects.create_superuser(email="super@example.com", password="superpass123")
 
-        factory = RequestFactory()
+        captured = {}
         request = self._build_request(
-            factory,
+            RequestFactory(),
             user=user,
             institution_id=str(institution.id),
         )
 
-        mock_cursor = MagicMock()
-        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        TenantRLSMiddleware(self._capturing_view(captured))(request)
 
-        middleware = TenantRLSMiddleware(dummy_get_response)
-        middleware(request)
+        if connection.vendor == "postgresql":
+            assert captured["institution_id"] == str(institution.id)
+            assert captured["bypass"] == "true"
+        else:
+            assert tenant_context.get_context() is None
 
-        # Should have at least 2 calls: one for institution_id, one for bypass
-        calls = [c[0][0] for c in mock_cursor.execute.call_args_list]
-        assert "SET LOCAL sigpi.institution_id" in calls[0]
-        assert any("sigpi.bypass_rls" in c for c in calls)
+    def test_non_superuser_has_no_bypass(self, db, institution, user_with_membership):
+        """A non-superuser never gets bypass_rls.
 
-    @patch("config.middleware.tenant.connection")
-    def test_no_bypass_for_non_superuser(
-        self, mock_connection, db, institution, user_with_membership
-    ):
-        """Non-superuser does not get bypass_rls."""
+        PostgreSQL-only effect: on SQLite the middleware is a documented no-op.
+        """
         from config.middleware.tenant import TenantRLSMiddleware
 
-        factory = RequestFactory()
+        captured = {}
         request = self._build_request(
-            factory,
+            RequestFactory(),
             user=user_with_membership,
             institution_id=str(institution.id),
         )
 
-        mock_cursor = MagicMock()
-        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        TenantRLSMiddleware(self._capturing_view(captured))(request)
 
-        middleware = TenantRLSMiddleware(dummy_get_response)
-        middleware(request)
+        if connection.vendor == "postgresql":
+            assert captured["bypass"] == "false"
+        else:
+            assert tenant_context.get_context() is None
 
-        # Should be exactly one call (institution_id only)
-        assert mock_cursor.execute.call_count == 1
-        call = mock_cursor.execute.call_args[0][0]
-        assert "institution_id" in call
-        assert "bypass" not in call.lower()
-
-    @patch("config.middleware.tenant.connection")
-    def test_passes_through_to_view(self, mock_connection, db, institution, user_with_membership):
-        """RLS middleware calls get_response and returns its result."""
+    def test_passes_through_to_view(self, db, institution, user_with_membership):
+        """The middleware calls get_response, returns its result and clears up."""
         from config.middleware.tenant import TenantRLSMiddleware
 
-        factory = RequestFactory()
         request = self._build_request(
-            factory,
+            RequestFactory(),
             user=user_with_membership,
             institution_id=str(institution.id),
         )
-
-        mock_cursor = MagicMock()
-        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
 
         response = HttpResponse("After RLS")
-        middleware = TenantRLSMiddleware(lambda r: response)
-        result = middleware(request)
+        result = TenantRLSMiddleware(lambda r: response)(request)
 
         assert result.status_code == 200
         assert result.content == b"After RLS"
+        assert tenant_context.get_context() is None
