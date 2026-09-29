@@ -22,6 +22,16 @@ services:
       - POSTGRES_PASSWORD=sigpi
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
+      # Runtime connects as the least-privilege role so row-level security
+      # actually applies. The role is created by migration 0010 (NOLOGIN) and
+      # made login-capable by migration 0012; neither sets a password. Set it
+      # once after the first `migrate`, as the owning user:
+      #   docker compose exec db psql -U sigpi -d sigpi \
+      #     -c "ALTER ROLE sigpi_app PASSWORD 'sigpi_app';"
+      # An init script mounted into `db` cannot do this: /docker-entrypoint-initdb.d
+      # runs at cluster init, before any migration has created the role.
+      - POSTGRES_APP_USER=sigpi_app
+      - POSTGRES_APP_PASSWORD=sigpi_app
       - REDIS_URL=redis://redis:6379/0
       - OIDC_RP_CLIENT_ID=sigpi-app
       - OIDC_RP_CLIENT_SECRET=dev-client-secret

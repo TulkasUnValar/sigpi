@@ -105,12 +105,25 @@ if os.environ.get("PYTEST_RUNNING") == "true" and not os.environ.get("POSTGRES_H
         }
     }
 else:
+    # Runtime credential switch to the least-privilege role.
+    #
+    # When POSTGRES_APP_USER/POSTGRES_APP_PASSWORD are set the application
+    # connects as `sigpi_app` (NOSUPERUSER, NOBYPASSRLS), so row-level
+    # security actually restricts it. When they are absent the settings fall
+    # back to POSTGRES_USER/POSTGRES_PASSWORD — the owning, superuser role.
+    #
+    # The fallback is load-bearing, not a convenience: `manage.py migrate` and
+    # pytest-django both create/alter schema and the test database, which the
+    # app role cannot do. Tests and migrations therefore leave the app
+    # variables unset and keep using the owner, unchanged. Only the running
+    # application and the dedicated end-to-end CI job set them.
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": os.environ.get("POSTGRES_DB", "sigpi"),
-            "USER": os.environ.get("POSTGRES_USER", "sigpi"),
-            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "sigpi"),
+            "USER": os.environ.get("POSTGRES_APP_USER") or os.environ.get("POSTGRES_USER", "sigpi"),
+            "PASSWORD": os.environ.get("POSTGRES_APP_PASSWORD")
+            or os.environ.get("POSTGRES_PASSWORD", "sigpi"),
             "HOST": os.environ.get("POSTGRES_HOST", "db"),
             "PORT": os.environ.get("POSTGRES_PORT", "5432"),
             "CONN_MAX_AGE": 60,
