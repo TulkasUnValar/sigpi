@@ -10,6 +10,7 @@ Implements the tenant isolation layer defined in design.md:
 Spec references: FR-004, FR-006
 Design reference: openspec/changes/auth/design.md — TenantMiddleware, PostgreSQL RLS Design
 """
+
 import logging
 
 from django.db import connection
@@ -18,6 +19,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from apps.accounts.audit import AuditEventEmitter
 from apps.accounts.models import InstitutionMembership
 from apps.audit.context import reset_audit_context, set_audit_context
+from config import tenant_context
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +71,7 @@ class TenantMiddleware:
 
         if request.user.is_authenticated and request.institution_id:
             request.active_membership = (
-                InstitutionMembership.objects
-                .select_related("role")
+                InstitutionMembership.objects.select_related("role")
                 .filter(
                     user=request.user,
                     institution_id=request.institution_id,
@@ -119,44 +120,56 @@ class TenantMiddleware:
 
 
 class TenantRLSMiddleware:
-    """Sets PostgreSQL session variables for RLS on each request.
+    """Establishes the PostgreSQL tenant context for every request.
+
+    Ordering requirement: this middleware must run BEFORE ``TenantMiddleware``.
+    ``TenantMiddleware`` reads the RLS-protected
+    ``accounts_institutionmembership`` table to load ``active_membership``; if
+    the tenant context is not already on the connection, that read runs under a
+    least-privilege role with no GUC and returns nothing. Placing this class
+    after ``TenantMiddleware`` would therefore silently break membership
+    loading once the runtime switches to ``sigpi_app``.
 
     Design decisions:
-    - SET LOCAL scopes to the current transaction
-    - institution_id: restricts row visibility per tenant
-    - bypass_rls: superadmins skip RLS
-    - Anonymous users (no institution) bypass RLS — no context to set
-    - Runs AFTER TenantMiddleware (which sets request.institution_id)
-
-    Note: SQLite does not support SET LOCAL. This middleware is designed
-    for PostgreSQL. In test environments (SQLite), the cursor operations
-    will be no-ops when the DB engine doesn't support them.
+    - Reads ``institution_id`` from the session itself, so it does not depend
+      on ``TenantMiddleware`` having run
+    - ``bypass`` is granted only to an authenticated superuser
+    - The context is connection-scoped (see ``config.tenant_context``), not
+      ``SET LOCAL``, because there is no request-spanning transaction
+    - Anonymous / institution-less requests still write both GUCs (empty
+      tenant, no bypass), so a stale value can never leak into the request
+    - No-op on SQLite: RLS is a PostgreSQL feature and the default local test
+      engine has no GUCs
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        if hasattr(request, "institution_id") and request.institution_id:
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SET LOCAL sigpi.institution_id = %s",
-                        [str(request.institution_id)],
-                    )
-            except Exception:
-                # Gracefully handle non-PostgreSQL backends (e.g., SQLite in tests)
-                logger.debug(
-                    "RLS session variable not set — non-PostgreSQL backend or "
-                    "unsupported operation"
-                )
+        if connection.vendor != "postgresql":
+            return self.get_response(request)
 
-        # Superadmin bypass
-        if request.user.is_authenticated and request.user.is_superuser:
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute("SET LOCAL sigpi.bypass_rls = true")
-            except Exception:
-                logger.debug("RLS bypass not set — unsupported backend")
+        institution_id = request.session.get("institution_id")
+        bypass = bool(
+            getattr(request.user, "is_authenticated", False) and request.user.is_superuser
+        )
 
-        return self.get_response(request)
+        try:
+            tenant_context.activate(connection, institution_id, bypass)
+        except Exception:
+            # Deliberate tradeoff: a failure to establish the tenant context is
+            # logged and the request continues instead of being rejected. The
+            # runtime still connects as a superuser, so rejecting here would be
+            # a production regression today; failing the request is deferred to
+            # the change that switches the runtime role, when enforcement
+            # actually matters. It is never silent — the traceback is logged.
+            logger.exception(
+                "Failed to establish the PostgreSQL tenant context; serving the request without it."
+            )
+            tenant_context.clear(connection)
+            return self.get_response(request)
+
+        try:
+            return self.get_response(request)
+        finally:
+            tenant_context.clear(connection)
