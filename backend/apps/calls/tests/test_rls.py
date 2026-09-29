@@ -186,9 +186,10 @@ class TestRLSPolicySQL:
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
-        assert "institution_id = current_setting" in sql, (
-            "calls_call must use direct institution_id filter. Child tables use subquery."
-        )
+        assert (
+            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
+            in sql
+        ), "calls_call must use direct institution_id filter. Child tables use subquery."
 
     def test_child_tables_use_subquery(self, db):
         """Child tables must filter via subquery through call_id."""

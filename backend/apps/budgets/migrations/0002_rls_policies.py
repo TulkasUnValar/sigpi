@@ -53,7 +53,7 @@ ALTER TABLE {PARENT_TABLE} ENABLE ROW LEVEL SECURITY;
 -- Policy: users see only their institution's rows
 DROP POLICY IF EXISTS tenant_isolation ON {PARENT_TABLE};
 CREATE POLICY tenant_isolation ON {PARENT_TABLE}
-    USING (institution_id = current_setting('sigpi.institution_id')::uuid);
+    USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {PARENT_TABLE};
@@ -78,7 +78,7 @@ DROP POLICY IF EXISTS tenant_isolation ON budgets_budgetline;
 CREATE POLICY tenant_isolation ON budgets_budgetline
     USING (budget_id IN (
         SELECT id FROM budgets_budget
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetline;
@@ -92,7 +92,7 @@ DROP POLICY IF EXISTS tenant_isolation ON budgets_budgetattachment;
 CREATE POLICY tenant_isolation ON budgets_budgetattachment
     USING (budget_id IN (
         SELECT id FROM budgets_budget
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_budgetattachment;
@@ -111,7 +111,7 @@ CREATE POLICY tenant_isolation ON budgets_budgetexecution
         SELECT id FROM budgets_budgetline
         WHERE budget_id IN (
             SELECT id FROM budgets_budget
-            WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+            WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
         )
     ));
 
@@ -129,7 +129,7 @@ DROP POLICY IF EXISTS tenant_isolation ON budgets_fundingsource;
 CREATE POLICY tenant_isolation ON budgets_fundingsource
     USING (project_id IN (
         SELECT id FROM projects_project
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 DROP POLICY IF EXISTS superadmin_bypass ON budgets_fundingsource;

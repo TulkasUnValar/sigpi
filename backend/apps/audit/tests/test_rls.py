@@ -132,9 +132,10 @@ class TestRLSPolicySQL:
         assert f"CREATE POLICY tenant_isolation ON {TABLE}" in sql, (
             f"tenant_isolation policy missing for '{TABLE}'"
         )
-        assert "institution_id = current_setting('sigpi.institution_id')::uuid" in sql, (
-            "tenant_isolation must filter by sigpi.institution_id"
-        )
+        assert (
+            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
+            in sql
+        ), "tenant_isolation must filter by sigpi.institution_id"
 
     def test_superadmin_bypass_policy(self, db):
         mod = _get_module()

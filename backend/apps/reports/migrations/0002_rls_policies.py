@@ -43,7 +43,7 @@ ALTER TABLE {PARENT_TABLE} ENABLE ROW LEVEL SECURITY;
 -- Policy: users see only their institution's rows
 DROP POLICY IF EXISTS tenant_isolation ON {PARENT_TABLE};
 CREATE POLICY tenant_isolation ON {PARENT_TABLE}
-    USING (institution_id = current_setting('sigpi.institution_id')::uuid);
+    USING (institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid);
 
 -- Policy: superadmin bypass
 DROP POLICY IF EXISTS superadmin_bypass ON {PARENT_TABLE};
@@ -69,7 +69,7 @@ DROP POLICY IF EXISTS tenant_isolation ON {table};
 CREATE POLICY tenant_isolation ON {table}
     USING (report_id IN (
         SELECT id FROM reports_report
-        WHERE institution_id = current_setting('sigpi.institution_id')::uuid
+        WHERE institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid
     ));
 
 -- Policy: superadmin bypass

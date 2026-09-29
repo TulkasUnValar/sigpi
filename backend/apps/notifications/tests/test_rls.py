@@ -195,9 +195,10 @@ class TestRLSPolicySQL:
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
-        assert "institution_id = current_setting" in sql, (
-            "notifications_notification must use direct institution_id filter."
-        )
+        assert (
+            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
+            in sql
+        ), "notifications_notification must use direct institution_id filter."
 
     def test_notificationlog_uses_subquery(self, db):
         """NotificationLog must filter via subquery through notification_id."""
@@ -329,8 +330,9 @@ def _set_rls_context(connection, institution_id, bypass=False):
 
     set_config(..., true) is transaction-local: it lasts for the rest of
     the pytest-django test transaction and is rolled back with it.
-    Both variables are always set — the tenant_isolation policy reads
-    sigpi.institution_id without missing_ok and would raise if unset.
+    Both variables are always set here; the tenant_isolation policy reads
+    sigpi.institution_id with missing_ok and NULLIF, so an unset or empty
+    value yields NULL and denies the row without raising.
     """
     with connection.cursor() as cursor:
         cursor.execute(
