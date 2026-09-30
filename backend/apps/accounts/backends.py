@@ -16,10 +16,12 @@ import uuid as uuid_module
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 from apps.accounts.models import InstitutionMembership, Role
 from apps.institutions.models import Institution, ResearchCenter
+from config.tenant_context import tenant_context
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -264,28 +266,35 @@ class SIGPIOIDCBackend(OIDCAuthenticationBackend):
                 )
                 role = Role.objects.get(name="Investigador")
 
-        # Create or update membership
-        membership, created = InstitutionMembership.objects.get_or_create(
-            user=user,
-            institution=institution,
-            defaults={"role": role, "is_primary": True},
-        )
-        if not created:
-            # Update existing membership role
-            membership.role = role
-            membership.save(update_fields=["role"])
-
-        # Sync centers
-        center_ids = claims.get("sigpi_center_ids", [])
-        if center_ids:
-            existing_center_ids = list(
-                ResearchCenter.objects.filter(
-                    pk__in=center_ids,
-                    institution=institution,
-                    is_active=True,
-                ).values_list("pk", flat=True)
+        # The OIDC callback runs while the request is still anonymous, so the
+        # middleware's context is empty (institution and user GUCs blank). The
+        # membership table is RLS-protected: without a tenant context the read
+        # is denied and the INSERT violates tenant_isolation. Re-establish the
+        # context from the institution resolved above; tenant_context clears
+        # all three GUCs in finally so the rest of the callback stays clean.
+        with tenant_context(connection, institution.pk, False, user.pk):
+            # Create or update membership
+            membership, created = InstitutionMembership.objects.get_or_create(
+                user=user,
+                institution=institution,
+                defaults={"role": role, "is_primary": True},
             )
-            membership.centers.set(existing_center_ids)
+            if not created:
+                # Update existing membership role
+                membership.role = role
+                membership.save(update_fields=["role"])
+
+            # Sync centers
+            center_ids = claims.get("sigpi_center_ids", [])
+            if center_ids:
+                existing_center_ids = list(
+                    ResearchCenter.objects.filter(
+                        pk__in=center_ids,
+                        institution=institution,
+                        is_active=True,
+                    ).values_list("pk", flat=True)
+                )
+                membership.centers.set(existing_center_ids)
 
     def _sync_realm_groups(self, user: User, claims: dict) -> None:
         """Sync Django Groups from realm_access.roles in claims."""

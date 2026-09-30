@@ -17,12 +17,14 @@ import json
 import logging
 
 from django.contrib.auth import authenticate, login, logout
+from django.db import connection
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.accounts.audit import AuditEventEmitter, AuditEventType
 from apps.accounts.models import InstitutionMembership
+from config import tenant_context
 
 logger = logging.getLogger(__name__)
 
@@ -142,14 +144,24 @@ def local_login_view(request: HttpRequest) -> JsonResponse:
     # Create Django session
     login(request, user)
 
+    # Re-scope the RLS context to the just-authenticated user so the
+    # primary-membership read below is allowed by the own_memberships policy.
+    # The middleware wrote this context before login(), when the request was
+    # still anonymous.
+    _activate_rls_context(user.pk, None)
+
     # Set initial institution if user has a primary membership
     primary = user.memberships.filter(is_primary=True, is_active=True).first()
     if primary:
         request.session["institution_id"] = str(primary.institution_id)
         request.session["active_role"] = primary.role.name
 
-    # Emit audit event
+    # Emit audit event. institution_id is read after the conditional so it is
+    # whatever the session ended up with, and the context is re-scoped to it
+    # before emitting: the audit tenant_insert policy requires
+    # institution_id = sigpi.institution_id.
     institution_id = request.session.get("institution_id")
+    _activate_rls_context(user.pk, institution_id)
     AuditEventEmitter().emit(
         event_type=AuditEventType.LOGIN,
         user=user,
@@ -287,9 +299,12 @@ def switch_institution_view(request: HttpRequest) -> JsonResponse:
         )
 
     user = request.user
+    # No prefetch_related("centers") here: the connection still holds the OLD
+    # institution's RLS context at this point, and institutions_researchcenter
+    # is RLS-protected, so a prefetch would cache an empty center list. The
+    # response reads centers after the re-scope to the adopted institution.
     membership = (
         InstitutionMembership.objects.select_related("institution", "role")
-        .prefetch_related("centers")
         .filter(
             user=user,
             institution_id=institution_id,
@@ -310,6 +325,10 @@ def switch_institution_view(request: HttpRequest) -> JsonResponse:
     # Update session with new active institution
     request.session["institution_id"] = str(membership.institution_id)
     request.session["active_role"] = membership.role.name
+
+    # Re-scope the RLS context to the adopted institution BEFORE emitting: the
+    # audit tenant_insert policy requires institution_id = sigpi.institution_id.
+    _activate_rls_context(user.pk, str(membership.institution_id))
 
     # Emit audit event
     AuditEventEmitter().emit(
@@ -344,8 +363,31 @@ def switch_institution_view(request: HttpRequest) -> JsonResponse:
 # ──────────────────────────────────────────────────────────
 
 
+def _activate_rls_context(user_id, institution_id) -> None:
+    """Re-apply the request's PostgreSQL RLS context after a session change.
+
+    The RLS GUCs are written at connection scope (see ``config.tenant_context``).
+    Login and institution switch change the active user/institution mid-request,
+    so the context the middleware established is stale for the reads that
+    follow. No-op on SQLite, where RLS is unavailable and there are no GUCs.
+    """
+    if connection.vendor != "postgresql":
+        return
+    tenant_context.activate(connection, institution_id, False, user_id)
+
+
 def _serialize_user(request: HttpRequest) -> dict:
-    """Serialize the current user for API responses."""
+    """Serialize the current user for API responses.
+
+    Centers are read under the single active-institution RLS context, so only
+    the ACTIVE membership can report centers: another membership's centers
+    belong to a different tenant and are filtered out, legitimately returning
+    ``centers: []``. That is a deliberate consequence of tenant scoping, not a
+    bug — the client consumes only the active membership's centers
+    (frontend/store/auth.ts: ``deriveActiveMembership`` → ``deriveCenters``;
+    ``deriveInstitutions`` uses only id and name). Widening center visibility
+    for data no consumer reads would weaken tenant isolation for nothing.
+    """
     user = request.user
     memberships = (
         user.memberships.select_related("institution", "role")
