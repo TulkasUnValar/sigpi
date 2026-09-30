@@ -8,6 +8,9 @@ Receivers translate ORM save/delete events into Celery enqueues
 - Commit gating: the enqueue runs after the sender transaction commits,
   so uncommitted data is never indexed and rolled-back writes enqueue
   nothing
+- Tenant context: ``post_save`` also forwards the row's
+  ``institution_id`` so ``index_document`` can scope its protected read
+  (a Celery worker has no request context)
 - Resilient: enqueue errors are logged and swallowed so a broker
   failure never breaks the sender's committed transaction
 - Filtered per model: each receiver reacts only to its own entity
@@ -33,16 +36,26 @@ from apps.search.tasks import delete_document, index_document
 logger = logging.getLogger(__name__)
 
 
-def _enqueue(index_name, object_id, task):
+def _enqueue(index_name, object_id, task, institution_id=None):
     """Register a Celery enqueue to run once the sender transaction commits.
 
     The callback swallows and logs enqueue errors: the sender's
     committed transaction must never fail because of search indexing.
+
+    ``institution_id`` is forwarded when present so the indexing task can
+    establish the tenant context its protected model read needs (a Celery
+    worker has no request). It is read from the instance here, before commit,
+    and captured as a string because Celery's default JSON serializer cannot
+    encode a UUID. Deletion needs no context — it removes by ID without a DB
+    read — so it is not passed there.
     """
+    args = [index_name, str(object_id)]
+    if institution_id is not None:
+        args.append(str(institution_id))
 
     def _on_commit():
         try:
-            task.delay(index_name, str(object_id))
+            task.delay(*args)
         except Exception:
             logger.exception("Failed to enqueue %s for %s %s", task.name, index_name, object_id)
 
@@ -57,7 +70,7 @@ def _enqueue(index_name, object_id, task):
 @receiver(post_save, sender=Project, dispatch_uid="search.on_project_post_save")
 def on_project_post_save(sender, instance, **kwargs):
     """Enqueue project indexing after the sender transaction commits."""
-    _enqueue("projects", instance.pk, index_document)
+    _enqueue("projects", instance.pk, index_document, instance.institution_id)
 
 
 @receiver(post_delete, sender=Project, dispatch_uid="search.on_project_post_delete")
@@ -74,7 +87,7 @@ def on_project_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=Researcher, dispatch_uid="search.on_researcher_post_save")
 def on_researcher_post_save(sender, instance, **kwargs):
     """Enqueue researcher indexing after the sender transaction commits."""
-    _enqueue("researchers", instance.pk, index_document)
+    _enqueue("researchers", instance.pk, index_document, instance.institution_id)
 
 
 @receiver(post_delete, sender=Researcher, dispatch_uid="search.on_researcher_post_delete")
@@ -91,7 +104,7 @@ def on_researcher_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=ResearchProduct, dispatch_uid="search.on_product_post_save")
 def on_product_post_save(sender, instance, **kwargs):
     """Enqueue product indexing after the sender transaction commits."""
-    _enqueue("products", instance.pk, index_document)
+    _enqueue("products", instance.pk, index_document, instance.institution_id)
 
 
 @receiver(post_delete, sender=ResearchProduct, dispatch_uid="search.on_product_post_delete")
@@ -108,7 +121,7 @@ def on_product_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=Call, dispatch_uid="search.on_call_post_save")
 def on_call_post_save(sender, instance, **kwargs):
     """Enqueue call indexing after the sender transaction commits."""
-    _enqueue("calls", instance.pk, index_document)
+    _enqueue("calls", instance.pk, index_document, instance.institution_id)
 
 
 @receiver(post_delete, sender=Call, dispatch_uid="search.on_call_post_delete")
@@ -125,7 +138,7 @@ def on_call_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=ProgressReport, dispatch_uid="search.on_advance_post_save")
 def on_advance_post_save(sender, instance, **kwargs):
     """Enqueue advance indexing after the sender transaction commits."""
-    _enqueue("advances", instance.pk, index_document)
+    _enqueue("advances", instance.pk, index_document, instance.institution_id)
 
 
 @receiver(post_delete, sender=ProgressReport, dispatch_uid="search.on_advance_post_delete")

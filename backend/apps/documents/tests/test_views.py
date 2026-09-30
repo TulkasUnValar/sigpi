@@ -215,7 +215,7 @@ class TestDocumentTypes:
         codes = {item["code"] for item in data}
         assert "acta_inicio" in codes and "certificacion" in codes and "otro" in codes
 
-    def test_types_unauthenticated_denied(self, api_client):
+    def test_types_unauthenticated_denied(self, db, api_client):
         r = api_client.get(reverse("documents:document-types"))
         assert r.status_code == 403
 
@@ -304,7 +304,7 @@ class TestPresign:
         )
         assert r.status_code == 403
 
-    def test_presign_unauthenticated_403(self, api_client):
+    def test_presign_unauthenticated_403(self, db, api_client):
         r = api_client.post(
             reverse("documents:document-presign"),
             _presign_payload(),
@@ -381,7 +381,7 @@ class TestDocumentCRUD:
         assert len(data) == 2
         assert all(item["institution"] == str(institution.pk) for item in data)
 
-    def test_list_unauthenticated_403(self, api_client):
+    def test_list_unauthenticated_403(self, db, api_client):
         r = api_client.get(reverse("documents:document-list"))
         assert r.status_code == 403
 

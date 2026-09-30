@@ -133,11 +133,17 @@ class TenantRLSMiddleware:
     Design decisions:
     - Reads ``institution_id`` from the session itself, so it does not depend
       on ``TenantMiddleware`` having run
+    - Writes ``sigpi.user_id`` from the authenticated ``request.user.pk`` (never
+      from the session), so the ``own_memberships`` policy can scope a user's
+      membership reads without trusting client-controlled session data
     - ``bypass`` is granted only to an authenticated superuser
     - The context is connection-scoped (see ``config.tenant_context``), not
       ``SET LOCAL``, because there is no request-spanning transaction
-    - Anonymous / institution-less requests still write both GUCs (empty
-      tenant, no bypass), so a stale value can never leak into the request
+    - Anonymous / institution-less requests still write all three GUCs (empty
+      tenant, empty user, no bypass), so a stale value can never leak into the
+      request
+    - An activation failure rejects the request (fail closed): serving it
+      without a tenant context would run unprotected against RLS
     - No-op on SQLite: RLS is a PostgreSQL feature and the default local test
       engine has no GUCs
     """
@@ -150,24 +156,25 @@ class TenantRLSMiddleware:
             return self.get_response(request)
 
         institution_id = request.session.get("institution_id")
+        user_id = request.user.pk if getattr(request.user, "is_authenticated", False) else None
         bypass = bool(
             getattr(request.user, "is_authenticated", False) and request.user.is_superuser
         )
 
         try:
-            tenant_context.activate(connection, institution_id, bypass)
+            tenant_context.activate(connection, institution_id, bypass, user_id)
         except Exception:
-            # Deliberate tradeoff: a failure to establish the tenant context is
-            # logged and the request continues instead of being rejected. The
-            # runtime still connects as a superuser, so rejecting here would be
-            # a production regression today; failing the request is deferred to
-            # the change that switches the runtime role, when enforcement
-            # actually matters. It is never silent — the traceback is logged.
+            # Fail closed. Once enforcement is real, a request that cannot
+            # establish its tenant context must not be served: it would run
+            # every query without the GUC that scopes the RLS policies. The
+            # failure is logged and then re-raised so Django's error handling
+            # responds and the traceback is recorded, instead of silently
+            # returning data the tenant should not see.
             logger.exception(
-                "Failed to establish the PostgreSQL tenant context; serving the request without it."
+                "Failed to establish the PostgreSQL tenant context; rejecting the request."
             )
             tenant_context.clear(connection)
-            return self.get_response(request)
+            raise
 
         try:
             return self.get_response(request)

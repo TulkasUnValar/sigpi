@@ -125,6 +125,87 @@ jobs:
           fail_ci_if_error: false
 
   # ─────────────────────────────────────────────────────────────
+  # Backend app-role RLS — least-privilege role, enforced end to end
+  #
+  # Protects against the runtime silently connecting as the table owner or a
+  # superuser, which carries BYPASSRLS and makes every row-level-security
+  # policy inert — the exact defect the role switch removes. It migrates as
+  # the owner (migrations need DDL the app role does not have), sets the
+  # sigpi_app password at runtime (never committed), then runs the
+  # application connected as sigpi_app and asserts against real rows: no rows
+  # without a tenant context, that tenant's rows with one. The existing
+  # `backend` job is unchanged; this job only adds the app-role proof.
+  # ─────────────────────────────────────────────────────────────
+  backend-app-role-rls:
+    name: Backend app-role RLS (least privilege)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: sigpi
+          POSTGRES_USER: sigpi
+          POSTGRES_PASSWORD: sigpi
+        options: >-
+          --health-cmd "pg_isready -U sigpi -d sigpi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.base
+      DJANGO_SECRET_KEY: ci-secret-key-not-for-production
+      POSTGRES_DB: sigpi
+      POSTGRES_USER: sigpi
+      POSTGRES_PASSWORD: sigpi
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Create virtual environment (backend/.venv-wsl)
+        run: |
+          python -m venv backend/.venv-wsl
+          source backend/.venv-wsl/bin/activate
+          python -m pip install --upgrade pip
+          pip install -e "./backend[dev]"
+
+      # Owner credentials: migrations create the role (0010) and grant it,
+      # which requires the owning superuser. The app vars stay unset here.
+      - name: Migrate as the owning role
+        run: |
+          source backend/.venv-wsl/bin/activate
+          cd backend && python manage.py migrate --noinput
+
+      # The role is created NOLOGIN by 0010 and made LOGIN-capable by 0012,
+      # but no migration carries a password. Set a throwaway one as the owner
+      # so pg_hba's password method accepts sigpi_app.
+      - name: Set the sigpi_app password (owner, runtime only)
+        env:
+          PGPASSWORD: sigpi
+        run: |
+          psql -h localhost -U sigpi -d sigpi -v ON_ERROR_STOP=1 \
+            -c "ALTER ROLE sigpi_app PASSWORD 'ci-app-role-password';"
+
+      - name: Assert RLS end to end as sigpi_app
+        env:
+          POSTGRES_APP_USER: sigpi_app
+          POSTGRES_APP_PASSWORD: ci-app-role-password
+        run: |
+          source backend/.venv-wsl/bin/activate
+          cd backend && python manage.py verify_app_role_rls
+
+  # ─────────────────────────────────────────────────────────────
   # Frontend — Lint, Type-check, Test
   # ─────────────────────────────────────────────────────────────
   frontend:

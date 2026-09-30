@@ -19,9 +19,10 @@ Design reference: openspec/changes/audit/design.md — PostgreSQL RLS
 
 import importlib
 import inspect
+import uuid
 
 import pytest
-from django.db import connection
+from django.db import DatabaseError, connection, transaction
 from django.db.migrations.loader import MigrationLoader
 
 TABLE = "accounts_auditevent"
@@ -213,3 +214,140 @@ class TestRLSEnforcement:
         # With bypass on, the query runs without tenant restriction — no error
         # and a valid (possibly 0) count is returned.
         assert count >= 0
+
+
+# ──────────────────────────────────────────────
+# Per-command policies introduced by accounts/0011_audit_policy_per_command
+# ──────────────────────────────────────────────
+
+INSTITUTION_A = "00000000-0000-0000-0000-0000000000a1"
+INSTITUTION_B = "00000000-0000-0000-0000-0000000000b1"
+
+
+def _set_context(conn, institution_id, bypass=False):
+    """Scope the RLS GUCs to the current test transaction (rolled back with it)."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config('sigpi.institution_id', %s, true)",
+            ["" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config('sigpi.bypass_rls', %s, true)",
+            ["true" if bypass else "false"],
+        )
+
+
+def _insert_audit(conn, row_id, institution_id):
+    """Append one audit row directly, exercising the INSERT policy."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO accounts_auditevent (id, event_type, timestamp, institution_id) "
+            "VALUES (%s, %s, now(), %s)",
+            [str(row_id), "LOGIN", None if institution_id is None else str(institution_id)],
+        )
+
+
+def _count_row(conn, row_id):
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT count(*) FROM accounts_auditevent WHERE id = %s",
+            [str(row_id)],
+        )
+        return cursor.fetchone()[0]
+
+
+class TestAuditPerCommandEnforcement:
+    """Per-command RLS on accounts_auditevent — real PostgreSQL (skipped on SQLite).
+
+    Verified against migration ``accounts/0011_audit_policy_per_command``:
+
+    - ``tenant_isolation`` is SELECT-only and tenant-scoped;
+    - ``tenant_insert`` accepts system events with no institution;
+    - an INSERT claiming a foreign institution is rejected;
+    - UPDATE/DELETE have no applicable tenant policy, so the table is append-only.
+    """
+
+    def test_insert_with_null_institution_succeeds(self, postgres_app_role):
+        """A system event (failed login, logout) carries no tenant and must append."""
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=False)
+        row_id = uuid.uuid4()
+
+        _insert_audit(conn, row_id, institution_id=None)
+
+        # The row is invisible to the tenant, so confirm it persisted under bypass.
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        assert _count_row(conn, row_id) == 1
+
+    def test_insert_claiming_another_institution_fails(self, postgres_app_role):
+        """A row cannot be appended under another institution's identity."""
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=False)
+        row_id = uuid.uuid4()
+
+        with pytest.raises(DatabaseError):
+            with transaction.atomic():
+                _insert_audit(conn, row_id, institution_id=INSTITUTION_B)
+
+    def test_tenant_cannot_select_null_institution_row(self, postgres_app_role):
+        """A row with no institution is never visible to a tenant session."""
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        row_id = uuid.uuid4()
+        _insert_audit(conn, row_id, institution_id=None)
+
+        _set_context(conn, INSTITUTION_A, bypass=False)
+        assert _count_row(conn, row_id) == 0
+
+    def test_tenant_can_select_own_institution_rows(self, postgres_app_role):
+        """A tenant session sees its own institution's rows."""
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        row_id = uuid.uuid4()
+        _insert_audit(conn, row_id, institution_id=INSTITUTION_A)
+
+        _set_context(conn, INSTITUTION_A, bypass=False)
+        assert _count_row(conn, row_id) == 1
+
+    def test_update_is_denied_for_app_role(self, postgres_app_role):
+        """No tenant policy applies to UPDATE — the row cannot be modified."""
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        row_id = uuid.uuid4()
+        _insert_audit(conn, row_id, institution_id=INSTITUTION_A)
+
+        _set_context(conn, INSTITUTION_A, bypass=False)
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE accounts_auditevent SET event_type = 'LOGOUT' WHERE id = %s",
+                [str(row_id)],
+            )
+            updated = cursor.rowcount
+
+        assert updated == 0, "A tenant session was able to UPDATE an audit row (not append-only)."
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT event_type FROM accounts_auditevent WHERE id = %s",
+                [str(row_id)],
+            )
+            assert cursor.fetchone()[0] == "LOGIN"
+
+    def test_delete_is_denied_for_app_role(self, postgres_app_role):
+        """No tenant policy applies to DELETE — the row cannot be removed."""
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        row_id = uuid.uuid4()
+        _insert_audit(conn, row_id, institution_id=INSTITUTION_A)
+
+        _set_context(conn, INSTITUTION_A, bypass=False)
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM accounts_auditevent WHERE id = %s",
+                [str(row_id)],
+            )
+            deleted = cursor.rowcount
+
+        assert deleted == 0, "A tenant session was able to DELETE an audit row (not append-only)."
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        assert _count_row(conn, row_id) == 1

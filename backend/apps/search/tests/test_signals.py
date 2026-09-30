@@ -4,7 +4,10 @@ Covers the ten receiver paths (design.md — Data Flow; 5 entities ×
 post_save / post_delete):
 
 - ``post_save`` on each indexed model registers a ``transaction.on_commit``
-  callback that enqueues ``index_document.delay(index_name, str(pk))``
+  callback that enqueues
+  ``index_document.delay(index_name, str(pk), str(institution_id))`` — the
+  institution travels with the message so the task can establish its tenant
+  context
 - ``post_delete`` on each indexed model registers a ``transaction.on_commit``
   callback that enqueues ``delete_document.delay(index_name, str(pk))``
 - the enqueue is deferred until commit (never runs inside the sender)
@@ -43,7 +46,7 @@ class TestProjectSignals:
             project = ProjectFactory()
 
         on_commit.assert_called()
-        delay.assert_any_call("projects", str(project.pk))
+        delay.assert_any_call("projects", str(project.pk), str(project.institution_id))
 
     def test_post_delete_enqueues_delete_document_on_commit(self, db):
         project = ProjectFactory()
@@ -92,7 +95,7 @@ class TestResearcherSignals:
             researcher = ResearcherFactory()
 
         on_commit.assert_called()
-        delay.assert_any_call("researchers", str(researcher.pk))
+        delay.assert_any_call("researchers", str(researcher.pk), str(researcher.institution_id))
 
     def test_post_delete_enqueues_delete_document_on_commit(self, db):
         researcher = ResearcherFactory()
@@ -121,7 +124,7 @@ class TestProductSignals:
             product = ProductFactory()
 
         on_commit.assert_called()
-        delay.assert_any_call("products", str(product.pk))
+        delay.assert_any_call("products", str(product.pk), str(product.institution_id))
 
     def test_post_delete_enqueues_delete_document_on_commit(self, db):
         product = ProductFactory()
@@ -150,7 +153,7 @@ class TestCallSignals:
             call = CallFactory()
 
         on_commit.assert_called()
-        delay.assert_any_call("calls", str(call.pk))
+        delay.assert_any_call("calls", str(call.pk), str(call.institution_id))
 
     def test_post_delete_enqueues_delete_document_on_commit(self, db):
         call = CallFactory()
@@ -179,7 +182,7 @@ class TestAdvanceSignals:
             report = ProgressReportFactory()
 
         on_commit.assert_called()
-        delay.assert_any_call("advances", str(report.pk))
+        delay.assert_any_call("advances", str(report.pk), str(report.institution_id))
 
     def test_post_delete_enqueues_delete_document_on_commit(self, db):
         report = ProgressReportFactory()
