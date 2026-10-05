@@ -24,6 +24,20 @@ import inspect
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
 
+from apps.institutions.tests.conftest import InstitutionFactory
+from apps.researchers.models import (
+    ExternalProfile,
+    Researcher,
+    ResearcherAffiliation,
+    ResearcherAttachment,
+)
+from apps.researchers.tests.conftest import (
+    ExternalProfileFactory,
+    ResearcherAffiliationFactory,
+    ResearcherAttachmentFactory,
+    ResearcherFactory,
+)
+
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
 # ──────────────────────────────────────────────
@@ -110,6 +124,7 @@ class TestRLSMigrationExists:
     def test_has_reverse_code(self, db):
         """RunPython must have a reverse_code for rollback."""
         migration = _get_migration()
+        assert migration is not None, "Migration 0002 missing"
         from django.db.migrations import RunPython
 
         for op in migration.operations:
@@ -239,3 +254,127 @@ class TestRLSPostgresGuard:
             "Forward function must guard against non-PostgreSQL. "
             "Add _is_postgresql() check before schema_editor.execute()."
         )
+
+
+# ──────────────────────────────────────────────
+# Test: PostgreSQL-only enforcement (skip on SQLite via postgres_app_role)
+# ──────────────────────────────────────────────
+
+TENANT_GUC = "sigpi.institution_id"
+BYPASS_GUC = "sigpi.bypass_rls"
+
+
+def _set_rls(conn, institution_id, bypass):
+    """Write the RLS GUCs at connection scope, exactly like production does."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [TENANT_GUC, "" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [BYPASS_GUC, "true" if bypass else "false"],
+        )
+
+
+def _seed_researchers(conn):
+    """Seed one institution-A and one institution-B row per protected table.
+
+    Every protected row is inserted under a bypass context, because
+    ``sigpi_app`` cannot see or write a foreign institution's rows otherwise.
+    Seeding restores the restrictive default, so each test must opt in to a
+    tenant context before it reads anything.
+    """
+    _set_rls(conn, None, bypass=True)
+    inst_a = InstitutionFactory(code="BGA", name="Institution BGA")
+    inst_b = InstitutionFactory(code="BGB", name="Institution BGB")
+    researcher_a = ResearcherFactory(institution=inst_a)
+    researcher_b = ResearcherFactory(institution=inst_b)
+    # ResearcherAffiliation.save() runs full_clean(): the affiliation must
+    # point at a same-institution center and must not be primary.
+    affiliation_a = ResearcherAffiliationFactory(researcher=researcher_a, is_primary=False)
+    affiliation_b = ResearcherAffiliationFactory(researcher=researcher_b, is_primary=False)
+    profile_a = ExternalProfileFactory(researcher=researcher_a)
+    profile_b = ExternalProfileFactory(researcher=researcher_b)
+    attachment_a = ResearcherAttachmentFactory(researcher=researcher_a)
+    attachment_b = ResearcherAttachmentFactory(researcher=researcher_b)
+    _set_rls(conn, None, bypass=False)
+    return {
+        "inst_a": inst_a,
+        "researcher_a": researcher_a,
+        "researcher_b": researcher_b,
+        "affiliation_a": affiliation_a,
+        "affiliation_b": affiliation_b,
+        "profile_a": profile_a,
+        "profile_b": profile_b,
+        "attachment_a": attachment_a,
+        "attachment_b": attachment_b,
+    }
+
+
+def _assert_only_a_visible(model, pk_a, pk_b):
+    """Non-vacuous assertion pair: A's row visible, B's row denied."""
+    assert model.objects.filter(pk=pk_a).exists(), (
+        f"{model.__name__}: institution A's seeded row is not visible under "
+        f"institution A's tenant context."
+    )
+    assert model.objects.filter(pk=pk_b).count() == 0, (
+        f"{model.__name__}: institution B's seeded row leaked into institution A's tenant context."
+    )
+
+
+def _assert_both_visible(model, pk_a, pk_b):
+    """Bypass must reveal both institutions' rows, not merely zero rows."""
+    both = model.objects.filter(pk__in=[pk_a, pk_b]).count()
+    assert both == 2, (
+        f"{model.__name__}: superadmin bypass exposed {both} of 2 seeded rows; "
+        f"it must reveal more than a single tenant scope."
+    )
+
+
+class TestRLSEnforcement:
+    """Cross-institution isolation for every protected researchers table."""
+
+    def test_cross_institution_researcher_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_researchers(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Researcher, rows["researcher_a"].pk, rows["researcher_b"].pk)
+
+    def test_cross_institution_affiliation_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_researchers(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(
+            ResearcherAffiliation, rows["affiliation_a"].pk, rows["affiliation_b"].pk
+        )
+
+    def test_cross_institution_externalprofile_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_researchers(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(ExternalProfile, rows["profile_a"].pk, rows["profile_b"].pk)
+
+    def test_cross_institution_attachment_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_researchers(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(
+            ResearcherAttachment, rows["attachment_a"].pk, rows["attachment_b"].pk
+        )
+
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_researchers(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=True)
+        _assert_both_visible(Researcher, rows["researcher_a"].pk, rows["researcher_b"].pk)
+        _assert_both_visible(
+            ResearcherAffiliation, rows["affiliation_a"].pk, rows["affiliation_b"].pk
+        )
+        _assert_both_visible(ExternalProfile, rows["profile_a"].pk, rows["profile_b"].pk)
+        _assert_both_visible(ResearcherAttachment, rows["attachment_a"].pk, rows["attachment_b"].pk)
