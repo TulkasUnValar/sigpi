@@ -21,9 +21,24 @@ RED PHASE: Tests fail because 0002_rls_policies.py does not exist.
 import importlib
 import inspect
 
-import pytest
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
+
+from apps.institutions.tests.conftest import InstitutionFactory
+from apps.projects.models import (
+    Project,
+    ProjectDocument,
+    ProjectMember,
+    ProjectObservation,
+    ProjectStateLog,
+)
+from apps.projects.tests.conftest import (
+    ProjectDocumentFactory,
+    ProjectFactory,
+    ProjectMemberFactory,
+    ProjectObservationFactory,
+    ProjectStateLogFactory,
+)
 
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
@@ -243,39 +258,130 @@ class TestRLSPostgresGuard:
 
 
 # ──────────────────────────────────────────────
-# Test: PostgreSQL-only enforcement (skip on SQLite)
+# Test: PostgreSQL-only enforcement (skip on SQLite via postgres_app_role)
 # ──────────────────────────────────────────────
 
+TENANT_GUC = "sigpi.institution_id"
+BYPASS_GUC = "sigpi.bypass_rls"
 
-@pytest.mark.skip(reason="Requires PostgreSQL with RLS support")
-class TestRLSEnforcement:
-    """Cross-institution isolation tests — PostgreSQL only.
 
-    These tests verify that RLS policies actually enforce tenant
-    isolation at the database level. Marked @pytest.mark.skip
-    because they require a PostgreSQL backend.
+def _set_rls(conn, institution_id, bypass):
+    """Write the RLS GUCs at connection scope, exactly like production does."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [TENANT_GUC, "" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [BYPASS_GUC, "true" if bypass else "false"],
+        )
+
+
+def _seed_projects(conn):
+    """Seed one institution-A and one institution-B row per protected table.
+
+    Every protected row is inserted under a bypass context, because
+    ``sigpi_app`` cannot see or write a foreign institution's rows otherwise.
+    Seeding restores the restrictive default, so each test must opt in to a
+    tenant context before it reads anything.
     """
+    _set_rls(conn, None, bypass=True)
+    inst_a = InstitutionFactory(code="PRA", name="Institution PRA")
+    inst_b = InstitutionFactory(code="PRB", name="Institution PRB")
+    project_a = ProjectFactory(institution=inst_a)
+    project_b = ProjectFactory(institution=inst_b)
+    member_a = ProjectMemberFactory(project=project_a)
+    member_b = ProjectMemberFactory(project=project_b)
+    document_a = ProjectDocumentFactory(project=project_a)
+    document_b = ProjectDocumentFactory(project=project_b)
+    observation_a = ProjectObservationFactory(project=project_a)
+    observation_b = ProjectObservationFactory(project=project_b)
+    log_a = ProjectStateLogFactory(project=project_a)
+    log_b = ProjectStateLogFactory(project=project_b)
+    _set_rls(conn, None, bypass=False)
+    return {
+        "inst_a": inst_a,
+        "project_a": project_a,
+        "project_b": project_b,
+        "member_a": member_a,
+        "member_b": member_b,
+        "document_a": document_a,
+        "document_b": document_b,
+        "observation_a": observation_a,
+        "observation_b": observation_b,
+        "log_a": log_a,
+        "log_b": log_b,
+    }
 
-    def test_cross_institution_project_invisible(self, db):
-        """A project from another institution is not visible."""
-        pass
 
-    def test_cross_institution_member_invisible(self, db):
-        """A member of a project from another institution is not visible."""
-        pass
+def _assert_only_a_visible(model, pk_a, pk_b):
+    """Non-vacuous assertion pair: A's row visible, B's row denied."""
+    assert model.objects.filter(pk=pk_a).exists(), (
+        f"{model.__name__}: institution A's seeded row is not visible under "
+        f"institution A's tenant context."
+    )
+    assert model.objects.filter(pk=pk_b).count() == 0, (
+        f"{model.__name__}: institution B's seeded row leaked into institution A's tenant context."
+    )
 
-    def test_cross_institution_document_invisible(self, db):
-        """A document of a project from another institution is not visible."""
-        pass
 
-    def test_cross_institution_observation_invisible(self, db):
-        """An observation of a project from another institution is not visible."""
-        pass
+def _assert_both_visible(model, pk_a, pk_b):
+    """Bypass must reveal both institutions' rows, not merely zero rows."""
+    both = model.objects.filter(pk__in=[pk_a, pk_b]).count()
+    assert both == 2, (
+        f"{model.__name__}: superadmin bypass exposed {both} of 2 seeded rows; "
+        f"it must reveal more than a single tenant scope."
+    )
 
-    def test_cross_institution_state_log_invisible(self, db):
-        """A state log of a project from another institution is not visible."""
-        pass
 
-    def test_superadmin_bypass_sees_all(self, db):
-        """Superadmin bypass flag makes all rows visible."""
-        pass
+class TestRLSEnforcement:
+    """Cross-institution isolation for every protected projects table."""
+
+    def test_cross_institution_project_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_projects(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Project, rows["project_a"].pk, rows["project_b"].pk)
+
+    def test_cross_institution_member_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_projects(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(ProjectMember, rows["member_a"].pk, rows["member_b"].pk)
+
+    def test_cross_institution_document_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_projects(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(ProjectDocument, rows["document_a"].pk, rows["document_b"].pk)
+
+    def test_cross_institution_observation_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_projects(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(
+            ProjectObservation, rows["observation_a"].pk, rows["observation_b"].pk
+        )
+
+    def test_cross_institution_state_log_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_projects(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(ProjectStateLog, rows["log_a"].pk, rows["log_b"].pk)
+
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_projects(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=True)
+        _assert_both_visible(Project, rows["project_a"].pk, rows["project_b"].pk)
+        _assert_both_visible(ProjectMember, rows["member_a"].pk, rows["member_b"].pk)
+        _assert_both_visible(ProjectDocument, rows["document_a"].pk, rows["document_b"].pk)
+        _assert_both_visible(ProjectObservation, rows["observation_a"].pk, rows["observation_b"].pk)
+        _assert_both_visible(ProjectStateLog, rows["log_a"].pk, rows["log_b"].pk)

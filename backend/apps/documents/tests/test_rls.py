@@ -25,9 +25,22 @@ RED PHASE: Tests fail because 0002_rls_policies.py does not exist.
 import importlib
 import inspect
 
-import pytest
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
+
+from apps.documents.models import (
+    DigitalSignature,
+    Document,
+    DocumentVersion,
+    Minutes,
+)
+from apps.documents.tests.conftest import (
+    DigitalSignatureFactory,
+    DocumentFactory,
+    DocumentVersionFactory,
+    MinutesFactory,
+)
+from apps.institutions.tests.conftest import InstitutionFactory
 
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
@@ -281,36 +294,120 @@ class TestRLSPostgresGuard:
 
 
 # ──────────────────────────────────────────────
-# Test: PostgreSQL-only enforcement (skip on SQLite)
+# Test: PostgreSQL-only enforcement (skip on SQLite via postgres_app_role)
 # ──────────────────────────────────────────────
 
+TENANT_GUC = "sigpi.institution_id"
+BYPASS_GUC = "sigpi.bypass_rls"
 
-@pytest.mark.skip(reason="Requires PostgreSQL with RLS support")
-class TestRLSEnforcement:
-    """Cross-institution isolation tests — PostgreSQL only.
 
-    These tests verify that RLS policies actually enforce tenant
-    isolation at the database level. Marked @pytest.mark.skip
-    because they require a PostgreSQL backend. Run in PG CI with
-    ``set sigpi.institution_id`` session variables.
+def _set_rls(conn, institution_id, bypass):
+    """Write the RLS GUCs at connection scope, exactly like production does."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [TENANT_GUC, "" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [BYPASS_GUC, "true" if bypass else "false"],
+        )
+
+
+def _seed_documents(conn):
+    """Seed one institution-A and one institution-B row per protected table.
+
+    Every protected row is inserted under a bypass context, because
+    ``sigpi_app`` cannot see or write a foreign institution's rows otherwise.
+    Seeding restores the restrictive default, so each test must opt in to a
+    tenant context before it reads anything.
     """
+    _set_rls(conn, None, bypass=True)
+    inst_a = InstitutionFactory(code="DCA", name="Institution DCA")
+    inst_b = InstitutionFactory(code="DCB", name="Institution DCB")
+    document_a = DocumentFactory(institution=inst_a)
+    document_b = DocumentFactory(institution=inst_b)
+    version_a = DocumentVersionFactory(document=document_a)
+    version_b = DocumentVersionFactory(document=document_b)
+    signature_a = DigitalSignatureFactory(document_version=version_a)
+    signature_b = DigitalSignatureFactory(document_version=version_b)
+    # Minutes must be backed by an UNSIGNED document: signing a document makes
+    # it immutable, and Minutes.clean() rejects a signed backing document.
+    minutes_document_a = DocumentFactory(institution=inst_a)
+    minutes_document_b = DocumentFactory(institution=inst_b)
+    minutes_a = MinutesFactory(institution=inst_a, document=minutes_document_a)
+    minutes_b = MinutesFactory(institution=inst_b, document=minutes_document_b)
+    _set_rls(conn, None, bypass=False)
+    return {
+        "inst_a": inst_a,
+        "document_a": document_a,
+        "document_b": document_b,
+        "version_a": version_a,
+        "version_b": version_b,
+        "signature_a": signature_a,
+        "signature_b": signature_b,
+        "minutes_a": minutes_a,
+        "minutes_b": minutes_b,
+    }
 
-    def test_cross_institution_document_invisible(self, db):
-        """A Document from another institution is not visible."""
-        pass
 
-    def test_cross_institution_minutes_invisible(self, db):
-        """A Minutes row from another institution is not visible."""
-        pass
+def _assert_only_a_visible(model, pk_a, pk_b):
+    """Non-vacuous assertion pair: A's row visible, B's row denied."""
+    assert model.objects.filter(pk=pk_a).exists(), (
+        f"{model.__name__}: institution A's seeded row is not visible under "
+        f"institution A's tenant context."
+    )
+    assert model.objects.filter(pk=pk_b).count() == 0, (
+        f"{model.__name__}: institution B's seeded row leaked into institution A's tenant context."
+    )
 
-    def test_cross_institution_version_invisible(self, db):
-        """A DocumentVersion of another institution's document is not visible."""
-        pass
 
-    def test_cross_institution_signature_invisible(self, db):
-        """A DigitalSignature of another institution's document is not visible."""
-        pass
+def _assert_both_visible(model, pk_a, pk_b):
+    """Bypass must reveal both institutions' rows, not merely zero rows."""
+    both = model.objects.filter(pk__in=[pk_a, pk_b]).count()
+    assert both == 2, (
+        f"{model.__name__}: superadmin bypass exposed {both} of 2 seeded rows; "
+        f"it must reveal more than a single tenant scope."
+    )
 
-    def test_superadmin_bypass_sees_all(self, db):
-        """Superadmin bypass flag makes all rows visible."""
-        pass
+
+class TestRLSEnforcement:
+    """Cross-institution isolation for every protected documents table."""
+
+    def test_cross_institution_document_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_documents(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Document, rows["document_a"].pk, rows["document_b"].pk)
+
+    def test_cross_institution_minutes_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_documents(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Minutes, rows["minutes_a"].pk, rows["minutes_b"].pk)
+
+    def test_cross_institution_version_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_documents(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(DocumentVersion, rows["version_a"].pk, rows["version_b"].pk)
+
+    def test_cross_institution_signature_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_documents(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(DigitalSignature, rows["signature_a"].pk, rows["signature_b"].pk)
+
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_documents(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=True)
+        _assert_both_visible(Document, rows["document_a"].pk, rows["document_b"].pk)
+        _assert_both_visible(Minutes, rows["minutes_a"].pk, rows["minutes_b"].pk)
+        _assert_both_visible(DocumentVersion, rows["version_a"].pk, rows["version_b"].pk)
+        _assert_both_visible(DigitalSignature, rows["signature_a"].pk, rows["signature_b"].pk)
