@@ -27,6 +27,19 @@ from django.test import Client
 from django.urls import reverse
 
 from apps.accounts.tests._helpers import get_role
+from apps.institutions.tests.conftest import InstitutionFactory
+from apps.project_workflow.models import (
+    WorkflowAction,
+    WorkflowInstance,
+    WorkflowStep,
+    WorkflowTemplate,
+)
+from apps.project_workflow.tests.conftest import (
+    WorkflowActionFactory,
+    WorkflowInstanceFactory,
+    WorkflowStepFactory,
+    WorkflowTemplateFactory,
+)
 
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
@@ -342,3 +355,119 @@ class TestApplicationLevelTenantScoping:
         assert response.status_code == 200
         data = json.loads(response.content)
         assert len(data["results"]) == 2
+
+
+# ──────────────────────────────────────────────
+# Test: PostgreSQL-only enforcement (skip on SQLite via postgres_app_role)
+# ──────────────────────────────────────────────
+
+TENANT_GUC = "sigpi.institution_id"
+BYPASS_GUC = "sigpi.bypass_rls"
+
+
+def _set_rls(conn, institution_id, bypass):
+    """Write the RLS GUCs at connection scope, exactly like production does."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [TENANT_GUC, "" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [BYPASS_GUC, "true" if bypass else "false"],
+        )
+
+
+def _seed_workflow(conn):
+    """Seed one institution-A and one institution-B row per protected table.
+
+    Every protected row is inserted under a bypass context, because
+    ``sigpi_app`` cannot see or write a foreign institution's rows otherwise.
+    Seeding restores the restrictive default, so each test must opt in to a
+    tenant context before it reads anything.
+    """
+    _set_rls(conn, None, bypass=True)
+    inst_a = InstitutionFactory(code="BGA", name="Institution BGA")
+    inst_b = InstitutionFactory(code="BGB", name="Institution BGB")
+    template_a = WorkflowTemplateFactory(institution=inst_a)
+    template_b = WorkflowTemplateFactory(institution=inst_b)
+    step_a = WorkflowStepFactory(template=template_a)
+    step_b = WorkflowStepFactory(template=template_b)
+    instance_a = WorkflowInstanceFactory(template=template_a)
+    instance_b = WorkflowInstanceFactory(template=template_b)
+    action_a = WorkflowActionFactory(instance=instance_a)
+    action_b = WorkflowActionFactory(instance=instance_b)
+    _set_rls(conn, None, bypass=False)
+    return {
+        "inst_a": inst_a,
+        "template_a": template_a,
+        "template_b": template_b,
+        "step_a": step_a,
+        "step_b": step_b,
+        "instance_a": instance_a,
+        "instance_b": instance_b,
+        "action_a": action_a,
+        "action_b": action_b,
+    }
+
+
+def _assert_only_a_visible(model, pk_a, pk_b):
+    """Non-vacuous assertion pair: A's row visible, B's row denied."""
+    assert model.objects.filter(pk=pk_a).exists(), (
+        f"{model.__name__}: institution A's seeded row is not visible under "
+        f"institution A's tenant context."
+    )
+    assert model.objects.filter(pk=pk_b).count() == 0, (
+        f"{model.__name__}: institution B's seeded row leaked into institution A's tenant context."
+    )
+
+
+def _assert_both_visible(model, pk_a, pk_b):
+    """Bypass must reveal both institutions' rows, not merely zero rows."""
+    both = model.objects.filter(pk__in=[pk_a, pk_b]).count()
+    assert both == 2, (
+        f"{model.__name__}: superadmin bypass exposed {both} of 2 seeded rows; "
+        f"it must reveal more than a single tenant scope."
+    )
+
+
+class TestRLSEnforcement:
+    """Cross-institution isolation for every protected workflow table."""
+
+    def test_cross_institution_template_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_workflow(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(WorkflowTemplate, rows["template_a"].pk, rows["template_b"].pk)
+
+    def test_cross_institution_instance_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_workflow(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(WorkflowInstance, rows["instance_a"].pk, rows["instance_b"].pk)
+
+    def test_cross_institution_step_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_workflow(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(WorkflowStep, rows["step_a"].pk, rows["step_b"].pk)
+
+    def test_cross_institution_action_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_workflow(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(WorkflowAction, rows["action_a"].pk, rows["action_b"].pk)
+
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_workflow(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=True)
+        _assert_both_visible(WorkflowTemplate, rows["template_a"].pk, rows["template_b"].pk)
+        _assert_both_visible(WorkflowInstance, rows["instance_a"].pk, rows["instance_b"].pk)
+        _assert_both_visible(WorkflowStep, rows["step_a"].pk, rows["step_b"].pk)
+        _assert_both_visible(WorkflowAction, rows["action_a"].pk, rows["action_b"].pk)
