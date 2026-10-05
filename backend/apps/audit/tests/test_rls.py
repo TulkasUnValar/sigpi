@@ -185,35 +185,58 @@ class TestRLSEnforcement:
         assert row is not None, f"Table '{TABLE}' not found"
         assert row[0] is True, f"RLS not enabled on '{TABLE}'"
 
-    def test_user_a_cannot_read_institution_y_events(self, db):
-        """Setting sigpi.institution_id to X hides institution Y rows."""
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'"
-            )
-        with connection.cursor() as cursor:
-            cursor.execute("SET LOCAL sigpi.bypass_rls = false")
-        # Enforced at the DB layer: a SELECT must return 0 rows because no
-        # audit rows carry institution 0000...0001.
-        with connection.cursor() as cursor:
-            cursor.execute(f"SELECT count(*) FROM {TABLE}")
-            count = cursor.fetchone()[0]
-        assert count == 0
+    def test_user_a_cannot_read_institution_y_events(self, postgres_app_role):
+        """A tenant scoped to X sees X's row and not Y's seeded row.
 
-    def test_superadmin_bypass_sees_all_rows(self, db):
-        """Setting sigpi.bypass_rls = true reveals all rows regardless of tenant."""
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SET LOCAL sigpi.institution_id = '00000000-0000-0000-0000-000000000001'"
-            )
-        with connection.cursor() as cursor:
-            cursor.execute("SET LOCAL sigpi.bypass_rls = true")
-        with connection.cursor() as cursor:
-            cursor.execute(f"SELECT count(*) FROM {TABLE}")
-            count = cursor.fetchone()[0]
-        # With bypass on, the query runs without tenant restriction — no error
-        # and a valid (possibly 0) count is returned.
-        assert count >= 0
+        The original body counted an empty table, so ``count == 0`` held no
+        matter what the policy did. This seeds real rows for both tenants
+        under bypass and proves the pair: X's row is visible to X, Y's is not.
+        """
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        row_x = uuid.uuid4()
+        row_y = uuid.uuid4()
+        _insert_audit(conn, row_x, institution_id=INSTITUTION_A)
+        _insert_audit(conn, row_y, institution_id=INSTITUTION_B)
+
+        _set_context(conn, INSTITUTION_A, bypass=False)
+
+        assert _count_row(conn, row_x) == 1, "Institution X could not read its own audit row."
+        assert _count_row(conn, row_y) == 0, (
+            "Institution X read institution Y's audit row: tenant isolation is "
+            "not enforced on accounts_auditevent."
+        )
+
+    def test_superadmin_bypass_sees_all_rows(self, postgres_app_role):
+        """Bypass reveals strictly more than the tenant context.
+
+        The original body ended on ``assert count >= 0`` — true for every
+        possible outcome. This seeds one row per institution and requires the
+        tenant scope to reveal one while bypass reveals both.
+        """
+        conn = postgres_app_role
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        row_a = uuid.uuid4()
+        row_b = uuid.uuid4()
+        _insert_audit(conn, row_a, institution_id=INSTITUTION_A)
+        _insert_audit(conn, row_b, institution_id=INSTITUTION_B)
+
+        _set_context(conn, INSTITUTION_A, bypass=False)
+        tenant_visible = _count_row(conn, row_a) + _count_row(conn, row_b)
+        assert tenant_visible == 1, (
+            f"Tenant A saw {tenant_visible} of the 2 seeded rows; the tenant "
+            f"scope must hide institution B's row."
+        )
+
+        _set_context(conn, INSTITUTION_A, bypass=True)
+        bypass_visible = _count_row(conn, row_a) + _count_row(conn, row_b)
+        assert bypass_visible == 2, (
+            f"Superadmin bypass saw {bypass_visible} of the 2 seeded rows; it "
+            f"must reveal both institutions."
+        )
+        assert bypass_visible > tenant_visible, (
+            "Bypass did not reveal more rows than the tenant context."
+        )
 
 
 # ──────────────────────────────────────────────
