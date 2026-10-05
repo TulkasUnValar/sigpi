@@ -21,9 +21,17 @@ RED PHASE: Tests fail because 0002_rls_policies.py does not exist.
 import importlib
 import inspect
 
-import pytest
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
+
+from apps.calls.models import Call, CallDocument, CallProject, CallStateLog
+from apps.calls.tests.conftest import (
+    CallDocumentFactory,
+    CallFactory,
+    CallProjectFactory,
+    CallStateLogFactory,
+)
+from apps.institutions.tests.conftest import InstitutionFactory
 
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
@@ -240,35 +248,116 @@ class TestRLSPostgresGuard:
 
 
 # ──────────────────────────────────────────────
-# Test: PostgreSQL-only enforcement (skip on SQLite)
+# Test: PostgreSQL-only enforcement (skip on SQLite via postgres_app_role)
 # ──────────────────────────────────────────────
 
+TENANT_GUC = "sigpi.institution_id"
+BYPASS_GUC = "sigpi.bypass_rls"
 
-@pytest.mark.skip(reason="Requires PostgreSQL with RLS support")
-class TestRLSEnforcement:
-    """Cross-institution isolation tests — PostgreSQL only.
 
-    These tests verify that RLS policies actually enforce tenant
-    isolation at the database level. Marked @pytest.mark.skip
-    because they require a PostgreSQL backend.
+def _set_rls(conn, institution_id, bypass):
+    """Write the RLS GUCs at connection scope, exactly like production does."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [TENANT_GUC, "" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [BYPASS_GUC, "true" if bypass else "false"],
+        )
+
+
+def _seed_calls(conn):
+    """Seed one institution-A and one institution-B row per protected table.
+
+    Every protected row is inserted under a bypass context, because
+    ``sigpi_app`` cannot see or write a foreign institution's rows otherwise.
+    Seeding restores the restrictive default, so each test must opt in to a
+    tenant context before it reads anything.
     """
+    _set_rls(conn, None, bypass=True)
+    inst_a = InstitutionFactory(code="CLA", name="Institution CLA")
+    inst_b = InstitutionFactory(code="CLB", name="Institution CLB")
+    call_a = CallFactory(institution=inst_a)
+    call_b = CallFactory(institution=inst_b)
+    document_a = CallDocumentFactory(call=call_a)
+    document_b = CallDocumentFactory(call=call_b)
+    project_a = CallProjectFactory(call=call_a)
+    project_b = CallProjectFactory(call=call_b)
+    log_a = CallStateLogFactory(call=call_a)
+    log_b = CallStateLogFactory(call=call_b)
+    _set_rls(conn, None, bypass=False)
+    return {
+        "inst_a": inst_a,
+        "call_a": call_a,
+        "call_b": call_b,
+        "document_a": document_a,
+        "document_b": document_b,
+        "project_a": project_a,
+        "project_b": project_b,
+        "log_a": log_a,
+        "log_b": log_b,
+    }
 
-    def test_cross_institution_call_invisible(self, db):
-        """A call from another institution is not visible."""
-        pass
 
-    def test_cross_institution_document_invisible(self, db):
-        """A document of a call from another institution is not visible."""
-        pass
+def _assert_only_a_visible(model, pk_a, pk_b):
+    """Non-vacuous assertion pair: A's row visible, B's row denied."""
+    assert model.objects.filter(pk=pk_a).exists(), (
+        f"{model.__name__}: institution A's seeded row is not visible under "
+        f"institution A's tenant context."
+    )
+    assert model.objects.filter(pk=pk_b).count() == 0, (
+        f"{model.__name__}: institution B's seeded row leaked into institution A's tenant context."
+    )
 
-    def test_cross_institution_project_invisible(self, db):
-        """A CallProject of a call from another institution is not visible."""
-        pass
 
-    def test_cross_institution_state_log_invisible(self, db):
-        """A state log of a call from another institution is not visible."""
-        pass
+def _assert_both_visible(model, pk_a, pk_b):
+    """Bypass must reveal both institutions' rows, not merely zero rows."""
+    both = model.objects.filter(pk__in=[pk_a, pk_b]).count()
+    assert both == 2, (
+        f"{model.__name__}: superadmin bypass exposed {both} of 2 seeded rows; "
+        f"it must reveal more than a single tenant scope."
+    )
 
-    def test_superadmin_bypass_sees_all(self, db):
-        """Superadmin bypass flag makes all rows visible."""
-        pass
+
+class TestRLSEnforcement:
+    """Cross-institution isolation for every protected calls table."""
+
+    def test_cross_institution_call_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_calls(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Call, rows["call_a"].pk, rows["call_b"].pk)
+
+    def test_cross_institution_document_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_calls(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(CallDocument, rows["document_a"].pk, rows["document_b"].pk)
+
+    def test_cross_institution_project_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_calls(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(CallProject, rows["project_a"].pk, rows["project_b"].pk)
+
+    def test_cross_institution_state_log_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_calls(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(CallStateLog, rows["log_a"].pk, rows["log_b"].pk)
+
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_calls(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=True)
+        _assert_both_visible(Call, rows["call_a"].pk, rows["call_b"].pk)
+        _assert_both_visible(CallDocument, rows["document_a"].pk, rows["document_b"].pk)
+        _assert_both_visible(CallProject, rows["project_a"].pk, rows["project_b"].pk)
+        _assert_both_visible(CallStateLog, rows["log_a"].pk, rows["log_b"].pk)
