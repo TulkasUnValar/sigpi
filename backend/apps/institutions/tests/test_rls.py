@@ -22,6 +22,22 @@ import inspect
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
 
+from apps.institutions.models import (
+    Facultad,
+    ResearchCenter,
+    ResearchGroup,
+    ResearchLine,
+    Sede,
+)
+from apps.institutions.tests.conftest import (
+    FacultadFactory,
+    InstitutionFactory,
+    ResearchCenterFactory,
+    ResearchGroupFactory,
+    ResearchLineFactory,
+    SedeFactory,
+)
+
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
 # ──────────────────────────────────────────────
@@ -107,6 +123,7 @@ class TestRLSMigrationExists:
     def test_has_reverse_code(self, db):
         """RunPython must have a reverse_code for rollback."""
         migration = _get_migration()
+        assert migration is not None, "Migration 0003 missing"
         from django.db.migrations import RunPython
 
         for op in migration.operations:
@@ -243,9 +260,141 @@ class TestRLSInstitutionExcluded:
         assert migration is not None, "Migration 0003 missing"
         module_name = migration.__class__.__module__
         mod = importlib.import_module(module_name)
-        # Check if there's a TENANT_SCOPED_TABLES list
-        if hasattr(mod, "TENANT_SCOPED_TABLES"):
-            tables = mod.TENANT_SCOPED_TABLES
-            assert "institutions_institution" not in tables, (
-                "Institution must not be in TENANT_SCOPED_TABLES — it has no institution_id column."
-            )
+        # The attribute must exist: guarding with hasattr() would let this
+        # test pass vacuously if TENANT_SCOPED_TABLES ever disappeared.
+        assert hasattr(mod, "TENANT_SCOPED_TABLES"), (
+            "Migration 0003 must declare TENANT_SCOPED_TABLES so the excluded "
+            "root table can be verified."
+        )
+        tables = mod.TENANT_SCOPED_TABLES
+        assert "institutions_institution" not in tables, (
+            "Institution must not be in TENANT_SCOPED_TABLES — it has no institution_id column."
+        )
+
+
+# ──────────────────────────────────────────────
+# Test: PostgreSQL-only enforcement (skip on SQLite via postgres_app_role)
+# ──────────────────────────────────────────────
+
+TENANT_GUC = "sigpi.institution_id"
+BYPASS_GUC = "sigpi.bypass_rls"
+
+
+def _set_rls(conn, institution_id, bypass):
+    """Write the RLS GUCs at connection scope, exactly like production does."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [TENANT_GUC, "" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [BYPASS_GUC, "true" if bypass else "false"],
+        )
+
+
+def _seed_institutions(conn):
+    """Seed one institution-A and one institution-B row per protected table.
+
+    Every protected row is inserted under a bypass context, because
+    ``sigpi_app`` cannot see or write a foreign institution's rows otherwise.
+    Seeding restores the restrictive default, so each test must opt in to a
+    tenant context before it reads anything.
+    """
+    _set_rls(conn, None, bypass=True)
+    inst_a = InstitutionFactory(code="BGA", name="Institution BGA")
+    inst_b = InstitutionFactory(code="BGB", name="Institution BGB")
+    sede_a = SedeFactory(institution=inst_a)
+    sede_b = SedeFactory(institution=inst_b)
+    facultad_a = FacultadFactory(institution=inst_a)
+    facultad_b = FacultadFactory(institution=inst_b)
+    center_a = ResearchCenterFactory(institution=inst_a)
+    center_b = ResearchCenterFactory(institution=inst_b)
+    group_a = ResearchGroupFactory(institution=inst_a, center=center_a)
+    group_b = ResearchGroupFactory(institution=inst_b, center=center_b)
+    line_a = ResearchLineFactory(institution=inst_a, group=group_a)
+    line_b = ResearchLineFactory(institution=inst_b, group=group_b)
+    _set_rls(conn, None, bypass=False)
+    return {
+        "inst_a": inst_a,
+        "sede_a": sede_a,
+        "sede_b": sede_b,
+        "facultad_a": facultad_a,
+        "facultad_b": facultad_b,
+        "center_a": center_a,
+        "center_b": center_b,
+        "group_a": group_a,
+        "group_b": group_b,
+        "line_a": line_a,
+        "line_b": line_b,
+    }
+
+
+def _assert_only_a_visible(model, pk_a, pk_b):
+    """Non-vacuous assertion pair: A's row visible, B's row denied."""
+    assert model.objects.filter(pk=pk_a).exists(), (
+        f"{model.__name__}: institution A's seeded row is not visible under "
+        f"institution A's tenant context."
+    )
+    assert model.objects.filter(pk=pk_b).count() == 0, (
+        f"{model.__name__}: institution B's seeded row leaked into institution A's tenant context."
+    )
+
+
+def _assert_both_visible(model, pk_a, pk_b):
+    """Bypass must reveal both institutions' rows, not merely zero rows."""
+    both = model.objects.filter(pk__in=[pk_a, pk_b]).count()
+    assert both == 2, (
+        f"{model.__name__}: superadmin bypass exposed {both} of 2 seeded rows; "
+        f"it must reveal more than a single tenant scope."
+    )
+
+
+class TestRLSEnforcement:
+    """Cross-institution isolation for every protected institutions table."""
+
+    def test_cross_institution_sede_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_institutions(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Sede, rows["sede_a"].pk, rows["sede_b"].pk)
+
+    def test_cross_institution_facultad_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_institutions(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Facultad, rows["facultad_a"].pk, rows["facultad_b"].pk)
+
+    def test_cross_institution_researchcenter_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_institutions(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(ResearchCenter, rows["center_a"].pk, rows["center_b"].pk)
+
+    def test_cross_institution_researchgroup_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_institutions(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(ResearchGroup, rows["group_a"].pk, rows["group_b"].pk)
+
+    def test_cross_institution_researchline_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_institutions(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(ResearchLine, rows["line_a"].pk, rows["line_b"].pk)
+
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_institutions(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=True)
+        _assert_both_visible(Sede, rows["sede_a"].pk, rows["sede_b"].pk)
+        _assert_both_visible(Facultad, rows["facultad_a"].pk, rows["facultad_b"].pk)
+        _assert_both_visible(ResearchCenter, rows["center_a"].pk, rows["center_b"].pk)
+        _assert_both_visible(ResearchGroup, rows["group_a"].pk, rows["group_b"].pk)
+        _assert_both_visible(ResearchLine, rows["line_a"].pk, rows["line_b"].pk)
