@@ -22,9 +22,25 @@ RED PHASE: Tests fail because 0002_rls_policies.py does not exist.
 import importlib
 import inspect
 
-import pytest
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
+
+from apps.budgets.models import (
+    Budget,
+    BudgetAttachment,
+    BudgetExecution,
+    BudgetLine,
+    FundingSource,
+)
+from apps.budgets.tests.conftest import (
+    BudgetAttachmentFactory,
+    BudgetExecutionFactory,
+    BudgetFactory,
+    BudgetLineFactory,
+    FundingSourceFactory,
+)
+from apps.institutions.tests.conftest import InstitutionFactory
+from apps.projects.tests.conftest import ProjectFactory
 
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
@@ -233,28 +249,130 @@ class TestRLSPostgresGuard:
 
 
 # ──────────────────────────────────────────────
-# Test: PostgreSQL-only enforcement (skip on SQLite)
+# Test: PostgreSQL-only enforcement (skip on SQLite via postgres_app_role)
 # ──────────────────────────────────────────────
 
+TENANT_GUC = "sigpi.institution_id"
+BYPASS_GUC = "sigpi.bypass_rls"
 
-@pytest.mark.skip(reason="Requires PostgreSQL with RLS support")
+
+def _set_rls(conn, institution_id, bypass):
+    """Write the RLS GUCs at connection scope, exactly like production does."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [TENANT_GUC, "" if institution_id is None else str(institution_id)],
+        )
+        cursor.execute(
+            "SELECT set_config(%s, %s, false)",
+            [BYPASS_GUC, "true" if bypass else "false"],
+        )
+
+
+def _seed_budgets(conn):
+    """Seed one institution-A and one institution-B row per protected table.
+
+    Every protected row is inserted under a bypass context, because
+    ``sigpi_app`` cannot see or write a foreign institution's rows otherwise.
+    Seeding restores the restrictive default, so each test must opt in to a
+    tenant context before it reads anything.
+    """
+    _set_rls(conn, None, bypass=True)
+    inst_a = InstitutionFactory(code="BGA", name="Institution BGA")
+    inst_b = InstitutionFactory(code="BGB", name="Institution BGB")
+    project_a = ProjectFactory(institution=inst_a)
+    project_b = ProjectFactory(institution=inst_b)
+    budget_a = BudgetFactory(project=project_a)
+    budget_b = BudgetFactory(project=project_b)
+    line_a = BudgetLineFactory(budget=budget_a)
+    line_b = BudgetLineFactory(budget=budget_b)
+    execution_a = BudgetExecutionFactory(line=line_a)
+    execution_b = BudgetExecutionFactory(line=line_b)
+    attachment_a = BudgetAttachmentFactory(budget=budget_a)
+    attachment_b = BudgetAttachmentFactory(budget=budget_b)
+    source_a = FundingSourceFactory(project=project_a)
+    source_b = FundingSourceFactory(project=project_b)
+    _set_rls(conn, None, bypass=False)
+    return {
+        "inst_a": inst_a,
+        "budget_a": budget_a,
+        "budget_b": budget_b,
+        "line_a": line_a,
+        "line_b": line_b,
+        "execution_a": execution_a,
+        "execution_b": execution_b,
+        "attachment_a": attachment_a,
+        "attachment_b": attachment_b,
+        "source_a": source_a,
+        "source_b": source_b,
+    }
+
+
+def _assert_only_a_visible(model, pk_a, pk_b):
+    """Non-vacuous assertion pair: A's row visible, B's row denied."""
+    assert model.objects.filter(pk=pk_a).exists(), (
+        f"{model.__name__}: institution A's seeded row is not visible under "
+        f"institution A's tenant context."
+    )
+    assert model.objects.filter(pk=pk_b).count() == 0, (
+        f"{model.__name__}: institution B's seeded row leaked into institution A's tenant context."
+    )
+
+
+def _assert_both_visible(model, pk_a, pk_b):
+    """Bypass must reveal both institutions' rows, not merely zero rows."""
+    both = model.objects.filter(pk__in=[pk_a, pk_b]).count()
+    assert both == 2, (
+        f"{model.__name__}: superadmin bypass exposed {both} of 2 seeded rows; "
+        f"it must reveal more than a single tenant scope."
+    )
+
+
 class TestRLSEnforcement:
-    """Cross-institution isolation tests — PostgreSQL only."""
+    """Cross-institution isolation for every protected budgets table."""
 
-    def test_cross_institution_budget_invisible(self, db):
-        pass
+    def test_cross_institution_budget_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_budgets(conn)
 
-    def test_cross_institution_line_invisible(self, db):
-        pass
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(Budget, rows["budget_a"].pk, rows["budget_b"].pk)
 
-    def test_cross_institution_execution_invisible(self, db):
-        pass
+    def test_cross_institution_line_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_budgets(conn)
 
-    def test_cross_institution_attachment_invisible(self, db):
-        pass
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(BudgetLine, rows["line_a"].pk, rows["line_b"].pk)
 
-    def test_cross_institution_funding_source_invisible(self, db):
-        pass
+    def test_cross_institution_execution_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_budgets(conn)
 
-    def test_superadmin_bypass_sees_all(self, db):
-        pass
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(BudgetExecution, rows["execution_a"].pk, rows["execution_b"].pk)
+
+    def test_cross_institution_attachment_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_budgets(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(BudgetAttachment, rows["attachment_a"].pk, rows["attachment_b"].pk)
+
+    def test_cross_institution_funding_source_invisible(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_budgets(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=False)
+        _assert_only_a_visible(FundingSource, rows["source_a"].pk, rows["source_b"].pk)
+
+    def test_superadmin_bypass_sees_all(self, postgres_app_role):
+        conn = postgres_app_role
+        rows = _seed_budgets(conn)
+
+        _set_rls(conn, rows["inst_a"].pk, bypass=True)
+        _assert_both_visible(Budget, rows["budget_a"].pk, rows["budget_b"].pk)
+        _assert_both_visible(BudgetLine, rows["line_a"].pk, rows["line_b"].pk)
+        _assert_both_visible(BudgetExecution, rows["execution_a"].pk, rows["execution_b"].pk)
+        _assert_both_visible(BudgetAttachment, rows["attachment_a"].pk, rows["attachment_b"].pk)
+        _assert_both_visible(FundingSource, rows["source_a"].pk, rows["source_b"].pk)
