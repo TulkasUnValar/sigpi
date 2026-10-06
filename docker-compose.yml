@@ -1,6 +1,5 @@
 # SIGPI — Docker Compose (development)
-# Stack: Django 5.1 + PostgreSQL 16 + Redis 7 + Keycloak 26 + MinIO + Meilisearch 1.53
-version: "3.9"
+# Stack: Django 6.0 + PostgreSQL 16 + Redis 7 + Keycloak 26 + MinIO + Meilisearch 1.53
 
 services:
   # ── Django backend ──────────────────────────────────────
