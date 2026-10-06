@@ -4,7 +4,7 @@ Sistema de Información para la Gestión de Proyectos de Investigación
 
 ## Stack
 
-- **Backend**: Django 5.1 + DRF + Celery + PostgreSQL 16
+- **Backend**: Django 6.0 + DRF + Celery + PostgreSQL 16
 - **Frontend**: Next.js 15 + React 19 + shadcn/ui
 - **Auth**: Keycloak 26 (OIDC/SAML) + django-allauth fallback
 - **Infra**: Docker Compose (dev), GitHub Actions (CI)
