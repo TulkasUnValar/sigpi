@@ -85,6 +85,7 @@ kcpgdata/
 
 # ── Local tooling cache ───────────────────────────────────
 .atl/
+.engram/
 
 # ── Windows alternate data streams ────────────────────────
 *:Zone.Identifier
