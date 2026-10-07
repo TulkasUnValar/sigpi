@@ -39,6 +39,7 @@ from tests.rls_helpers import (
     get_all_sql,
     get_apply_function_source,
     load_migration,
+    policy_using,
     set_rls,
 )
 
@@ -57,6 +58,12 @@ CHILD_TABLES = [
     "products_productauthor",  # via product_id
     "products_productattachment",  # via product_id
 ]
+
+# Each child reaches the tenant through product_id into products_researchproduct.
+CHILD_PARENT = {
+    "products_productauthor": ("product_id", "products_researchproduct"),
+    "products_productattachment": ("product_id", "products_researchproduct"),
+}
 
 EXPECTED_POLICIES = [
     "tenant_isolation",
@@ -122,7 +129,7 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            assert table in sql, (
+            assert policy_using(sql, table) is not None, (
                 f"Table '{table}' missing from RLS migration SQL. All 3 product tables must have RLS."
             )
 
@@ -131,8 +138,14 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the tenant GUC: "
+                f"{predicate!r}"
+            )
 
     def test_superadmin_bypass_policy_per_table(self, db):
         migration = load_migration("products", "0002_rls_policies")
@@ -155,10 +168,9 @@ class TestRLSPolicySQL:
         migration = load_migration("products", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
-        assert (
-            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
-            in sql
-        ), (
+        predicate = policy_using(sql, "products_researchproduct")
+        assert predicate is not None, "products_researchproduct: no tenant_isolation USING clause"
+        assert "institution_id" in predicate, (
             "products_researchproduct must use direct institution_id filter. Child tables use subquery."
         )
 
@@ -167,9 +179,12 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         # Author/attachment reach Institution through the parent product.
-        assert "SELECT id FROM products_researchproduct" in sql, (
-            "Child tables must subquery products_researchproduct by institution_id."
-        )
+        for table, (fk, parent) in CHILD_PARENT.items():
+            predicate = policy_using(sql, table)
+            assert predicate is not None, f"{table}: no tenant_isolation USING clause"
+            assert fk in predicate and parent in predicate, (
+                f"{table}: predicate must subquery {parent} via {fk}: {predicate!r}"
+            )
 
 
 # ──────────────────────────────────────────────

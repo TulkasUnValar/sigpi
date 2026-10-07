@@ -40,6 +40,7 @@ from tests.rls_helpers import (
     get_all_sql,
     get_apply_function_source,
     load_migration,
+    policy_using,
     set_rls,
 )
 
@@ -131,7 +132,7 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            assert table in sql, (
+            assert policy_using(sql, table) is not None, (
                 f"Table '{table}' missing from RLS migration SQL. "
                 f"All 4 researcher tables must have RLS."
             )
@@ -142,8 +143,14 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the tenant GUC: "
+                f"{predicate!r}"
+            )
 
     def test_superadmin_bypass_policy_per_table(self, db):
         """Each table must have a superadmin_bypass policy."""
@@ -169,11 +176,11 @@ class TestRLSPolicySQL:
         migration = load_migration("researchers", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
-        # Parent table should use direct institution_id
-        assert (
-            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
-            in sql
-        ), "Researcher table must use direct institution_id filter. Child tables use subquery."
+        predicate = policy_using(sql, "researchers_researcher")
+        assert predicate is not None, "researchers_researcher: no tenant_isolation USING clause"
+        assert "institution_id" in predicate, (
+            "Researcher table must use direct institution_id filter. Child tables use subquery."
+        )
 
     def test_child_tables_use_subquery(self, db):
         """Child tables must filter via subquery through researcher_id."""
@@ -181,11 +188,14 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in CHILD_TABLES:
-            # Child tables should reference researchers_researcher in a subquery
-            assert "researcher_id IN" in sql or "researchers_researcher" in sql, (
+            # Each child predicate must itself reach researchers_researcher through
+            # researcher_id; a global substring cannot catch a per-table regression.
+            predicate = policy_using(sql, table)
+            assert predicate is not None, f"{table}: no tenant_isolation USING clause"
+            assert "researcher_id" in predicate and "researchers_researcher" in predicate, (
                 f"Child table '{table}' must use a subquery through "
                 f"researcher_id → researchers_researcher.institution_id. "
-                f"Child tables have no direct institution_id column."
+                f"Child tables have no direct institution_id column: {predicate!r}"
             )
 
 

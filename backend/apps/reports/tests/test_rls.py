@@ -34,6 +34,7 @@ from tests.rls_helpers import (
     get_all_sql,
     get_apply_function_source,
     load_migration,
+    policy_using,
     set_rls,
 )
 
@@ -101,14 +102,20 @@ class TestRLSPolicySQL:
         migration = load_migration("reports", "0004_reporttemplate_rls")
         assert migration is not None, "Migration 0004 missing"
         sql = get_all_sql(migration)
-        assert TABLE in sql, f"Table '{TABLE}' missing from RLS migration SQL."
+        assert policy_using(sql, TABLE) is not None, (
+            f"Table '{TABLE}' has no CREATE POLICY tenant_isolation with a USING clause."
+        )
 
     def test_tenant_isolation_policy(self, db):
         migration = load_migration("reports", "0004_reporttemplate_rls")
         assert migration is not None, "Migration 0004 missing"
         sql = get_all_sql(migration)
-        assert f"CREATE POLICY tenant_isolation ON {TABLE}" in sql, (
-            f"tenant_isolation policy missing for '{TABLE}'"
+        predicate = policy_using(sql, TABLE)
+        assert predicate is not None, (
+            f"'{TABLE}': no CREATE POLICY tenant_isolation with a USING clause"
+        )
+        assert "sigpi.institution_id" in predicate, (
+            f"'{TABLE}': tenant_isolation predicate does not scope by the tenant GUC: {predicate!r}"
         )
 
     def test_superadmin_bypass_policy(self, db):
@@ -201,15 +208,22 @@ class TestRLSReportTables0002:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in [PARENT_TABLE_0002, *CHILD_TABLES_0002]:
-            assert table in sql, f"Table '{table}' missing from RLS migration SQL."
+            assert policy_using(sql, table) is not None, (
+                f"Table '{table}' has no CREATE POLICY tenant_isolation with a USING clause."
+            )
 
     def test_policies_per_table(self, db):
         migration = load_migration("reports", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in [PARENT_TABLE_0002, *CHILD_TABLES_0002]:
-            assert f"CREATE POLICY tenant_isolation ON {table}" in sql, (
-                f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the tenant GUC: "
+                f"{predicate!r}"
             )
             assert f"CREATE POLICY superadmin_bypass ON {table}" in sql, (
                 f"superadmin_bypass policy missing for '{table}'"
@@ -222,17 +236,20 @@ class TestRLSReportTables0002:
         migration = load_migration("reports", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
-        assert (
-            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
-            in sql
-        ), f"{PARENT_TABLE_0002} must use the hardened direct institution_id cast."
+        predicate = policy_using(sql, PARENT_TABLE_0002)
+        assert predicate is not None, f"{PARENT_TABLE_0002}: no tenant_isolation USING clause"
+        assert "institution_id" in predicate, (
+            f"{PARENT_TABLE_0002} must use the hardened direct institution_id cast."
+        )
 
     def test_child_uses_subquery(self, db):
         migration = load_migration("reports", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
-        assert "SELECT id FROM reports_report" in sql, (
-            f"{CHILD_TABLES_0002[0]} must subquery reports_report by institution_id."
+        predicate = policy_using(sql, CHILD_TABLES_0002[0])
+        assert predicate is not None, f"{CHILD_TABLES_0002[0]}: no tenant_isolation USING clause"
+        assert "report_id" in predicate and "reports_report" in predicate, (
+            f"{CHILD_TABLES_0002[0]} must subquery reports_report by institution_id: {predicate!r}"
         )
 
 

@@ -9,6 +9,7 @@ truth; app-specific seeds, table lists and expectations stay local.
 
 import importlib
 import inspect
+import re
 
 from django.db import connection
 from django.db.migrations.loader import MigrationLoader
@@ -38,6 +39,28 @@ def get_all_sql(migration):
         if isinstance(val, str) and "tenant_isolation" in val:
             sql_parts.append(val)
     return "\n".join(sql_parts)
+
+
+def policy_using(sql, table, policy="tenant_isolation"):
+    """Return the whitespace-normalized USING predicate of ``<policy>`` on ``table``.
+
+    Anchors on ``CREATE POLICY`` (never ``DROP POLICY``) and captures the
+    balanced ``USING (...)`` clause up to the statement-terminating semicolon,
+    so nested parentheses (NULLIF, subqueries) survive. Returns None when the
+    policy is absent.
+    """
+    pattern = re.compile(
+        r"CREATE\s+POLICY\s+"
+        + re.escape(policy)
+        + r"\s+ON\s+"
+        + re.escape(table)
+        + r"\b\s+USING\s*\((.*?)\)\s*;",
+        re.DOTALL | re.IGNORECASE,
+    )
+    match = pattern.search(sql)
+    if match is None:
+        return None
+    return " ".join(match.group(1).split())
 
 
 def get_apply_function_source(migration):
