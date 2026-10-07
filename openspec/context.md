@@ -9,7 +9,7 @@ A national-scale, multi-institutional web platform for managing research project
 
 | Layer        | Technology                                                    |
 |-------------|----------------------------------------------------------------|
-| Backend      | Django 5.1 + DRF + Celery + Redis + PostgreSQL 16 + django-fsm |
+| Backend      | Django 6.0 + DRF + Celery + Redis + PostgreSQL 16 + django-fsm |
 | Frontend     | Next.js 15 App Router + React 19 + next-intl + next-themes + shadcn/ui |
 | Auth          | Keycloak 26 (OIDC/SAML) + django-allauth fallback             |
 | Search        | Meilisearch                                                     |
@@ -51,7 +51,7 @@ auth, dashboard, institutions, centers, researchers, projects, progress, reports
 - **Strict TDD**: Red–Green–Refactor enforced for all modules
 - **Backend**: pytest + pytest-django + pytest-asyncio + pytest-cov (≥80% floor)
 - **Frontend**: Jest + React Testing Library + Playwright (E2E)
-- **Linting**: ruff + mypy (backend), ESLint + Prettier + TS strict (frontend)
+- **Linting**: ruff + pyright (backend), ESLint + Prettier + TS strict (frontend)
 - **CI**: GitHub Actions with pre-commit hooks
 
 ## MVP Priority Order

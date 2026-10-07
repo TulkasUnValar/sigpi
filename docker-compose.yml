@@ -1,82 +1,121 @@
 # SIGPI — Docker Compose (development)
-# Stack: Django 5.1 + PostgreSQL 16 + Redis 7 + Keycloak 26 + MinIO + Meilisearch 1.53
-version: "3.9"
+# Stack: Django 6.0 + PostgreSQL 16 + Redis 7 + Keycloak 26 + MinIO + Meilisearch 1.53
+
+# ── Shared backend block ──────────────────────────────────
+# Build context, bind mount and environment for the Django image. Reused by
+# the web server, the Celery worker and the Celery beat scheduler so the
+# ~20 variables have a single source of truth.
+x-backend: &backend
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+  # One image shared by backend, worker and beat, so the Celery services do
+  # not each trigger a separate (slow) image build.
+  image: sigpi-backend:dev
+  volumes:
+    - ./backend:/app
+  environment:
+    - DJANGO_DEBUG=true
+    - DJANGO_SECRET_KEY=dev-secret-change-in-production
+    - POSTGRES_DB=sigpi
+    - POSTGRES_USER=sigpi
+    - POSTGRES_PASSWORD=sigpi
+    - POSTGRES_HOST=db
+    - POSTGRES_PORT=5432
+    # Row-level security only applies when the runtime connects as the
+    # least-privilege role, so enabling it here is a deliberate opt-in. The
+    # role is created by migration 0010 (NOLOGIN) and made login-capable by
+    # migration 0012; neither sets a password.
+    #
+    # Do NOT set POSTGRES_APP_USER in this service's environment by default:
+    # settings prefer it, so EVERY manage.py command in the container would
+    # then connect as sigpi_app, which has no DDL rights and cannot migrate.
+    # Enable it per invocation, in this order:
+    #
+    #   1. migrate as the owner:
+    #      docker compose run --rm -e POSTGRES_APP_USER= backend \
+    #        python manage.py migrate
+    #   2. give the role a password, as the owning user:
+    #      docker compose exec db psql -U sigpi -d sigpi \
+    #        -c "ALTER ROLE sigpi_app PASSWORD 'sigpi_app';"
+    #   3. then run anything else with the switch on, e.g.
+    #      docker compose run --rm -e POSTGRES_APP_USER=sigpi_app \
+    #        -e POSTGRES_APP_PASSWORD=sigpi_app backend
+    #
+    # An init script mounted into `db` cannot create the role, because
+    # /docker-entrypoint-initdb.d runs at cluster init, before any migration
+    # has created it. CI verifies the role end to end in the
+    # `backend-app-role-rls` job, so a developer does not need it locally.
+    - REDIS_URL=redis://redis:6379/0
+    - OIDC_RP_CLIENT_ID=sigpi-app
+    - OIDC_RP_CLIENT_SECRET=dev-client-secret
+    - OIDC_OP_AUTHORIZATION_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/auth
+    - OIDC_OP_TOKEN_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/token
+    - OIDC_OP_USER_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/userinfo
+    - OIDC_OP_JWKS_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/certs
+    - OIDC_OP_LOGOUT_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/logout
+    - OIDC_RP_SIGN_ALGO=RS256
+    - MINIO_ENDPOINT=http://minio:9000
+    - MINIO_ACCESS_KEY=minioadmin
+    - MINIO_SECRET_KEY=minioadmin
+    - MINIO_BUCKET_NAME=sigpi-documents
+    - MEILISEARCH_URL=http://meilisearch:7700
+    - MEILISEARCH_API_KEY=masterKey
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_started
+    minio:
+      condition: service_healthy
+    meilisearch:
+      condition: service_healthy
+  networks:
+    - sigpi-net
 
 services:
   # ── Django backend ──────────────────────────────────────
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    <<: *backend
     container_name: sigpi-backend
+    restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:8000"
-    environment:
-      - DJANGO_DEBUG=true
-      - DJANGO_SECRET_KEY=dev-secret-change-in-production
-      - POSTGRES_DB=sigpi
-      - POSTGRES_USER=sigpi
-      - POSTGRES_PASSWORD=sigpi
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      # Row-level security only applies when the runtime connects as the
-      # least-privilege role, so enabling it here is a deliberate opt-in. The
-      # role is created by migration 0010 (NOLOGIN) and made login-capable by
-      # migration 0012; neither sets a password.
-      #
-      # Do NOT set POSTGRES_APP_USER in this service's environment by default:
-      # settings prefer it, so EVERY manage.py command in the container would
-      # then connect as sigpi_app, which has no DDL rights and cannot migrate.
-      # Enable it per invocation, in this order:
-      #
-      #   1. migrate as the owner:
-      #      docker compose run --rm -e POSTGRES_APP_USER= backend \
-      #        python manage.py migrate
-      #   2. give the role a password, as the owning user:
-      #      docker compose exec db psql -U sigpi -d sigpi \
-      #        -c "ALTER ROLE sigpi_app PASSWORD 'sigpi_app';"
-      #   3. then run anything else with the switch on, e.g.
-      #      docker compose run --rm -e POSTGRES_APP_USER=sigpi_app \
-      #        -e POSTGRES_APP_PASSWORD=sigpi_app backend
-      #
-      # An init script mounted into `db` cannot create the role, because
-      # /docker-entrypoint-initdb.d runs at cluster init, before any migration
-      # has created it. CI verifies the role end to end in the
-      # `backend-app-role-rls` job, so a developer does not need it locally.
-      - REDIS_URL=redis://redis:6379/0
-      - OIDC_RP_CLIENT_ID=sigpi-app
-      - OIDC_RP_CLIENT_SECRET=dev-client-secret
-      - OIDC_OP_AUTHORIZATION_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/auth
-      - OIDC_OP_TOKEN_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/token
-      - OIDC_OP_USER_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/userinfo
-      - OIDC_OP_JWKS_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/certs
-      - OIDC_OP_LOGOUT_ENDPOINT=http://keycloak:8080/realms/sigpi/protocol/openid-connect/logout
-      - OIDC_RP_SIGN_ALGO=RS256
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - MINIO_BUCKET_NAME=sigpi-documents
-      - MEILISEARCH_URL=http://meilisearch:7700
-      - MEILISEARCH_API_KEY=masterKey
+
+  # ── Celery worker ───────────────────────────────────────
+  # Consumes the Redis broker (db 2). Tasks are declared in config/celery.py
+  # and the app-level modules (apps/*/tasks.py).
+  worker:
+    <<: *backend
+    container_name: sigpi-worker
+    restart: unless-stopped
+    command: celery -A config worker -l info
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
-      minio:
+
+  # ── Celery beat ─────────────────────────────────────────
+  # Schedules the periodic tasks in config/celery.py (beat_schedule). The
+  # schedule file lives in /tmp so it never lands in the bind-mounted source.
+  beat:
+    <<: *backend
+    container_name: sigpi-beat
+    restart: unless-stopped
+    command: celery -A config beat -l info --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      db:
         condition: service_healthy
-      meilisearch:
-        condition: service_healthy
-    networks:
-      - sigpi-net
+      redis:
+        condition: service_started
 
   # ── PostgreSQL 16 ───────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: sigpi-db
+    restart: unless-stopped
     environment:
       - POSTGRES_DB=sigpi
       - POSTGRES_USER=sigpi
@@ -97,6 +136,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: sigpi-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
@@ -110,6 +150,7 @@ services:
   meilisearch:
     image: getmeili/meilisearch:v1.53
     container_name: sigpi-meilisearch
+    restart: unless-stopped
     environment:
       - MEILI_ENV=development
       - MEILI_MASTER_KEY=masterKey
@@ -130,7 +171,12 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: sigpi-keycloak
-    command: start-dev
+    restart: unless-stopped
+    # --import-realm loads every JSON in /opt/keycloak/data/import on boot.
+    # It only imports a realm that does not exist yet, so restarts do not
+    # clobber local changes. The realm `sigpi` (infra/keycloak/realm-export.json)
+    # is required by the backend OIDC_* endpoints.
+    command: start-dev --import-realm
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
@@ -154,6 +200,7 @@ services:
   kc-db:
     image: postgres:16-alpine
     container_name: sigpi-kc-db
+    restart: unless-stopped
     environment:
       - POSTGRES_DB=keycloak
       - POSTGRES_USER=keycloak
@@ -168,19 +215,24 @@ services:
     networks:
       - sigpi-net
 
-# ── MinIO (S3-compatible object storage) ─────────────────
+  # ── MinIO (S3-compatible object storage) ─────────────────
+  # The official minio/minio image was removed from Docker Hub and
+  # quay.io/minio/minio now requires authentication, so this pins the
+  # frozen Bitnami legacy build. Env names and ports match upstream;
+  # data lives at /bitnami/minio/data (Bitnami's convention).
   minio:
-    image: minio/minio:latest
+    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
     container_name: sigpi-minio
-    command: server /data --console-address ":9001"
+    restart: unless-stopped
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_DEFAULT_BUCKETS=sigpi-documents
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - miniodata:/data
+      - miniodata:/bitnami/minio/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 5s

@@ -1,6 +1,11 @@
 /** @type {import('jest').Config} */
 const config = {
   testEnvironment: "jsdom",
+  // jsdom + Radix interaction suites are wall-clock heavy: the multi-step
+  // ProductList filter tests spent >5s under full parallel load while taking
+  // ~1.3s in isolation. Jest's 5s default is calibrated for pure unit tests,
+  // not component-integration tests, so give them explicit headroom.
+  testTimeout: 15000,
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   transform: {
     "^.+\\.tsx?$": [
