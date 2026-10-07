@@ -3,6 +3,7 @@ Celery configuration for SIGPI backend.
 
 Design reference: openspec/changes/auth/design.md — Role Sync Flow
 """
+
 import os
 
 from celery import Celery
@@ -30,8 +31,8 @@ app.conf.beat_schedule = {
     },
     # Notifications retention (spec NFR — Retention): read rows purged
     # after 90 days, unread after 365 days, NotificationLog after 12
-    # months. Schedule-only for now — the cleanup_old_notifications
-    # task body ships in a later phase.
+    # months. Implemented by the cleanup_old_notifications task; the
+    # thresholds are configurable via the NOTIFICATIONS_RETENTION_* settings.
     "cleanup-old-notifications": {
         "task": "cleanup_old_notifications",
         "schedule": crontab(minute=0, hour=3),  # Daily at 03:00 America/Bogota

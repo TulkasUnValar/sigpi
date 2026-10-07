@@ -284,6 +284,17 @@ CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379/2")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379/3")
 
 # ──────────────────────────────────────────────────────────
+# Notifications retention (spec NFR — Retention)
+# ──────────────────────────────────────────────────────────
+# Purge thresholds for the scheduled cleanup_old_notifications task: read
+# rows age from read_at, unread rows from created_at, logs from created_at.
+NOTIFICATIONS_RETENTION_READ_DAYS = int(os.environ.get("NOTIFICATIONS_RETENTION_READ_DAYS", "90"))
+NOTIFICATIONS_RETENTION_UNREAD_DAYS = int(
+    os.environ.get("NOTIFICATIONS_RETENTION_UNREAD_DAYS", "365")
+)
+NOTIFICATIONS_RETENTION_LOG_DAYS = int(os.environ.get("NOTIFICATIONS_RETENTION_LOG_DAYS", "365"))
+
+# ──────────────────────────────────────────────────────────
 # Meilisearch (search module)
 # ──────────────────────────────────────────────────────────
 # Full-text search engine (RNF-014). Dev defaults match the

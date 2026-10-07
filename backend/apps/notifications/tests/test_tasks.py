@@ -14,13 +14,17 @@ Channel Semantics; spec NFR Retry / Acceptance Criteria):
   once per CREATED row, only when email is enabled for the recipient
 - retention beat schedule (read 90d / unread 365d / logs 12m) is
   registered in config.celery
+- cleanup_old_notifications purges read rows past READ_DAYS, unread rows
+  past UNREAD_DAYS and NotificationLog rows past LOG_DAYS, across all
+  tenants, returning a counts dict
 """
 
 import uuid
-from datetime import date
+from datetime import date, timedelta
 from unittest import mock
 
 import pytest
+from django.utils import timezone
 
 from apps.notifications.models import (
     Notification,
@@ -29,7 +33,7 @@ from apps.notifications.models import (
     NotificationTemplate,
     UserPreference,
 )
-from apps.notifications.tasks import dispatch_notification
+from apps.notifications.tasks import cleanup_old_notifications, dispatch_notification
 from apps.projects.models import Project
 
 # ──────────────────────────────────────────────
@@ -112,9 +116,9 @@ def _make_project(institution, center=None, researcher=None):
     )
 
 
-def _make_notification(email="recipient@test.edu"):
+def _make_notification(email="recipient@test.edu", code="TU"):
     """A Notification row as created by the receivers (seeded template)."""
-    inst = _make_institution()
+    inst = _make_institution(code)
     user = _make_user(email)
     template = NotificationTemplate.objects.get(code="PROJECT_SUBMITTED")
     return Notification.objects.create(
@@ -125,6 +129,34 @@ def _make_notification(email="recipient@test.edu"):
         title="Test title",
         body="Test body",
     )
+
+
+def _age_notification(notification, *, created_days_ago=0, read_days_ago=None):
+    """Push a notification's timestamps into the past.
+
+    ``created_at`` is ``auto_now_add`` and ``read_at`` is set by the app, so
+    the test moves them through a queryset ``update`` (which bypasses
+    ``auto_now_add``) rather than a model ``save``.
+    """
+    now = timezone.now()
+    Notification.objects.filter(pk=notification.pk).update(
+        created_at=now - timedelta(days=created_days_ago),
+        is_read=read_days_ago is not None,
+        read_at=None if read_days_ago is None else now - timedelta(days=read_days_ago),
+    )
+    return notification
+
+
+def _make_log(*, created_days_ago=0, notification=None):
+    """A NotificationLog row with a controlled ``created_at``."""
+    log = NotificationLog.objects.create(
+        notification=notification,
+        recipient_email="log@test.edu",
+    )
+    NotificationLog.objects.filter(pk=log.pk).update(
+        created_at=timezone.now() - timedelta(days=created_days_ago)
+    )
+    return log
 
 
 def _make_director_project():
@@ -363,7 +395,7 @@ class TestReceiverEnqueuesDispatch:
 
 
 class TestRetentionBeatSchedule:
-    """Phase 3 schedule entry — task body lands in a later phase."""
+    """The beat entry names the cleanup_old_notifications task."""
 
     def test_cleanup_beat_entry_configured(self):
         from config.celery import app
@@ -372,3 +404,92 @@ class TestRetentionBeatSchedule:
         assert "cleanup-old-notifications" in schedule
         entry = schedule["cleanup-old-notifications"]
         assert entry["task"] == "cleanup_old_notifications"
+
+
+# ──────────────────────────────────────────────
+# Retention cleanup task (spec NFR Retention)
+# ──────────────────────────────────────────────
+
+
+class TestCleanupOldNotifications:
+    """Retention purge — hard delete across all tenants, counts observable."""
+
+    def test_read_notification_past_window_is_deleted(self, db):
+        notification = _age_notification(_make_notification(), read_days_ago=91)
+
+        counts = cleanup_old_notifications()
+
+        assert not Notification.objects.filter(pk=notification.pk).exists()
+        assert counts["read_deleted"] == 1
+
+    def test_recent_read_notification_is_kept(self, db):
+        notification = _age_notification(_make_notification(), read_days_ago=10)
+
+        counts = cleanup_old_notifications()
+
+        assert Notification.objects.filter(pk=notification.pk).exists()
+        assert counts["read_deleted"] == 0
+
+    def test_unread_notification_past_window_is_deleted(self, db):
+        notification = _age_notification(_make_notification(), created_days_ago=366)
+
+        counts = cleanup_old_notifications()
+
+        assert not Notification.objects.filter(pk=notification.pk).exists()
+        assert counts["unread_deleted"] == 1
+
+    def test_recent_unread_notification_is_kept(self, db):
+        notification = _age_notification(_make_notification(), created_days_ago=10)
+
+        counts = cleanup_old_notifications()
+
+        assert Notification.objects.filter(pk=notification.pk).exists()
+        assert counts["unread_deleted"] == 0
+
+    def test_old_log_is_deleted_and_recent_log_kept(self, db):
+        old_log = _make_log(created_days_ago=366)
+        recent_log = _make_log(created_days_ago=10)
+
+        counts = cleanup_old_notifications()
+
+        assert not NotificationLog.objects.filter(pk=old_log.pk).exists()
+        assert NotificationLog.objects.filter(pk=recent_log.pk).exists()
+        assert counts["logs_deleted"] == 1
+
+    def test_read_window_setting_changes_the_boundary(self, db, settings):
+        settings.NOTIFICATIONS_RETENTION_READ_DAYS = 30
+        notification = _age_notification(_make_notification(), read_days_ago=31)
+
+        counts = cleanup_old_notifications()
+
+        assert not Notification.objects.filter(pk=notification.pk).exists()
+        assert counts["read_deleted"] == 1
+
+    def test_unread_window_setting_changes_the_boundary(self, db, settings):
+        settings.NOTIFICATIONS_RETENTION_UNREAD_DAYS = 30
+        notification = _age_notification(_make_notification(), created_days_ago=31)
+
+        counts = cleanup_old_notifications()
+
+        assert not Notification.objects.filter(pk=notification.pk).exists()
+        assert counts["unread_deleted"] == 1
+
+    def test_log_window_setting_changes_the_boundary(self, db, settings):
+        settings.NOTIFICATIONS_RETENTION_LOG_DAYS = 30
+        log = _make_log(created_days_ago=31)
+
+        counts = cleanup_old_notifications()
+
+        assert not NotificationLog.objects.filter(pk=log.pk).exists()
+        assert counts["logs_deleted"] == 1
+
+    def test_returns_counts_dict_of_purges(self, db):
+        _age_notification(_make_notification(email="read@test.edu", code="TUR"), read_days_ago=200)
+        _age_notification(
+            _make_notification(email="unread@test.edu", code="TUU"), created_days_ago=400
+        )
+        _make_log(created_days_ago=400)
+
+        counts = cleanup_old_notifications()
+
+        assert counts == {"read_deleted": 1, "unread_deleted": 1, "logs_deleted": 1}

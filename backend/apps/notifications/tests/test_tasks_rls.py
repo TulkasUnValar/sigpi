@@ -1,23 +1,30 @@
-"""Real-PostgreSQL proof that ``dispatch_notification`` needs its tenant context.
+"""Real-PostgreSQL proof of the tenant context the notification tasks need.
 
 These tests run as the least-privilege ``sigpi_app`` role (via the
 ``postgres_app_role`` fixture), so row-level security actually applies to the
-reads and writes the task performs. They prove the context is load-bearing:
+reads and writes the tasks perform. They prove the context is load-bearing:
 
-- with the institution passed the task finds its Notification and writes the
-  dispatch log
+- ``dispatch_notification``: with the institution passed the task finds its
+  Notification and writes the dispatch log
 - with no context (or the wrong institution) the same protected read finds
   nothing — the non-vacuity control that stops the positive case from passing
   even if the context did nothing
+- ``cleanup_old_notifications``: a cross-tenant system task with no institution
+  to scope to; only the explicit RLS bypass lets it purge every tenant's
+  expired rows
 
-The task is exercised by calling it directly (no broker): it is eager-callable,
-and ``get_client`` is mocked where the search task would otherwise reach out.
+The tasks are exercised by calling them directly (no broker): they are
+eager-callable, and ``get_client`` is mocked where the search task would
+otherwise reach out.
 """
 
+from datetime import timedelta
+
 import pytest
+from django.utils import timezone
 
 from apps.notifications.models import Notification, NotificationLog, NotificationTemplate
-from apps.notifications.tasks import dispatch_notification
+from apps.notifications.tasks import cleanup_old_notifications, dispatch_notification
 from config import tenant_context
 
 TENANT_GUC = "sigpi.institution_id"
@@ -104,3 +111,81 @@ class TestDispatchNotificationTenantContext:
         result = dispatch_notification(str(notification.pk), str(other.pk))
 
         assert result == {"status": "skipped", "reason": "notification_not_found"}
+
+
+def _age_notification(notification, *, created_days_ago=0, read_days_ago=None):
+    """Push a notification's timestamps into the past (bypass must be active)."""
+    now = timezone.now()
+    Notification.objects.filter(pk=notification.pk).update(
+        created_at=now - timedelta(days=created_days_ago),
+        is_read=read_days_ago is not None,
+        read_at=None if read_days_ago is None else now - timedelta(days=read_days_ago),
+    )
+    return notification
+
+
+def _make_log(notification, *, created_days_ago=0):
+    """A NotificationLog linked to ``notification``, with a controlled age."""
+    log = NotificationLog.objects.create(
+        notification=notification,
+        recipient_email=notification.recipient.email,
+    )
+    NotificationLog.objects.filter(pk=log.pk).update(
+        created_at=timezone.now() - timedelta(days=created_days_ago)
+    )
+    return log
+
+
+class TestCleanupOldNotificationsTenantBypass:
+    """The cleanup task purges every tenant through the RLS bypass."""
+
+    def test_purges_expired_rows_of_both_tenants(self, postgres_app_role):
+        conn = postgres_app_role
+        inst_a = _make_institution("CLNA")
+        inst_b = _make_institution("CLNB")
+        user_a = _make_user("clna@test.edu")
+        user_b = _make_user("clnb@test.edu")
+
+        # Seed under the bypass: the notification/insert check also reads it.
+        _set_rls(conn, None, bypass=True)
+        expired_read_a = _age_notification(_make_notification(inst_a, user_a), read_days_ago=120)
+        expired_unread_a = _age_notification(
+            _make_notification(inst_a, user_a), created_days_ago=400
+        )
+        recent_a = _age_notification(_make_notification(inst_a, user_a), created_days_ago=10)
+        expired_log_a = _make_log(recent_a, created_days_ago=400)
+        recent_log_a = _make_log(recent_a, created_days_ago=10)
+
+        expired_read_b = _age_notification(_make_notification(inst_b, user_b), read_days_ago=120)
+        expired_unread_b = _age_notification(
+            _make_notification(inst_b, user_b), created_days_ago=400
+        )
+        recent_b = _age_notification(_make_notification(inst_b, user_b), created_days_ago=10)
+        expired_log_b = _make_log(recent_b, created_days_ago=400)
+        recent_log_b = _make_log(recent_b, created_days_ago=10)
+
+        # No tenant context: a DELETE here is default-deny. The task must
+        # activate the bypass itself, or both tenants' rows would survive.
+        tenant_context.clear(conn)
+
+        counts = cleanup_old_notifications()
+
+        _set_rls(conn, None, bypass=True)
+        assert counts == {"read_deleted": 2, "unread_deleted": 2, "logs_deleted": 2}
+
+        expired_notifications = Notification.objects.filter(
+            pk__in=[
+                expired_read_a.pk,
+                expired_unread_a.pk,
+                expired_read_b.pk,
+                expired_unread_b.pk,
+            ]
+        )
+        assert not expired_notifications.exists()
+        assert Notification.objects.filter(pk__in=[recent_a.pk, recent_b.pk]).count() == 2
+
+        expired_logs = NotificationLog.objects.filter(pk__in=[expired_log_a.pk, expired_log_b.pk])
+        assert not expired_logs.exists()
+        assert (
+            NotificationLog.objects.filter(pk__in=[recent_log_a.pk, recent_log_b.pk]).count() == 2
+        )

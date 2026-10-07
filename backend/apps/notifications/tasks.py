@@ -20,9 +20,12 @@ spec NFR Retry / Acceptance Criteria):
 """
 
 import logging
+from datetime import timedelta
 
 from celery import shared_task
+from django.conf import settings
 from django.db import connection
+from django.utils import timezone
 
 from apps.notifications.models import (
     Notification,
@@ -133,3 +136,40 @@ def dispatch_notification(self, notification_id, institution_id=None):
         log.status = NotificationLogStatus.SENT
         log.save(update_fields=["status", "updated_at"])
         return {"status": NotificationLogStatus.SENT, "notification_id": str(notification.pk)}
+
+
+@shared_task(name="cleanup_old_notifications")
+def cleanup_old_notifications():
+    """Purge notifications and their logs past their retention windows.
+
+    Runs across every tenant, so it has no institution to establish a tenant
+    context with. ``tenant_context(..., bypass=True)`` activates the
+    ``superadmin_bypass`` policy the notifications tables already carry;
+    without it a DELETE under the least-privilege role is default-deny and
+    silently affects zero rows. On SQLite the context is a no-op.
+
+    A read row ages from ``read_at`` (purging it by ``created_at`` would drop
+    a notification read yesterday just because it is old); an unread row ages
+    from ``created_at``. Returns a counts dict so the outcome is observable.
+    """
+    now = timezone.now()
+    read_cutoff = now - timedelta(days=settings.NOTIFICATIONS_RETENTION_READ_DAYS)
+    unread_cutoff = now - timedelta(days=settings.NOTIFICATIONS_RETENTION_UNREAD_DAYS)
+    log_cutoff = now - timedelta(days=settings.NOTIFICATIONS_RETENTION_LOG_DAYS)
+
+    with tenant_context(connection, None, bypass=True):
+        # QuerySet.delete()[0] also counts cascaded rows: purging a
+        # notification drags its own NotificationLog rows with it.
+        read_deleted, _ = Notification.objects.filter(
+            read_at__isnull=False, read_at__lt=read_cutoff
+        ).delete()
+        unread_deleted, _ = Notification.objects.filter(
+            read_at__isnull=True, created_at__lt=unread_cutoff
+        ).delete()
+        logs_deleted, _ = NotificationLog.objects.filter(created_at__lt=log_cutoff).delete()
+
+    return {
+        "read_deleted": read_deleted,
+        "unread_deleted": unread_deleted,
+        "logs_deleted": logs_deleted,
+    }
