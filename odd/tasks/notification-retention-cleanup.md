@@ -141,16 +141,35 @@ Full PG suite (throwaway cluster on /tmp:5433) and `ruff check backend` /
 
 ## Progress
 
-**DONE — implemented and verified on SQLite; PostgreSQL suite pending.**
+**DONE — implemented, verified on SQLite and independently verified on real
+PostgreSQL (RLS bypass proven non-vacuous).** Branch `fix/notification-retention-cleanup`,
+commit `06afd48` (`feat(notifications): implement cleanup_old_notifications
+retention task`), 6 files, +428 / −14.
 
 - T1 RED observed: `ImportError: cannot import name 'cleanup_old_notifications'
   from 'apps.notifications.tasks'`.
 - T2/T3 implemented: retention settings, `cleanup_old_notifications` task, RLS
   test, updated `config/celery.py` status comment.
-- T4: `test_tasks.py` — 24 passed; notifications app suite — 136 passed, 10
-  skipped (the three RLS tests self-skip on SQLite via `postgres_app_role`);
-  `ruff check backend` clean; `ruff format --check` clean for the touched files.
-- T5: single work-unit commit
-  `feat(notifications): implement cleanup_old_notifications retention task`.
-- Pending (orchestrator): full PostgreSQL suite to exercise the RLS bypass path
-  under `sigpi_app`.
+- T4 (writer, SQLite): `test_tasks.py` — 24 passed; notifications app suite —
+  136 passed, 10 skipped (the RLS tests self-skip on SQLite via
+  `postgres_app_role`); `ruff check backend` clean; `ruff format --check` clean
+  for the touched files.
+- T4 (independent verifier, real PostgreSQL): notifications suite — **146
+  passed, 0 skipped**, including
+  `TestCleanupOldNotificationsTenantBypass::test_purges_expired_rows_of_both_tenants`
+  (ran, not skipped). Adversarial mutation proof: flipping `bypass=True` →
+  `bypass=False` makes that test fail with
+  `{'read_deleted': 0, 'unread_deleted': 0, 'logs_deleted': 0}` — the
+  least-privilege DELETE affects zero rows — then restored; `git status` clean
+  and `HEAD` unchanged at `06afd48`. The bypass is load-bearing and the test is
+  non-vacuous.
+- T5: single work-unit commit; no AI attribution.
+- Environment note: host `127.0.0.1:5432` is served by the native WSL PG 18, so
+  the Docker `sigpi-db` was reached as host `db` inside the compose network (and
+  cross-checked against a PG 18 cluster on 5433). No product defect either way.
+- Findings: no CRITICAL/WARNING. Open notes (not defects): `delete()[0]` counts
+  cascaded rows; the three deletes are not wrapped in `transaction.atomic`; log
+  retention is 365 days for the spec's "12 months"; ruff 0.16.7 in the venv vs
+  0.16.9 pinned.
+- Delivery (push / PR base) is the user's decision; the branch currently stacks
+  on the local-only `fix/runtime-connectivity`.
