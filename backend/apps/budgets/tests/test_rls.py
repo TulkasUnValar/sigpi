@@ -44,6 +44,7 @@ from tests.rls_helpers import (
     get_all_sql,
     get_apply_function_source,
     load_migration,
+    policy_using,
     set_rls,
 )
 
@@ -66,6 +67,15 @@ CHILD_TABLES = [
     "budgets_budgetattachment",  # via budget_id
     "budgets_fundingsource",  # via project_id → project.institution_id
 ]
+
+# Each child reaches the tenant through its own FK; the map pins the FK column
+# and parent table a child's tenant_isolation predicate must traverse.
+CHILD_PARENT = {
+    "budgets_budgetline": ("budget_id", "budgets_budget"),
+    "budgets_budgetexecution": ("line_id", "budgets_budgetline"),
+    "budgets_budgetattachment": ("budget_id", "budgets_budget"),
+    "budgets_fundingsource": ("project_id", "projects_project"),
+}
 
 EXPECTED_POLICIES = [
     "tenant_isolation",
@@ -131,7 +141,7 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            assert table in sql, (
+            assert policy_using(sql, table) is not None, (
                 f"Table '{table}' missing from RLS migration SQL. All 5 budget tables must have RLS."
             )
 
@@ -140,8 +150,14 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the tenant GUC: "
+                f"{predicate!r}"
+            )
 
     def test_superadmin_bypass_policy_per_table(self, db):
         migration = load_migration("budgets", "0002_rls_policies")
@@ -164,24 +180,28 @@ class TestRLSPolicySQL:
         migration = load_migration("budgets", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
-        assert (
-            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
-            in sql
-        ), "budgets_budget must use direct institution_id filter. Child tables use subquery."
+        predicate = policy_using(sql, "budgets_budget")
+        assert predicate is not None, "budgets_budget: no tenant_isolation USING clause"
+        assert "institution_id" in predicate, (
+            "budgets_budget must use direct institution_id filter. Child tables use subquery."
+        )
 
     def test_child_tables_use_subquery(self, db):
         migration = load_migration("budgets", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         # Lines/attachments reach Budget directly; executions reach Budget via
-        # line; funding sources reach Institution via project. All subquery the
-        # session institution through a parent chain, never a direct column.
-        assert "SELECT id FROM budgets_budget" in sql, (
-            "Line/attachment/execution child tables must subquery budgets_budget by institution_id."
-        )
-        assert "SELECT id FROM projects_project" in sql, (
-            "FundingSource must subquery projects_project by institution_id."
-        )
+        # line; funding sources reach Institution via project. Assert each child
+        # predicate individually so a single-table regression cannot hide.
+        for table, (fk, parent) in CHILD_PARENT.items():
+            predicate = policy_using(sql, table)
+            assert predicate is not None, f"{table}: no tenant_isolation USING clause"
+            assert fk in predicate, (
+                f"{table}: tenant_isolation predicate must traverse {fk}: {predicate!r}"
+            )
+            assert parent in predicate, (
+                f"{table}: tenant_isolation predicate must reach {parent}: {predicate!r}"
+            )
 
 
 # ──────────────────────────────────────────────

@@ -40,6 +40,7 @@ from tests.rls_helpers import (
     get_all_sql,
     get_apply_function_source,
     load_migration,
+    policy_using,
     set_rls,
 )
 
@@ -130,7 +131,7 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0003 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            assert table in sql, (
+            assert policy_using(sql, table) is not None, (
                 f"Table '{table}' missing from RLS migration SQL. "
                 f"All institution-scoped tables except Institution must have RLS."
             )
@@ -154,8 +155,14 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0003 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the tenant GUC: "
+                f"{predicate!r}"
+            )
 
     def test_superadmin_bypass_policy_per_table(self, db):
         """Each table must have a superadmin_bypass policy."""

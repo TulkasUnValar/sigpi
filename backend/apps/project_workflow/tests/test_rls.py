@@ -44,6 +44,7 @@ from tests.rls_helpers import (
     get_all_sql,
     get_apply_function_source,
     load_migration,
+    policy_using,
     set_rls,
 )
 
@@ -69,6 +70,13 @@ CHILD_TABLES = [
     "project_workflow_workflowstep",
     "project_workflow_workflowaction",
 ]
+
+# Each child reaches the tenant through its own FK; the map pins the FK column
+# and parent table a child's tenant_isolation predicate must traverse.
+CHILD_PARENT = {
+    "project_workflow_workflowstep": ("template_id", "project_workflow_workflowtemplate"),
+    "project_workflow_workflowaction": ("instance_id", "project_workflow_workflowinstance"),
+}
 
 # Policies that must exist per table
 EXPECTED_POLICIES = [
@@ -140,7 +148,7 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            assert table in sql, (
+            assert policy_using(sql, table) is not None, (
                 f"Table '{table}' missing from RLS migration SQL. "
                 f"All 4 workflow tables must have RLS."
             )
@@ -151,8 +159,14 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the tenant GUC: "
+                f"{predicate!r}"
+            )
 
     def test_superadmin_bypass_policy_per_table(self, db):
         """Each table must have a superadmin_bypass policy."""
@@ -179,19 +193,22 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in PARENT_TABLES:
-            assert (
-                "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
-                in sql
-            ), f"Parent table '{table}' must use direct institution_id filter."
+            predicate = policy_using(sql, table)
+            assert predicate is not None, f"{table}: no tenant_isolation USING clause"
+            assert "institution_id" in predicate, (
+                f"Parent table '{table}' must use direct institution_id filter."
+            )
 
     def test_child_tables_use_subquery(self, db):
         """Child tables must filter via subquery through parent table."""
         migration = load_migration("project_workflow", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
-        for table in CHILD_TABLES:
-            assert "IN (" in sql and "project_workflow_" in sql, (
-                f"Child table '{table}' must use a subquery through parent."
+        for table, (fk, parent) in CHILD_PARENT.items():
+            predicate = policy_using(sql, table)
+            assert predicate is not None, f"{table}: no tenant_isolation USING clause"
+            assert fk in predicate and parent in predicate, (
+                f"Child table '{table}' must use a subquery through {fk} → {parent}: {predicate!r}"
             )
 
 

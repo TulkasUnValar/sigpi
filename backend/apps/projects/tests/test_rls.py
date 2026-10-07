@@ -42,6 +42,7 @@ from tests.rls_helpers import (
     get_all_sql,
     get_apply_function_source,
     load_migration,
+    policy_using,
     set_rls,
 )
 
@@ -64,6 +65,14 @@ CHILD_TABLES = [
     "projects_projectobservation",
     "projects_projectstatelog",
 ]
+
+# Each child reaches the tenant through project_id into projects_project.
+CHILD_PARENT = {
+    "projects_projectmember": ("project_id", "projects_project"),
+    "projects_projectdocument": ("project_id", "projects_project"),
+    "projects_projectobservation": ("project_id", "projects_project"),
+    "projects_projectstatelog": ("project_id", "projects_project"),
+}
 
 # Policies that must exist per table
 EXPECTED_POLICIES = [
@@ -135,7 +144,7 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            assert table in sql, (
+            assert policy_using(sql, table) is not None, (
                 f"Table '{table}' missing from RLS migration SQL. "
                 f"All 5 project tables must have RLS."
             )
@@ -146,8 +155,14 @@ class TestRLSPolicySQL:
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
         for table in EXPECTED_RLS_TABLES:
-            pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the tenant GUC: "
+                f"{predicate!r}"
+            )
 
     def test_superadmin_bypass_policy_per_table(self, db):
         """Each table must have a superadmin_bypass policy."""
@@ -183,10 +198,12 @@ class TestRLSPolicySQL:
         migration = load_migration("projects", "0002_rls_policies")
         assert migration is not None, "Migration 0002 missing"
         sql = get_all_sql(migration)
-        for table in CHILD_TABLES:
-            assert "project_id IN" in sql and "projects_project" in sql, (
+        for table, (fk, parent) in CHILD_PARENT.items():
+            predicate = policy_using(sql, table)
+            assert predicate is not None, f"{table}: no tenant_isolation USING clause"
+            assert fk in predicate and parent in predicate, (
                 f"Child table '{table}' must use a subquery through "
-                f"project_id → projects_project.institution_id."
+                f"{fk} → {parent}.institution_id: {predicate!r}"
             )
 
 
