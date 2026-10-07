@@ -33,6 +33,7 @@ from apps.notifications.models import (
     NotificationTemplate,
     UserPreference,
 )
+from tests.rls_helpers import policy_using
 
 # ──────────────────────────────────────────────
 # Tables that MUST have RLS policies
@@ -44,6 +45,9 @@ EXPECTED_RLS_TABLES = [
     "notifications_notificationlog",
     "notifications_userpreference",
 ]
+
+# Shared catalog table: intentionally global (``USING (true)``), not tenant-scoped.
+TEMPLATE_TABLE = "notifications_notificationtemplate"
 
 # Tables that use a subquery (no direct institution_id column)
 SUBQUERY_TABLES = [
@@ -151,24 +155,40 @@ class TestRLSPolicySQL:
         return "\n".join(sql_parts)
 
     def test_all_expected_tables_in_sql(self, db):
-        """Every expected table must have RLS policies in the migration SQL."""
+        """Every expected table must have a tenant_isolation USING clause."""
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
         for table in EXPECTED_RLS_TABLES:
-            assert table in sql, (
+            assert policy_using(sql, table) is not None, (
                 f"Table '{table}' missing from RLS migration SQL. "
                 f"All 4 notifications tables must have RLS."
             )
 
     def test_tenant_isolation_policy_per_table(self, db):
-        """Each table must have a tenant_isolation policy."""
+        """Each table's own tenant_isolation predicate is checked per table.
+
+        The catalog template table is intentionally shared and global
+        (``USING (true)``); every other table must scope by the tenant GUC.
+        """
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
         for table in EXPECTED_RLS_TABLES:
-            pattern = f"CREATE POLICY tenant_isolation ON {table}"
-            assert pattern in sql, f"tenant_isolation policy missing for '{table}'"
+            predicate = policy_using(sql, table)
+            assert predicate is not None, (
+                f"'{table}': no CREATE POLICY tenant_isolation with a USING clause"
+            )
+            if table == TEMPLATE_TABLE:
+                assert predicate == "true", (
+                    f"'{table}': shared catalog table must be globally visible "
+                    f"with USING (true): {predicate!r}"
+                )
+                continue
+            assert "sigpi.institution_id" in predicate, (
+                f"'{table}': tenant_isolation predicate does not scope by the "
+                f"tenant GUC: {predicate!r}"
+            )
 
     def test_superadmin_bypass_policy_per_table(self, db):
         """Each table must have a superadmin_bypass policy."""
@@ -194,21 +214,26 @@ class TestRLSPolicySQL:
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
-        assert (
-            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
-            in sql
-        ), "notifications_notification must use direct institution_id filter."
+        predicate = policy_using(sql, "notifications_notification")
+        assert predicate is not None, "notifications_notification: no tenant_isolation USING clause"
+        assert "institution_id" in predicate, (
+            "notifications_notification must use direct institution_id filter."
+        )
 
     def test_notificationlog_uses_subquery(self, db):
         """NotificationLog must filter via subquery through notification_id."""
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
-        assert "notification_id IN" in sql, (
+        predicate = policy_using(sql, "notifications_notificationlog")
+        assert predicate is not None, (
+            "notifications_notificationlog: no tenant_isolation USING clause"
+        )
+        assert "notification_id IN" in predicate, (
             "notifications_notificationlog must use a subquery through "
             "notification_id → notifications_notification.institution_id."
         )
-        assert "FROM notifications_notification" in sql, (
+        assert "FROM notifications_notification" in predicate, (
             "NotificationLog subquery must reference notifications_notification."
         )
 
@@ -217,25 +242,33 @@ class TestRLSPolicySQL:
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
-        assert "user_id IN" in sql, (
+        predicate = policy_using(sql, "notifications_userpreference")
+        assert predicate is not None, (
+            "notifications_userpreference: no tenant_isolation USING clause"
+        )
+        assert "user_id IN" in predicate, (
             "notifications_userpreference must use a subquery through "
             "user_id → accounts_institutionmembership."
         )
-        assert "FROM accounts_institutionmembership" in sql, (
+        assert "FROM accounts_institutionmembership" in predicate, (
             "UserPreference subquery must reference accounts_institutionmembership."
         )
-        assert "is_active" in sql, "UserPreference subquery must filter on active memberships."
+        assert "is_active" in predicate, (
+            "UserPreference subquery must filter on active memberships."
+        )
 
     def test_template_uses_global_policy(self, db):
         """NotificationTemplate is catalog data — explicit global policy."""
         migration = _get_migration()
         assert migration is not None, "Migration 0002 missing"
         sql = self._get_all_sql()
-        pattern = f"CREATE POLICY tenant_isolation ON {EXPECTED_RLS_TABLES[1]}"
-        assert pattern in sql, "tenant_isolation policy missing for template table"
-        assert "USING (true)" in sql, (
+        predicate = policy_using(sql, TEMPLATE_TABLE)
+        assert predicate is not None, (
+            "notifications_notificationtemplate: no tenant_isolation USING clause"
+        )
+        assert predicate == "true", (
             "NotificationTemplate must have an explicit global policy "
-            "(USING (true)) because templates are catalog data."
+            f"(USING (true)) because templates are catalog data: {predicate!r}"
         )
 
 
