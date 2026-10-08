@@ -7,13 +7,18 @@
  * inside the authenticated shell. No RoleGuard — flat permissions.
  */
 
+import { Suspense } from "react";
+
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
+import { Skeleton } from "@/components/shared/Skeleton";
 import { ProductList } from "@/features/products/ProductList";
 
 export default function ProductsPage() {
   return (
     <AuthenticatedLayout>
-      <ProductList />
+      <Suspense fallback={<Skeleton className="h-12" />}>
+        <ProductList />
+      </Suspense>
     </AuthenticatedLayout>
   );
 }
