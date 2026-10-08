@@ -7,6 +7,8 @@
  * admin/superadmin only (RF-F05).
  */
 
+import { Suspense } from "react";
+
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { GraduationCap, Plus } from "lucide-react";
@@ -20,6 +22,16 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useFacultades } from "@/features/institutions/queries";
 
 export default function FacultadesPage() {
+  return (
+    <AuthenticatedLayout>
+      <Suspense fallback={<Skeleton className="h-14" />}>
+        <FacultadesList />
+      </Suspense>
+    </AuthenticatedLayout>
+  );
+}
+
+function FacultadesList() {
   const params = useParams<{ id: string }>();
   const instId = params.id;
   const searchParams = useSearchParams();
@@ -29,7 +41,7 @@ export default function FacultadesPage() {
   const facultades = facultadesQuery.data?.results ?? [];
 
   return (
-    <AuthenticatedLayout>
+    <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Facultades</h1>
         <RoleGuard allowedRoles={["admin", "superadmin"]}>
@@ -89,6 +101,6 @@ export default function FacultadesPage() {
           ))}
         </ul>
       )}
-    </AuthenticatedLayout>
+    </>
   );
 }

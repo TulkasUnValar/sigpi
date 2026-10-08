@@ -7,6 +7,8 @@
  * (institution | sede | facultad). Create CTA is admin/superadmin (RF-F05).
  */
 
+import { Suspense } from "react";
+
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { FlaskConical, Plus } from "lucide-react";
@@ -20,6 +22,16 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useResearchCenters } from "@/features/institutions/queries";
 
 export default function CentersPage() {
+  return (
+    <AuthenticatedLayout>
+      <Suspense fallback={<Skeleton className="h-14" />}>
+        <CentersList />
+      </Suspense>
+    </AuthenticatedLayout>
+  );
+}
+
+function CentersList() {
   const params = useParams<{ id: string }>();
   const instId = params.id;
   const searchParams = useSearchParams();
@@ -30,7 +42,7 @@ export default function CentersPage() {
   const centers = centersQuery.data?.results ?? [];
 
   return (
-    <AuthenticatedLayout>
+    <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Centros de investigación</h1>
         <RoleGuard allowedRoles={["admin", "superadmin"]}>
@@ -88,6 +100,6 @@ export default function CentersPage() {
           ))}
         </ul>
       )}
-    </AuthenticatedLayout>
+    </>
   );
 }

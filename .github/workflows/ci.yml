@@ -247,6 +247,11 @@ jobs:
           cd frontend
           npm test -- --coverage --ci
 
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
         if: matrix.node-version == '20'
