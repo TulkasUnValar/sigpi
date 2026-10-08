@@ -25,6 +25,8 @@ import pytest
 from django.db import DatabaseError, connection, transaction
 from django.db.migrations.loader import MigrationLoader
 
+from tests.rls_helpers import policy_using
+
 TABLE = "accounts_auditevent"
 
 EXPECTED_POLICIES = [
@@ -130,13 +132,13 @@ class TestRLSPolicySQL:
         mod = _get_module()
         assert mod is not None
         sql = self._sql()
-        assert f"CREATE POLICY tenant_isolation ON {TABLE}" in sql, (
-            f"tenant_isolation policy missing for '{TABLE}'"
+        predicate = policy_using(sql, TABLE)
+        assert predicate is not None, (
+            f"'{TABLE}': no CREATE POLICY tenant_isolation with a USING clause"
         )
-        assert (
-            "institution_id = NULLIF(current_setting('sigpi.institution_id', true), '')::uuid"
-            in sql
-        ), "tenant_isolation must filter by sigpi.institution_id"
+        assert "sigpi.institution_id" in predicate, (
+            f"'{TABLE}': tenant_isolation predicate does not scope by the tenant GUC: {predicate!r}"
+        )
 
     def test_superadmin_bypass_policy(self, db):
         mod = _get_module()
