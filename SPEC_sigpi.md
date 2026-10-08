@@ -1,16 +1,16 @@
-## Sistema de Información para la Gestión de Proyectos de Investigación 
+## Sistema de Información para la Gestión de Proyectos de Investigación
 
-## ## 1. Definición general del sistema 
+## ## 1. Definición general del sistema
 
-El sistema será una plataforma web nacional, multiinstitucional y multicentro, orientada a la gestión integral de proyectos de investigación. Permitirá registrar, actualizar, aprobar, consultar, auditar y reportar información relacionada con investigadores, centros de investigación, grupos, líneas, convocatorias, proyectos, avances, informes, productos, presupuestos, actas, adjuntos e indicadores. 
+El sistema será una plataforma web nacional, multiinstitucional y multicentro, orientada a la gestión integral de proyectos de investigación. Permitirá registrar, actualizar, aprobar, consultar, auditar y reportar información relacionada con investigadores, centros de investigación, grupos, líneas, convocatorias, proyectos, avances, informes, productos, presupuestos, actas, adjuntos e indicadores.
 
-El sistema debe estar diseñado para operar con varios centros de investigación, diferentes facultades, sedes o instituciones, y podrá escalar a un uso nacional. Por esta razón, la arquitectura debe contemplar separación lógica por institución, centro, facultad, grupo y usuario, evitando que un usuario acceda a información no autorizada. 
+El sistema debe estar diseñado para operar con varios centros de investigación, diferentes facultades, sedes o instituciones, y podrá escalar a un uso nacional. Por esta razón, la arquitectura debe contemplar separación lógica por institución, centro, facultad, grupo y usuario, evitando que un usuario acceda a información no autorizada.
 
---- 
+---
 
-## ## 2. Alcance actualizado 
+## ## 2. Alcance actualizado
 
-El sistema debe permitir: 
+El sistema debe permitir:
 
 |**Código**|**Alcance**|
 |---|---|
@@ -24,11 +24,11 @@ El sistema debe permitir:
 
 
 
-informes ALC-07 Gestionar convocatorias internas y externas ALC-08 Gestionar presupuesto del proyecto ALC-09 Registrar avances, informes parciales e informes finales ALC-10 Generar informes en PDF ALC-11 Gestionar firma digital, actas y adjuntos ALC-12 Integrar o sincronizar información con CvLAC y GrupLAC ALC-13 Registrar productos/resultados de investigación ALC-14 Gestionar trazabilidad y auditoría completa de cambios ALC-15 Implementar búsqueda avanzada con Meilisearch ALC-16 Exponer API REST mediante Django REST Framework Visualizar indicadores y analítica mediante dashboards ALC-17 internos y Apache Superset ALC-18 Documentar el sistema con MkDocs Material 
+informes ALC-07 Gestionar convocatorias internas y externas ALC-08 Gestionar presupuesto del proyecto ALC-09 Registrar avances, informes parciales e informes finales ALC-10 Generar informes en PDF ALC-11 Gestionar firma digital, actas y adjuntos ALC-12 Integrar o sincronizar información con CvLAC y GrupLAC ALC-13 Registrar productos/resultados de investigación ALC-14 Gestionar trazabilidad y auditoría completa de cambios ALC-15 Implementar búsqueda avanzada con Meilisearch ALC-16 Exponer API REST mediante Django REST Framework Visualizar indicadores y analítica mediante dashboards ALC-17 internos y Apache Superset ALC-18 Documentar el sistema con MkDocs Material
 
---- 
+---
 
-## 3. Alcance excluido de la primera versión 
+## 3. Alcance excluido de la primera versión
 
 |**Código**|**Exclusión inicial**|
 |---|---|
@@ -40,11 +40,11 @@ informes ALC-07 Gestionar convocatorias internas y externas ALC-08 Gestionar pre
 
 
 
-Nota: la firma digital queda incluida funcionalmente, la firma es manuscrita digitalizada. 
+Nota: la firma digital queda incluida funcionalmente, la firma es manuscrita digitalizada.
 
---- 
+---
 
-## 4. Actores del sistema 
+## 4. Actores del sistema
 
 |**Actor**|**Descripción**|**Responsabilidades**|
 |---|---|---|
@@ -55,11 +55,11 @@ Nota: la firma digital queda incluida funcionalmente, la firma es manuscrita dig
 
 
 
-Usuario académico Crea proyectos, actualiza proyectos, registra **Investigador** responsable o participante avances, carga productos y documentos Participante asociado a un Registra avances o productos si tiene **Coinvestigador** proyecto permiso Grupo consultivo o Consulta información y emite observaciones **Comité** evaluador si se habilita el flujo Consulta trazabilidad, cambios, documentos **Auditor** Usuario de control y eventos Usuario autorizado para Consulta dashboards e indicadores en **Usuario BI** analítica Superset **Visitante interno** Usuario con acceso limitado Consulta información autorizada 
+Usuario académico Crea proyectos, actualiza proyectos, registra **Investigador** responsable o participante avances, carga productos y documentos Participante asociado a un Registra avances o productos si tiene **Coinvestigador** proyecto permiso Grupo consultivo o Consulta información y emite observaciones **Comité** evaluador si se habilita el flujo Consulta trazabilidad, cambios, documentos **Auditor** Usuario de control y eventos Usuario autorizado para Consulta dashboards e indicadores en **Usuario BI** analítica Superset **Visitante interno** Usuario con acceso limitado Consulta información autorizada
 
---- 
+---
 
-## ## 5. Roles y permisos principales 
+## ## 5. Roles y permisos principales
 
 |**Acción**|**Superadm**<br>**in**|**Admin**<br>**institucio**<br>**nal**|**Director**<br>**centro**|**Investigad**<br>**or**|**Coinvestigad**<br>**or**|**Audit**<br>**or**|
 |---|---|---|---|---|---|---|
@@ -80,31 +80,31 @@ Usuario académico Crea proyectos, actualiza proyectos, registra **Investigador*
 
 
 
---- 
+---
 
-## 6. Módulos del sistema 
+## 6. Módulos del sistema
 
-## 6.1 Módulo de instituciones y estructura investigativa 
+## 6.1 Módulo de instituciones y estructura investigativa
 
-### Objetivo 
+### Objetivo
 
-Gestionar la estructura jerárquica del sistema para permitir operación por múltiples instituciones, sedes, facultades, centros, grupos y líneas de investigación. 
+Gestionar la estructura jerárquica del sistema para permitir operación por múltiples instituciones, sedes, facultades, centros, grupos y líneas de investigación.
 
-## ### Entidades principales 
+## ### Entidades principales
 
-- Institución 
+- Institución
 
-- Sede 
+- Sede
 
-- Facultad 
+- Facultad
 
-- Centro de investigación 
+- Centro de investigación
 
-- Grupo de investigación 
+- Grupo de investigación
 
-- Línea de investigación 
+- Línea de investigación
 
-### Requisitos funcionales 
+### Requisitos funcionales
 
 |**Códig**<br>**o**||**Requisito**|
 |---|---|---|
@@ -121,31 +121,31 @@ Gestionar la estructura jerárquica del sistema para permitir operación por mú
 
 
 
-- RF-00 El sistema debe permitir activar, desactivar o archivar 8 estructuras institucionales. 
+- RF-00 El sistema debe permitir activar, desactivar o archivar 8 estructuras institucionales.
 
---- 
+---
 
-## 6.2 Módulo de autenticación y seguridad 
+## 6.2 Módulo de autenticación y seguridad
 
-### Objetivo 
+### Objetivo
 
-Gestionar el acceso seguro mediante Keycloak como proveedor principal de identidad y django-allauth como mecanismo alterno. 
+Gestionar el acceso seguro mediante Keycloak como proveedor principal de identidad y django-allauth como mecanismo alterno.
 
-### Stack 
+### Stack
 
-* Keycloak 26 
+* Keycloak 26
 
-## * OIDC 
+## * OIDC
 
-- SAML 
+- SAML
 
-- django-allauth como fallback 
+- django-allauth como fallback
 
-- Django permissions 
+- Django permissions
 
-- DRF permissions 
+- DRF permissions
 
-### Requisitos funcionales 
+### Requisitos funcionales
 
 |**Códig**<br>**o**|||||**Requisito**|
 |---|---|---|---|---|---|
@@ -156,19 +156,19 @@ Gestionar el acceso seguro mediante Keycloak como proveedor principal de identid
 
 
 
-2 allauth. 
+2 allauth.
 
-RF-01 El sistema debe controlar permisos por rol. 3 RF-01 El sistema debe controlar permisos por institución y centro. 4 RF-01 El sistema debe registrar último acceso del usuario. 5 RF-01 El sistema debe permitir desactivar usuarios. 6 
+RF-01 El sistema debe controlar permisos por rol. 3 RF-01 El sistema debe controlar permisos por institución y centro. 4 RF-01 El sistema debe registrar último acceso del usuario. 5 RF-01 El sistema debe permitir desactivar usuarios. 6
 
---- 
+---
 
-## ## 6.3 Módulo de investigadores 
+## ## 6.3 Módulo de investigadores
 
-### Objetivo 
+### Objetivo
 
-Centralizar la información de los investigadores y permitir actualización de perfiles académicos, institucionales y externos. 
+Centralizar la información de los investigadores y permitir actualización de perfiles académicos, institucionales y externos.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Códig**<br>**o**|**Requisito**|
 |---|---|
@@ -188,7 +188,7 @@ Centralizar la información de los investigadores y permitir actualización de p
 
 
 
-### Reglas de negocio 
+### Reglas de negocio
 
 |**Códig**<br>**o**|**Regla**|
 |---|---|
@@ -206,15 +206,15 @@ Centralizar la información de los investigadores y permitir actualización de p
 
 
 
---- 
+---
 
-## 6.4 Módulo de proyectos de investigación 
+## 6.4 Módulo de proyectos de investigación
 
-### Objetivo 
+### Objetivo
 
-Gestionar el ciclo de vida completo de los proyectos de investigación, desde su creación hasta su cierre. 
+Gestionar el ciclo de vida completo de los proyectos de investigación, desde su creación hasta su cierre.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -240,7 +240,7 @@ Gestionar el ciclo de vida completo de los proyectos de investigación, desde su
 
 
 
-## ### Estados del proyecto 
+## ### Estados del proyecto
 
 |**Estado**|**Descripción**|
 |---|---|
@@ -258,7 +258,7 @@ Gestionar el ciclo de vida completo de los proyectos de investigación, desde su
 
 
 
-## ### Reglas de negocio 
+## ### Reglas de negocio
 
 |**Código**|**Regla**|
 |---|---|
@@ -268,17 +268,17 @@ Gestionar el ciclo de vida completo de los proyectos de investigación, desde su
 
 
 
-Solo el director de centro puede aprobar proyectos de su RN-010 centro. Un proyecto cerrado no puede ser modificado por RN-011 investigadores. RN-012 Todo cambio de estado debe quedar auditado. RN-013 La fecha final no puede ser anterior a la fecha inicial. Un proyecto observado debe conservar historial de RN-014 observaciones. 
+Solo el director de centro puede aprobar proyectos de su RN-010 centro. Un proyecto cerrado no puede ser modificado por RN-011 investigadores. RN-012 Todo cambio de estado debe quedar auditado. RN-013 La fecha final no puede ser anterior a la fecha inicial. Un proyecto observado debe conservar historial de RN-014 observaciones.
 
---- 
+---
 
-## 6.5 Módulo de avances 
+## 6.5 Módulo de avances
 
-### Objetivo 
+### Objetivo
 
-Permitir el reporte periódico de avances por parte de los investigadores y la aprobación por parte del director de centro. 
+Permitir el reporte periódico de avances por parte de los investigadores y la aprobación por parte del director de centro.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -295,7 +295,7 @@ Permitir el reporte periódico de avances por parte de los investigadores y la a
 
 
 
-### Estados del avance 
+### Estados del avance
 
 |**Estado**|**Descripción**|
 |---|---|
@@ -308,15 +308,15 @@ Permitir el reporte periódico de avances por parte de los investigadores y la a
 
 
 
---- 
+---
 
-## 6.6 Módulo de informes 
+## 6.6 Módulo de informes
 
-### Objetivo 
+### Objetivo
 
-Generar informes en PDF sobre proyectos, investigadores, centros, avances, productos, presupuestos y convocatorias. 
+Generar informes en PDF sobre proyectos, investigadores, centros, avances, productos, presupuestos y convocatorias.
 
-### Requisitos funcionales 
+### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -332,7 +332,7 @@ Generar informes en PDF sobre proyectos, investigadores, centros, avances, produ
 
 
 
-### Reglas de negocio 
+### Reglas de negocio
 
 |**Código**|**Regla**|
 |---|---|
@@ -341,17 +341,17 @@ Generar informes en PDF sobre proyectos, investigadores, centros, avances, produ
 
 
 
-Un informe final no puede aprobarse si el proyecto tiene RN-017 avances pendientes sin revisar. Todo informe aprobado debe conservar fecha, aprobador y RN-018 versión. 
+Un informe final no puede aprobarse si el proyecto tiene RN-017 avances pendientes sin revisar. Todo informe aprobado debe conservar fecha, aprobador y RN-018 versión.
 
---- 
+---
 
-## 6.7 Módulo de firma digital, actas y adjuntos 
+## 6.7 Módulo de firma digital, actas y adjuntos
 
-## ### Objetivo 
+## ### Objetivo
 
-Gestionar documentos institucionales, soportes, actas y firmas asociadas a proyectos, informes y aprobaciones. 
+Gestionar documentos institucionales, soportes, actas y firmas asociadas a proyectos, informes y aprobaciones.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -365,31 +365,31 @@ Gestionar documentos institucionales, soportes, actas y firmas asociadas a proye
 
 
 
-## ### Tipos documentales 
+## ### Tipos documentales
 
-| Tipo                     | | ------------------------ | 
+| Tipo                     | | ------------------------ |
 
-| Acta de inicio           | 
+| Acta de inicio           |
 
-| Acta de comité           | 
+| Acta de comité           |
 
-| Acta de aprobación       | 
+| Acta de aprobación       |
 
-| Acta de cierre           | 
+| Acta de cierre           |
 
-| Formulación del proyecto | 
+| Formulación del proyecto |
 
-| Informe parcial          | | Informe final            | | Evidencia de producto    | | Presupuesto              | | Carta o aval             | | Certificación            | | Otro                     | 
+| Informe parcial          | | Informe final            | | Evidencia de producto    | | Presupuesto              | | Carta o aval             | | Certificación            | | Otro                     |
 
---- 
+---
 
-## 6.8 Módulo de convocatorias internas y externas 
+## 6.8 Módulo de convocatorias internas y externas
 
-## ### Objetivo 
+## ### Objetivo
 
-Gestionar convocatorias de investigación y asociarlas a proyectos. 
+Gestionar convocatorias de investigación y asociarlas a proyectos.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -401,37 +401,37 @@ Gestionar convocatorias de investigación y asociarlas a proyectos.
 
 
 
-El sistema debe registrar firmante, fecha, documento RF-064 firmado y hash del documento. RF-065 El sistema debe permitir consultar documentos firmados. El sistema debe impedir edición directa de documentos ya RF-066 firmados. 
+El sistema debe registrar firmante, fecha, documento RF-064 firmado y hash del documento. RF-065 El sistema debe permitir consultar documentos firmados. El sistema debe impedir edición directa de documentos ya RF-066 firmados.
 
-### Estados de convocatoria 
+### Estados de convocatoria
 
-| Estado                | 
+| Estado                |
 
-| --------------------- | 
+| --------------------- |
 
-| Borrador              | 
+| Borrador              |
 
-| Abierta               | 
+| Abierta               |
 
-| Cerrada               | 
+| Cerrada               |
 
-| En evaluación         | 
+| En evaluación         |
 
-| Resultados publicados | | Archivada             | 
+| Resultados publicados | | Archivada             |
 
---- 
+---
 
-## 6.9 Módulo de presupuesto 
+## 6.9 Módulo de presupuesto
 
-### Objetivo 
+### Objetivo
 
-Gestionar el presupuesto asociado a proyectos de investigación. 
+Gestionar el presupuesto asociado a proyectos de investigación.
 
-### Requisitos funcionales 
+### Requisitos funcionales
 
-**Código** 
+**Código**
 
-**Requisito** 
+**Requisito**
 
 |RF-067|El sistema debe permitir crear convocatorias internas.|
 |---|---|
@@ -443,7 +443,7 @@ Gestionar el presupuesto asociado a proyectos de investigación.
 
 
 
-## ### Entidades presupuestales 
+## ### Entidades presupuestales
 
 |**Entidad**|**Descripción**|
 |---|---|
@@ -455,7 +455,7 @@ Gestionar el presupuesto asociado a proyectos de investigación.
 
 
 
-## ### Reglas de negocio 
+## ### Reglas de negocio
 
 |**Código**|**Regla**|
 |---|---|
@@ -466,15 +466,15 @@ Gestionar el presupuesto asociado a proyectos de investigación.
 
 
 
---- 
+---
 
-## 6.10 Módulo de productos de investigación 
+## 6.10 Módulo de productos de investigación
 
-### Objetivo 
+### Objetivo
 
-Registrar productos y resultados derivados de los proyectos. 
+Registrar productos y resultados derivados de los proyectos.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -488,23 +488,23 @@ Registrar productos y resultados derivados de los proyectos.
 
 
 
-## ### Tipos de producto iniciales 
+## ### Tipos de producto iniciales
 
-| Tipo                           | | ------------------------------ | | Artículo                       | | Ponencia                       | | Libro                          | | Capítulo de libro              | | Software                       | | Prototipo                      | | Informe técnico                | | Producto de apropiación social | | Producto de formación          | | Evento                         | | Otro                           | 
+| Tipo                           | | ------------------------------ | | Artículo                       | | Ponencia                       | | Libro                          | | Capítulo de libro              | | Software                       | | Prototipo                      | | Informe técnico                | | Producto de apropiación social | | Producto de formación          | | Evento                         | | Otro                           |
 
---- 
+---
 
-## 6.11 Módulo de búsqueda avanzada 
+## 6.11 Módulo de búsqueda avanzada
 
-### Objetivo 
+### Objetivo
 
-Permitir búsquedas rápidas y filtradas en proyectos, investigadores, productos, convocatorias y documentos. 
+Permitir búsquedas rápidas y filtradas en proyectos, investigadores, productos, convocatorias y documentos.
 
-### Tecnología 
+### Tecnología
 
-## * Meilisearch 
+## * Meilisearch
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -517,15 +517,15 @@ Permitir búsquedas rápidas y filtradas en proyectos, investigadores, productos
 
 
 
---- 
+---
 
-## 6.12 Módulo de BI e indicadores 
+## 6.12 Módulo de BI e indicadores
 
-### Objetivo 
+### Objetivo
 
-Exponer información consolidada para visualización estratégica mediante dashboard interno y Apache Superset con réplica de lectura. 
+Exponer información consolidada para visualización estratégica mediante dashboard interno y Apache Superset con réplica de lectura.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -540,7 +540,7 @@ Exponer información consolidada para visualización estratégica mediante dashb
 
 
 
-## ### Indicadores iniciales 
+## ### Indicadores iniciales
 
 |**Código**|**Indicador**|
 |---|---|
@@ -561,15 +561,15 @@ Exponer información consolidada para visualización estratégica mediante dashb
 
 
 
---- 
+---
 
-## 6.13 Módulo de auditoría y trazabilidad 
+## 6.13 Módulo de auditoría y trazabilidad
 
-### Objetivo 
+### Objetivo
 
-Registrar todo cambio relevante en el sistema para permitir control, revisión y trazabilidad completa. 
+Registrar todo cambio relevante en el sistema para permitir control, revisión y trazabilidad completa.
 
-## ### Requisitos funcionales 
+## ### Requisitos funcionales
 
 |**Código**|**Requisito**|
 |---|---|
@@ -583,28 +583,28 @@ Registrar todo cambio relevante en el sistema para permitir control, revisión y
 
 
 
-### Eventos auditables 
+### Eventos auditables
 
-| Evento                       | | ---------------------------- | | Creación de usuario          | | Cambio de rol                | | Creación de investigador     | | Actualización de perfil      | | Creación de proyecto         | | Cambio de estado de proyecto | | Observación de proyecto      | | Aprobación de proyecto       | | Registro de avance           | | Aprobación de avance         | | Rechazo de avance            | | Generación de informe        | | Aprobación de informe        | 
+| Evento                       | | ---------------------------- | | Creación de usuario          | | Cambio de rol                | | Creación de investigador     | | Actualización de perfil      | | Creación de proyecto         | | Cambio de estado de proyecto | | Observación de proyecto      | | Aprobación de proyecto       | | Registro de avance           | | Aprobación de avance         | | Rechazo de avance            | | Generación de informe        | | Aprobación de informe        |
 
-| Carga de acta                | 
+| Carga de acta                |
 
-| Firma de documento           | 
+| Firma de documento           |
 
-| Cambio presupuestal          | 
+| Cambio presupuestal          |
 
-| Descarga de documento        | 
+| Descarga de documento        |
 
-| Eliminación lógica           | 
+| Eliminación lógica           |
 
---- 
+---
 
-## 7. Requisitos no funcionales 
+## 7. Requisitos no funcionales
 
 |**Código**|**Requisito**|
 |---|---|
 |RNF-001|El sistema debe ser web y responsive.|
-|RNF-002|El backend debe desarrollarse en Django 5.1 con Python<br>3.12.|
+|RNF-002|El backend debe desarrollarse en Django 6.0 con Python<br>3.12.|
 |RNF-003|El sistema debe exponer API REST mediante Django REST<br>Framework.|
 |RNF-004|El frontend debe desarrollarse en Next.js 15 con App Router<br>y React 19.|
 |RNF-005|El sistema debe soportar internacionalización con next-intl.|
@@ -628,15 +628,15 @@ Registrar todo cambio relevante en el sistema para permitir control, revisión y
 
 
 
-El sistema debe separar configuración sensible mediante RNF-024 variables de entorno. El sistema debe tener pruebas automatizadas para backend RNF-025 y frontend. 
+El sistema debe separar configuración sensible mediante RNF-024 variables de entorno. El sistema debe tener pruebas automatizadas para backend RNF-025 y frontend.
 
---- 
+---
 
-## 8. Stack tecnológico definitivo 
+## 8. Stack tecnológico definitivo
 
 |**Capa**|**Tecnología**|
 |---|---|
-|Backend|Django 5.1 + DRF + Celery + Redis + PostgreSQL 16 + django-<br>fsm + Python 3.12|
+|Backend|Django 6.0 + DRF + Celery + Redis + PostgreSQL 16 + django-<br>fsm + Python 3.12|
 |Frontend|Next.js 15 App Router + React 19 + next-intl + next-themes +<br>shadcn/ui|
 |Auth|Keycloak 26 con OIDC + SAML; django-allauth como fallback|
 |Búsqueda|Meilisearch|
@@ -649,27 +649,27 @@ El sistema debe separar configuración sensible mediante RNF-024 variables de en
 
 
 
-## ## 9. Arquitectura propuesta 
+## ## 9. Arquitectura propuesta
 
-## 9.1 Tipo de arquitectura 
+## 9.1 Tipo de arquitectura
 
-Arquitectura modular desacoplada: 
+Arquitectura modular desacoplada:
 
-- Backend API-first con Django REST Framework. 
+- Backend API-first con Django REST Framework.
 
-- Frontend separado con Next.js. 
+- Frontend separado con Next.js.
 
-- Autenticación externa mediante Keycloak. 
+- Autenticación externa mediante Keycloak.
 
-- Procesamiento asíncrono con Celery. 
+- Procesamiento asíncrono con Celery.
 
-- Búsqueda desacoplada con Meilisearch. 
+- Búsqueda desacoplada con Meilisearch.
 
-- Storage de objetos con MinIO. 
+- Storage de objetos con MinIO.
 
-* BI desacoplado mediante réplica de lectura y Superset. 
+* BI desacoplado mediante réplica de lectura y Superset.
 
-## 9.2 Componentes principales 
+## 9.2 Componentes principales
 
 |**Componente**|**Responsabilidad**|
 |---|---|
@@ -687,45 +687,45 @@ Arquitectura modular desacoplada:
 
 
 
---- 
+---
 
-## ## 10. Apps backend sugeridas 
+## ## 10. Apps backend sugeridas
 
-```txt backend/ config/ apps/ accounts/ institutions/ researchers/ projects/ project_workflow/ progress/ 
+```txt backend/ config/ apps/ accounts/ institutions/ researchers/ projects/ project_workflow/ progress/
 
-reports/ products/ calls/ budgets/ documents/ signatures/ audit/ search/ 
+reports/ products/ calls/ budgets/ documents/ signatures/ audit/ search/
 
-dashboards/ integrations/ notifications/ 
+dashboards/ integrations/ notifications/
 
-``` 
+```
 
---- 
+---
 
-## 11. Estructura frontend sugerida 
+## 11. Estructura frontend sugerida
 
-```txt 
+```txt
 
-frontend/ app/ [locale]/ auth/ dashboard/ institutions/ centers/ researchers/ 
+frontend/ app/ [locale]/ auth/ dashboard/ institutions/ centers/ researchers/
 
-projects/ 
+projects/
 
-progress/ reports/ products/ calls/ 
+progress/ reports/ products/ calls/
 
-budgets/ documents/ audit/ 
+budgets/ documents/ audit/
 
-components/ features/ 
+components/ features/
 
-lib/ 
+lib/
 
-hooks/ 
+hooks/
 
-messages/ 
+messages/
 
-``` 
+```
 
---- 
+---
 
-## 12. Modelo de datos principal 
+## 12. Modelo de datos principal
 
 |**Entidad**|**Descripción**|
 |---|---|
@@ -742,99 +742,99 @@ messages/
 
 
 
-ProjectMember Participante del proyecto ProjectStateHisto Historial de estados ry ProgressReport Avance ProgressReview Revisión del avance ResearchProduct Producto de investigación Call Convocatoria Budget Presupuesto del proyecto BudgetLine Rubro FundingSource Fuente de financiación BudgetExecution Ejecución presupuestal Document Documento o adjunto DocumentVersio Versión documental n DigitalSignature Firma digital/electrónica Minutes Acta AuditLog Auditoría Notification Notificación IntegrationLog Registro de integración externa 
+ProjectMember Participante del proyecto ProjectStateHisto Historial de estados ry ProgressReport Avance ProgressReview Revisión del avance ResearchProduct Producto de investigación Call Convocatoria Budget Presupuesto del proyecto BudgetLine Rubro FundingSource Fuente de financiación BudgetExecution Ejecución presupuestal Document Documento o adjunto DocumentVersio Versión documental n DigitalSignature Firma digital/electrónica Minutes Acta AuditLog Auditoría Notification Notificación IntegrationLog Registro de integración externa
 
---- 
+---
 
-## 13. Flujos críticos 
+## 13. Flujos críticos
 
-## 13.1 Crear proyecto por investigador 
+## 13.1 Crear proyecto por investigador
 
-1. Investigador inicia sesión. 
+1. Investigador inicia sesión.
 
-2. Ingresa al módulo de proyectos. 
+2. Ingresa al módulo de proyectos.
 
-3. Crea proyecto en estado borrador. 
+3. Crea proyecto en estado borrador.
 
-4. Registra datos mínimos. 
+4. Registra datos mínimos.
 
-5. Asocia centro, grupo y línea. 
+5. Asocia centro, grupo y línea.
 
-6. Asocia equipo investigador. 
+6. Asocia equipo investigador.
 
-7. Registra presupuesto si aplica. 
+7. Registra presupuesto si aplica.
 
-8. Adjunta documentos iniciales. 
+8. Adjunta documentos iniciales.
 
-## 9. Envía a revisión. 
+## 9. Envía a revisión.
 
-10. El sistema registra auditoría. 
+10. El sistema registra auditoría.
 
-11. El director de centro recibe notificación. 
+11. El director de centro recibe notificación.
 
-## 13.2 Aprobar proyecto por director de centro 
+## 13.2 Aprobar proyecto por director de centro
 
-1. Director ingresa al panel. 
+1. Director ingresa al panel.
 
-2. Consulta proyectos enviados. 
+2. Consulta proyectos enviados.
 
-3. Revisa información, documentos y presupuesto. 
+3. Revisa información, documentos y presupuesto.
 
-4. Puede aprobar, observar o rechazar. 
+4. Puede aprobar, observar o rechazar.
 
-5. Si observa, el proyecto vuelve al investigador. 
+5. Si observa, el proyecto vuelve al investigador.
 
-6. Si aprueba, el proyecto cambia a aprobado o en ejecución. 
+6. Si aprueba, el proyecto cambia a aprobado o en ejecución.
 
-7. El sistema registra estado, fecha, usuario y observación. 
+7. El sistema registra estado, fecha, usuario y observación.
 
-## 13.3 Registrar y aprobar avance 
+## 13.3 Registrar y aprobar avance
 
-1. Investigador registra avance. 
+1. Investigador registra avance.
 
-2. Adjunta soportes. 
+2. Adjunta soportes.
 
-3. Envía avance. 
+3. Envía avance.
 
-4. Director de centro revisa. 
+4. Director de centro revisa.
 
-5. Director aprueba, observa o rechaza. 
+5. Director aprueba, observa o rechaza.
 
-6. El sistema actualiza indicadores. 
+6. El sistema actualiza indicadores.
 
-7. El sistema registra auditoría. 
+7. El sistema registra auditoría.
 
-## 13.4 Generar informe PDF 
+## 13.4 Generar informe PDF
 
-1. Usuario autorizado selecciona tipo de informe. 
+1. Usuario autorizado selecciona tipo de informe.
 
-2. Selecciona filtros. 
+2. Selecciona filtros.
 
-3. El sistema genera vista previa. 
+3. El sistema genera vista previa.
 
-4. El usuario exporta a PDF. 
+4. El usuario exporta a PDF.
 
-5. El PDF se genera con WeasyPrint. 
+5. El PDF se genera con WeasyPrint.
 
-6. El sistema registra evento en auditoría. 
+6. El sistema registra evento en auditoría.
 
-## 13.5 Firma de documento 
+## 13.5 Firma de documento
 
-1. Usuario autorizado abre documento. 
+1. Usuario autorizado abre documento.
 
-2. El sistema muestra versión actual. 
+2. El sistema muestra versión actual.
 
-3. Usuario firma. 
+3. Usuario firma.
 
-4. El sistema registra firmante, fecha, hash y versión. 
+4. El sistema registra firmante, fecha, hash y versión.
 
-5. El documento queda bloqueado para edición directa. 
+5. El documento queda bloqueado para edición directa.
 
-6. Si hay cambios posteriores, debe crearse una nueva versión. 
+6. Si hay cambios posteriores, debe crearse una nueva versión.
 
---- 
+---
 
-## 14. Criterios de aceptación globales 
+## 14. Criterios de aceptación globales
 
 |**Código**|**Criterio**|
 |---|---|
@@ -848,141 +848,141 @@ ProjectMember Participante del proyecto ProjectStateHisto Historial de estados r
 
 
 
-Todo documento firmado conserva versión, firmante, fecha CA-008 y hash. CA-009 Los informes se generan únicamente en PDF. El sistema permite registrar convocatorias internas y CA-010 externas. El presupuesto del proyecto puede registrar rubros, fuentes CA-011 y ejecución. CA-012 Las búsquedas deben devolver resultados por texto y filtros. La información sensible se restringe por institución, centro y CA-013 rol. La integración con CvLAC/GrupLAC debe permitir enlace CA-014 manual y proceso automático cuando esté disponible. La auditoría debe permitir rastrear quién hizo qué, cuándo y CA-015 sobre qué entidad. 
+Todo documento firmado conserva versión, firmante, fecha CA-008 y hash. CA-009 Los informes se generan únicamente en PDF. El sistema permite registrar convocatorias internas y CA-010 externas. El presupuesto del proyecto puede registrar rubros, fuentes CA-011 y ejecución. CA-012 Las búsquedas deben devolver resultados por texto y filtros. La información sensible se restringe por institución, centro y CA-013 rol. La integración con CvLAC/GrupLAC debe permitir enlace CA-014 manual y proceso automático cuando esté disponible. La auditoría debe permitir rastrear quién hizo qué, cuándo y CA-015 sobre qué entidad.
 
---- 
+---
 
-## 15. Historias de usuario prioritarias 
+## 15. Historias de usuario prioritarias
 
-### HU-001 Crear proyecto como investigador 
+### HU-001 Crear proyecto como investigador
 
-Como investigador, quiero crear un proyecto de investigación para radicarlo ante mi centro. 
+Como investigador, quiero crear un proyecto de investigación para radicarlo ante mi centro.
 
-Criterios: 
+Criterios:
 
-* Dado que soy investigador autenticado, cuando creo un proyecto con datos mínimos, entonces el sistema lo guarda como borrador. 
+* Dado que soy investigador autenticado, cuando creo un proyecto con datos mínimos, entonces el sistema lo guarda como borrador.
 
-* Dado que el proyecto está completo, cuando lo envío a revisión, entonces el sistema lo pasa a estado enviado. 
+* Dado que el proyecto está completo, cuando lo envío a revisión, entonces el sistema lo pasa a estado enviado.
 
-* Dado que envío el proyecto, entonces el director de centro recibe notificación. 
+* Dado que envío el proyecto, entonces el director de centro recibe notificación.
 
-### HU-002 Actualizar proyecto observado 
+### HU-002 Actualizar proyecto observado
 
-Como investigador, quiero corregir un proyecto observado para responder a las solicitudes del director. 
+Como investigador, quiero corregir un proyecto observado para responder a las solicitudes del director.
 
-## Criterios: 
+## Criterios:
 
-- Dado un proyecto observado, cuando edito la información solicitada, entonces el sistema permite guardar cambios. 
+- Dado un proyecto observado, cuando edito la información solicitada, entonces el sistema permite guardar cambios.
 
-- Dado que hago cambios, entonces el sistema conserva historial. 
+- Dado que hago cambios, entonces el sistema conserva historial.
 
-- Dado que reenvío el proyecto, entonces vuelve a revisión del director. 
+- Dado que reenvío el proyecto, entonces vuelve a revisión del director.
 
-### HU-003 Aprobar avance 
+### HU-003 Aprobar avance
 
-Como director de centro, quiero revisar y aprobar avances para controlar el seguimiento de los proyectos. 
+Como director de centro, quiero revisar y aprobar avances para controlar el seguimiento de los proyectos.
 
-Criterios: 
+Criterios:
 
-- Dado un avance enviado, cuando lo apruebo, entonces el sistema cambia su estado a aprobado. 
+- Dado un avance enviado, cuando lo apruebo, entonces el sistema cambia su estado a aprobado.
 
-* Dado un avance incompleto, cuando lo observo, entonces el investigador recibe notificación. 
+* Dado un avance incompleto, cuando lo observo, entonces el investigador recibe notificación.
 
-* Dado un avance aprobado, entonces se actualizan los indicadores del proyecto. 
+* Dado un avance aprobado, entonces se actualizan los indicadores del proyecto.
 
-## ### HU-004 Generar informe PDF 
+## ### HU-004 Generar informe PDF
 
-Como director de centro, quiero generar informes PDF para consolidar información institucional. 
+Como director de centro, quiero generar informes PDF para consolidar información institucional.
 
-## Criterios: 
+## Criterios:
 
-- Dado un rango de fechas y centro, cuando genero informe, entonces el sistema muestra vista previa. 
+- Dado un rango de fechas y centro, cuando genero informe, entonces el sistema muestra vista previa.
 
-- Dado que confirmo la generación, entonces el sistema crea un PDF. 
+- Dado que confirmo la generación, entonces el sistema crea un PDF.
 
-- Dado que se genera el PDF, entonces el evento queda auditado. 
+- Dado que se genera el PDF, entonces el evento queda auditado.
 
-## ### HU-005 Registrar presupuesto 
+## ### HU-005 Registrar presupuesto
 
-Como investigador, quiero registrar el presupuesto del proyecto para documentar recursos y financiación. 
+Como investigador, quiero registrar el presupuesto del proyecto para documentar recursos y financiación.
 
-## Criterios: 
+## Criterios:
 
-- Dado un proyecto en borrador, cuando registro rubros y fuentes, entonces el presupuesto queda asociado. 
+- Dado un proyecto en borrador, cuando registro rubros y fuentes, entonces el presupuesto queda asociado.
 
-- Dado un rubro presupuestal, cuando registro ejecución, entonces el sistema calcula saldo. 
+- Dado un rubro presupuestal, cuando registro ejecución, entonces el sistema calcula saldo.
 
-* Dado que se supera el presupuesto del rubro, entonces el sistema solicita autorización o muestra restricción según configuración. 
+* Dado que se supera el presupuesto del rubro, entonces el sistema solicita autorización o muestra restricción según configuración.
 
---- 
+---
 
-## 16. Gherkin base actualizado 
+## 16. Gherkin base actualizado
 
-```gherkin 
+```gherkin
 
-Feature: Creación de proyectos por investigadores 
+Feature: Creación de proyectos por investigadores
 
-Scenario: Investigador crea proyecto en borrador 
+Scenario: Investigador crea proyecto en borrador
 
-Given que el investigador ha iniciado sesión 
+Given que el investigador ha iniciado sesión
 
-And pertenece a un centro de investigación 
+And pertenece a un centro de investigación
 
-When crea un proyecto con título, resumen, objetivos, centro, línea y fechas 
+When crea un proyecto con título, resumen, objetivos, centro, línea y fechas
 
-Then el sistema debe guardar el proyecto en estado "Borrador" 
+Then el sistema debe guardar el proyecto en estado "Borrador"
 
-And debe registrar la acción en auditoría 
+And debe registrar la acción en auditoría
 
-Scenario: Investigador envía proyecto a revisión 
+Scenario: Investigador envía proyecto a revisión
 
-Given que el investigador tiene un proyecto en estado "Borrador" 
+Given que el investigador tiene un proyecto en estado "Borrador"
 
-And el proyecto tiene los datos mínimos completos 
+And el proyecto tiene los datos mínimos completos
 
-When envía el proyecto a revisión 
+When envía el proyecto a revisión
 
-Then el sistema debe cambiar el estado a "Enviado" 
+Then el sistema debe cambiar el estado a "Enviado"
 
-And debe notificar al director de centro 
+And debe notificar al director de centro
 
-Scenario: Director aprueba avance 
+Scenario: Director aprueba avance
 
-Given que el director de centro ha iniciado sesión 
+Given que el director de centro ha iniciado sesión
 
-And existe un avance enviado de un proyecto de su centro 
+And existe un avance enviado de un proyecto de su centro
 
-When aprueba el avance 
+When aprueba el avance
 
-Then el sistema debe cambiar el estado del avance a "Aprobado" 
+Then el sistema debe cambiar el estado del avance a "Aprobado"
 
-And debe registrar el evento en auditoría 
+And debe registrar el evento en auditoría
 
-## Scenario: Generar informe PDF 
+## Scenario: Generar informe PDF
 
-Given que el usuario autorizado ha iniciado sesión 
+Given que el usuario autorizado ha iniciado sesión
 
-When genera un informe de proyecto 
+When genera un informe de proyecto
 
-Then el sistema debe crear un PDF con WeasyPrint 
+Then el sistema debe crear un PDF con WeasyPrint
 
-And debe registrar la generación del informe en auditoría 
+And debe registrar la generación del informe en auditoría
 
-## Scenario: Firmar documento 
+## Scenario: Firmar documento
 
-Given que el usuario autorizado ha iniciado sesión 
+Given que el usuario autorizado ha iniciado sesión
 
-And existe un documento pendiente de firma 
+And existe un documento pendiente de firma
 
-When firma el documento 
+When firma el documento
 
-Then el sistema debe registrar firmante, fecha, hash y versión 
+Then el sistema debe registrar firmante, fecha, hash y versión
 
-And debe bloquear la edición directa del documento firmado ``` 
+And debe bloquear la edición directa del documento firmado ```
 
---- 
+---
 
-## 17. Prioridad del MVP 
+## 17. Prioridad del MVP
 
 |**Prioridad**|**Módulo**|
 |---|---|
@@ -1005,131 +1005,130 @@ And debe bloquear la edición directa del documento firmado ```
 
 
 
---- 
+---
 
-## 18. Orden de desarrollo recomendado 
+## 18. Orden de desarrollo recomendado
 
-1. Configuración base del monorepo. 
+1. Configuración base del monorepo.
 
-2. Docker Compose para servicios. 
+2. Docker Compose para servicios.
 
-3. Backend Django 5.1. 
+3. Backend Django 6.0.
 
-4. PostgreSQL 16. 
+4. PostgreSQL 16.
 
-5. Keycloak 26. 
+5. Keycloak 26.
 
-6. Next.js 15. 
+6. Next.js 15.
 
-7. Módulo de instituciones. 
+7. Módulo de instituciones.
 
-8. Módulo de usuarios y permisos. 
+8. Módulo de usuarios y permisos.
 
-9. Módulo de investigadores. 
+9. Módulo de investigadores.
 
-10. Módulo de proyectos. 
+10. Módulo de proyectos.
 
-11. Flujo de estados con django-fsm. 
+11. Flujo de estados con django-fsm.
 
-12. Módulo de avances. 
+12. Módulo de avances.
 
-13. Módulo de documentos con MinIO. 
+13. Módulo de documentos con MinIO.
 
-14. Auditoría. 
+14. Auditoría.
 
-15. Informes PDF. 
+15. Informes PDF.
 
-16. Presupuesto. 
+16. Presupuesto.
 
-17. Convocatorias. 
+17. Convocatorias.
 
-18. Productos. 
+18. Productos.
 
-19. Meilisearch. 
+19. Meilisearch.
 
-20. Superset. 
+20. Superset.
 
-21. Integraciones externas. 
+21. Integraciones externas.
 
-22. Firma digital avanzada. 
+22. Firma digital avanzada.
 
---- 
+---
 
-## 19. Pendientes técnicos por definir 
+## 19. Pendientes técnicos por definir
 
-1. Formato institucional de actas. 
+1. Formato institucional de actas.
 
-2. Formato institucional de informes PDF. 
+2. Formato institucional de informes PDF.
 
-3. Campos oficiales exigidos para CvLAC y GrupLAC. 
+3. Campos oficiales exigidos para CvLAC y GrupLAC.
 
-4. Disponibilidad técnica real de integración automática con CvLAC/GrupLAC. 
+4. Disponibilidad técnica real de integración automática con CvLAC/GrupLAC.
 
-5. Periodicidad oficial de avances. 
+5. Periodicidad oficial de avances.
 
-6. Flujo exacto de aprobación de proyectos antes de ejecución. 
+6. Flujo exacto de aprobación de proyectos antes de ejecución.
 
-7. Reglas presupuestales institucionales. 
+7. Reglas presupuestales institucionales.
 
-8. Políticas de retención documental. 
+8. Políticas de retención documental.
 
-9. Si el sistema será multi-tenant estricto por institución o una sola base con separación lógica por permisos. 
+9. Si el sistema será multi-tenant estricto por institución o una sola base con separación lógica por permisos.
 
---- 
+---
 
-## 20. Prompt para OpenCode 
+## 20. Prompt para OpenCode
 
-Usa este SPEC v1.1 como fuente principal del proyecto. 
+Usa este SPEC v1.1 como fuente principal del proyecto.
 
-Primero no escribas código de negocio. Realiza estas tareas: 
+Primero no escribas código de negocio. Realiza estas tareas:
 
-1. Crear estructura de monorepo con backend, frontend, infra y docs. 
+1. Crear estructura de monorepo con backend, frontend, infra y docs.
 
-2. Crear Docker Compose con PostgreSQL 16, Redis, Keycloak 26, MinIO, Meilisearch y servicios base. 
+2. Crear Docker Compose con PostgreSQL 16, Redis, Keycloak 26, MinIO, Meilisearch y servicios base.
 
-3. Crear backend Django 5.1 con Django REST Framework, Celery, djangofsm y configuración por variables de entorno. 
+3. Crear backend Django 6.0 con Django REST Framework, Celery, djangofsm y configuración por variables de entorno.
 
-4. Crear frontend Next.js 15 con App Router, React 19, next-intl, nextthemes y shadcn/ui. 
+4. Crear frontend Next.js 15 con App Router, React 19, next-intl, nextthemes y shadcn/ui.
 
-5. Crear documentación inicial con MkDocs Material. 
+5. Crear documentación inicial con MkDocs Material.
 
-6. Convertir este SPEC en historias de usuario. 
+6. Convertir este SPEC en historias de usuario.
 
-7. Crear escenarios Gherkin por módulo. 
+7. Crear escenarios Gherkin por módulo.
 
-8. Crear modelos de datos iniciales. 
+8. Crear modelos de datos iniciales.
 
-9. Crear pruebas TDD antes de implementar lógica. 
+9. Crear pruebas TDD antes de implementar lógica.
 
-10. Implementar módulo por módulo según prioridad MVP. 
+10. Implementar módulo por módulo según prioridad MVP.
 
-Orden de módulos: 
+Orden de módulos:
 
-1. accounts/auth 
+1. accounts/auth
 
-2. institutions 
+2. institutions
 
-3. researchers 
+3. researchers
 
-4. projects 
+4. projects
 
-5. project workflow 
+5. project workflow
 
-6. progress 
+6. progress
 
-7. documents 
+7. documents
 
-8. audit 
+8. audit
 
-9. reports 
+9. reports
 
-10. budgets 
+10. budgets
 
-11. calls 
+11. calls
 
-12. products 
+12. products
 
-## 13. search 
+## 13. search
 
-14. dashboards 
-
+14. dashboards
