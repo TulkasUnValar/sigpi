@@ -73,11 +73,39 @@ export interface AuthActions {
 
 export type AuthStore = AuthState & AuthActions;
 
+// ── Role name → UI slug mapping ─────────────────────────
+
+/**
+ * The backend serializes the role DISPLAY NAME (see
+ * backend/apps/accounts/serializers.py, which returns `role.name`). Frontend
+ * authorization compares lowercase slugs (features/calls/permissions.ts,
+ * features/reports/permissions.ts, components/shell/Sidebar.tsx), so the
+ * display name must be translated into the UI slug at the store boundary.
+ */
+const ROLE_NAME_TO_SLUG: Record<string, string> = {
+  Superadmin: "superadmin",
+  "Admin Institucional": "admin",
+  "Director de Centro": "director",
+  Investigador: "researcher",
+  Evaluador: "evaluador",
+  Asistente: "asistente",
+  Auditor: "auditor",
+};
+
+/**
+ * Convert a backend role display name into the UI slug. Unknown display names
+ * are normalized (trim, lowercase, collapse whitespace runs to a single
+ * underscore) so the raw display name is never exposed as a slug.
+ */
+function roleNameToSlug(name: string): string {
+  const mapped = ROLE_NAME_TO_SLUG[name];
+  if (mapped) return mapped;
+  return name.trim().toLowerCase().replace(/\s+/g, "_");
+}
+
 // ── Derivation helpers ──────────────────────────────────
 
-function deriveInstitutions(
-  memberships: api.Membership[],
-): Institution[] {
+function deriveInstitutions(memberships: api.Membership[]): Institution[] {
   return memberships
     .filter((m) => m.is_active)
     .map((m) => ({
@@ -86,22 +114,18 @@ function deriveInstitutions(
     }));
 }
 
-function deriveActiveMembership(
-  user: api.AuthUser,
-): api.Membership | undefined {
+function deriveActiveMembership(user: api.AuthUser): api.Membership | undefined {
   const { active_institution_id, memberships } = user;
   if (!active_institution_id) {
     // Fall back to primary active membership
     return memberships.find((m) => m.is_primary && m.is_active);
   }
-  return memberships.find(
-    (m) => m.institution.id === active_institution_id && m.is_active,
-  );
+  return memberships.find((m) => m.institution.id === active_institution_id && m.is_active);
 }
 
 function deriveRoles(membership: api.Membership | undefined): string[] {
   if (!membership) return [];
-  return [membership.role.name];
+  return [roleNameToSlug(membership.role.name)];
 }
 
 function deriveCenters(membership: api.Membership | undefined): Center[] {
@@ -163,8 +187,7 @@ export const useAuthStore = create<AuthStore>()(
         try {
           const response = await api.switchInstitution(institutionId);
           const membership = response.user.memberships.find(
-            (m) =>
-              m.institution.id === institutionId && m.is_active,
+            (m) => m.institution.id === institutionId && m.is_active,
           );
           set({
             user: response.user,
@@ -172,7 +195,7 @@ export const useAuthStore = create<AuthStore>()(
               id: response.active_institution.id,
               name: response.active_institution.name,
             },
-            roles: membership ? [membership.role.name] : [],
+            roles: membership ? [roleNameToSlug(membership.role.name)] : [],
             centers: response.centers.map((c) => ({
               id: c.id,
               name: c.name,

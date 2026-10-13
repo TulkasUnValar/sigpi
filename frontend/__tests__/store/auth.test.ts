@@ -6,11 +6,7 @@
  */
 
 import { act } from "@testing-library/react";
-import {
-  useAuthStore,
-  type AuthStore,
-  type AuthUser,
-} from "@/store/auth";
+import { useAuthStore, type AuthStore, type AuthUser } from "@/store/auth";
 
 // ── Mock the API module ──────────────────────────────────
 jest.mock("@/lib/api", () => ({
@@ -153,9 +149,7 @@ describe("useAuthStore.login", () => {
     });
     expect(getStore().roles).toEqual(["researcher"]);
     expect(getStore().centers).toEqual([{ id: "c1", name: "Centro A" }]);
-    expect(getStore().institutions).toEqual([
-      { id: "inst-1", name: "Universidad Alpha" },
-    ]);
+    expect(getStore().institutions).toEqual([{ id: "inst-1", name: "Universidad Alpha" }]);
     expect(api.login).toHaveBeenCalledWith("test@example.com", "password123");
   });
 
@@ -307,9 +301,7 @@ describe("useAuthStore.switchInstitution", () => {
   });
 
   it("does not change state on failure", async () => {
-    (api.switchInstitution as jest.Mock).mockRejectedValue(
-      new Error("Not authorized"),
-    );
+    (api.switchInstitution as jest.Mock).mockRejectedValue(new Error("Not authorized"));
 
     await act(async () => {
       try {
@@ -359,5 +351,56 @@ describe("useAuthStore.clearAuth", () => {
     expect(getStore().roles).toEqual([]);
     expect(getStore().centers).toEqual([]);
     expect(getStore().isLoading).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────
+// role slug mapping (backend display name → UI slug)
+// ─────────────────────────────────────────────────────────
+
+describe("useAuthStore — role slug mapping", () => {
+  function userWithRole(name: string): AuthUser {
+    return {
+      ...mockUser,
+      memberships: [
+        {
+          institution: { id: "inst-1", name: "Universidad Alpha" },
+          role: { name, level: 3 },
+          centers: [],
+          is_primary: true,
+          is_active: true,
+        },
+      ],
+    };
+  }
+
+  it('derives "director" from the backend display name "Director de Centro"', async () => {
+    (api.login as jest.Mock).mockResolvedValue(userWithRole("Director de Centro"));
+
+    await act(async () => {
+      await getStore().login("director@example.com", "pass");
+    });
+
+    expect(getStore().roles).toEqual(["director"]);
+  });
+
+  it('derives "admin" from the backend display name "Admin Institucional"', async () => {
+    (api.login as jest.Mock).mockResolvedValue(userWithRole("Admin Institucional"));
+
+    await act(async () => {
+      await getStore().login("admin@example.com", "pass");
+    });
+
+    expect(getStore().roles).toEqual(["admin"]);
+  });
+
+  it("normalizes an unknown display name into a slug", async () => {
+    (api.login as jest.Mock).mockResolvedValue(userWithRole("Coordinador Regional"));
+
+    await act(async () => {
+      await getStore().login("unknown@example.com", "pass");
+    });
+
+    expect(getStore().roles).toEqual(["coordinador_regional"]);
   });
 });
