@@ -57,7 +57,7 @@ addopts = [
     "--strict-markers",
     "--tb=short",
 ]
-testpaths = ["backend"]
+testpaths = ["."]
 filterwarnings = [
     "ignore::UserWarning:django_fsm.*",
 ]
