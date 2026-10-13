@@ -93,14 +93,43 @@ const ROLE_NAME_TO_SLUG: Record<string, string> = {
 };
 
 /**
- * Convert a backend role display name into the UI slug. Unknown display names
- * are normalized (trim, lowercase, collapse whitespace runs to a single
- * underscore) so the raw display name is never exposed as a slug.
+ * Convert a backend role display name into the UI slug.
+ *
+ * Unknown display names FAIL CLOSED: a name that is not one of the 7 fixed
+ * roles is an anomaly (backend contract drift), and its slug must never
+ * collide with a known slug that grants privileges. Normalizing a near-miss
+ * name would otherwise be dangerous — e.g. "Admin" would become "admin" and
+ * satisfy the privileged `["admin","superadmin"]` / MANAGER_ROLES lists.
+ * Unknown results are therefore namespaced with an `unknown_` prefix (after
+ * trim/lowercase/whitespace-collapse), which matches no privilege list.
  */
 function roleNameToSlug(name: string): string {
   const mapped = ROLE_NAME_TO_SLUG[name];
   if (mapped) return mapped;
-  return name.trim().toLowerCase().replace(/\s+/g, "_");
+  return `unknown_${name.trim().toLowerCase().replace(/\s+/g, "_")}`;
+}
+
+/**
+ * Inverse mapping for display: the UI slug back to the human-readable label.
+ * Kept beside ROLE_NAME_TO_SLUG so both stay in sync — the label map is the
+ * single source of truth and must not be re-declared in components.
+ */
+const ROLE_SLUG_TO_LABEL: Record<string, string> = {
+  superadmin: "Superadmin",
+  admin: "Admin Institucional",
+  director: "Director de Centro",
+  researcher: "Investigador",
+  evaluador: "Evaluador",
+  asistente: "Asistente",
+  auditor: "Auditor",
+};
+
+/**
+ * Convert a UI role slug back into its human-readable display label.
+ * Slugs without a known label fall back to the slug itself.
+ */
+export function roleSlugToLabel(slug: string): string {
+  return ROLE_SLUG_TO_LABEL[slug] ?? slug;
 }
 
 // ── Derivation helpers ──────────────────────────────────
@@ -143,6 +172,21 @@ const initialState: AuthState = {
   centers: [],
   isAuthenticated: false,
   isLoading: false,
+};
+
+// ── Persisted shape ─────────────────────────────────────
+
+/**
+ * The subset of the store that is written to localStorage (see `partialize`).
+ * Typed explicitly so `migrate` can rebuild the same shape.
+ */
+type PersistedAuthState = {
+  user: api.AuthUser | null;
+  activeInstitution: Institution | null;
+  institutions: Institution[];
+  roles: string[];
+  centers: Center[];
+  isAuthenticated: boolean;
 };
 
 // ── Store ───────────────────────────────────────────────
@@ -218,6 +262,31 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: "sigpi-auth-store",
+      // Bump when the persisted shape or its derived values change. v1
+      // introduced slug-based `roles` (older builds stored the raw backend
+      // role display name in `roles`).
+      version: 1,
+      /**
+       * Rehydrate sessions persisted before slug mapping existed.
+       *
+       * Older builds trusted the stored `roles` (which held a raw display name
+       * like "Director de Centro"), so such a user stayed broken until a fresh
+       * login. For a pre-v1 persisted state we recompute `roles` from the
+       * persisted `user` (it carries memberships + active institution) using
+       * the same derivation helpers as login, instead of trusting the stored
+       * value. Never throw: a missing user or an unresolvable membership
+       * degrades to `roles: []`.
+       */
+      migrate: (persistedState, version): PersistedAuthState => {
+        const persisted = (persistedState ?? {}) as Partial<PersistedAuthState>;
+        if (version >= 1) return persisted as PersistedAuthState;
+        try {
+          const membership = persisted.user ? deriveActiveMembership(persisted.user) : undefined;
+          return { ...persisted, roles: deriveRoles(membership) } as PersistedAuthState;
+        } catch {
+          return { ...persisted, roles: [] } as PersistedAuthState;
+        }
+      },
       // Only persist these keys to localStorage
       partialize: (state) => ({
         user: state.user,

@@ -5,7 +5,7 @@
  * email, auth source, active institution, role, and centers.
  */
 
-import { useAuthStore } from "@/store/auth";
+import { roleSlugToLabel, useAuthStore } from "@/store/auth";
 
 export default function UserProfileCard() {
   const { user, activeInstitution, roles, centers } = useAuthStore();
@@ -29,16 +29,10 @@ export default function UserProfileCard() {
         <dd>{activeInstitution?.name ?? "None"}</dd>
 
         <dt>Active Role</dt>
-        <dd>
-          {roles.length > 0 ? roles.join(", ") : "None"}
-        </dd>
+        <dd>{roles.length > 0 ? roles.map((slug) => roleSlugToLabel(slug)).join(", ") : "None"}</dd>
 
         <dt>Centers</dt>
-        <dd>
-          {centers.length > 0
-            ? centers.map((c) => c.name).join(", ")
-            : "None"}
-        </dd>
+        <dd>{centers.length > 0 ? centers.map((c) => c.name).join(", ") : "None"}</dd>
       </dl>
     </div>
   );

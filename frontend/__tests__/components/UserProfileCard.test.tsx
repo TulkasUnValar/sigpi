@@ -6,6 +6,9 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 jest.mock("@/store/auth", () => ({
+  // Keep the real roleSlugToLabel (single source of truth for labels); only
+  // the hook is stubbed so each test controls the store slice.
+  ...jest.requireActual("@/store/auth"),
   useAuthStore: jest.fn(),
 }));
 
@@ -44,7 +47,8 @@ describe("UserProfileCard", () => {
     expect(screen.getByText("test@example.com")).toBeInTheDocument();
     expect(screen.getByText("keycloak")).toBeInTheDocument();
     expect(screen.getByText("Universidad Alpha")).toBeInTheDocument();
-    expect(screen.getByText("researcher")).toBeInTheDocument();
+    // The store holds slugs; the card renders the human-readable label.
+    expect(screen.getByText("Investigador")).toBeInTheDocument();
     expect(screen.getByText("Centro A, Centro B")).toBeInTheDocument();
   });
 
@@ -83,8 +87,6 @@ describe("UserProfileCard", () => {
 
     render(<UserProfileCard />);
 
-    expect(
-      screen.getByText(/no user data available/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no user data available/i)).toBeInTheDocument();
   });
 });
