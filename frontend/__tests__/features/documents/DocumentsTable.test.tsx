@@ -40,7 +40,7 @@ describe('DocumentsTable', () => {
 
   it('renders empty state when no documents', () => {
     render(<DocumentsTable documents={[]} page={1} totalCount={0} onPageChange={mockOnPageChange} />);
-    expect(screen.getByText(/no hay documentos/i)).toBeInTheDocument();
+    expect(screen.getByText('No hay documentos', { exact: true })).toBeInTheDocument();
   });
 
   it('renders table with documents', () => {
