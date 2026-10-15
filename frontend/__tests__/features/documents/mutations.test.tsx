@@ -11,9 +11,10 @@ const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return ({ children }: { children: React.ReactNode }) => (
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  return Wrapper;
 };
 
 describe('documents mutations', () => {
@@ -25,13 +26,13 @@ describe('documents mutations', () => {
     it('creates document with 4-step pipeline', async () => {
       const mockDocument = { id: 'doc-1', title: 'Test' };
       const mockPresign = { upload_url: 'http://minio/upload', key: 'key123' };
-      
+
       (api.post as jest.Mock)
         .mockResolvedValueOnce(mockDocument) // POST /api/documents/
         .mockResolvedValueOnce(mockPresign); // POST /api/documents/{id}/presign/
-      
+
       (presignUpload as jest.Mock).mockResolvedValue(undefined); // PUT to MinIO
-      
+
       (api.post as jest.Mock)
         .mockResolvedValueOnce(undefined); // POST /api/documents/{id}/confirm/
 
@@ -62,11 +63,11 @@ describe('documents mutations', () => {
   describe('useReuploadDocument', () => {
     it('reuploads document to create new version', async () => {
       const mockPresign = { upload_url: 'http://minio/upload', key: 'key456' };
-      
+
       (api.post as jest.Mock)
         .mockResolvedValueOnce(mockPresign) // POST /api/documents/{id}/presign/
         .mockResolvedValueOnce(undefined); // POST /api/documents/{id}/confirm/
-      
+
       (presignUpload as jest.Mock).mockResolvedValue(undefined); // PUT to MinIO
 
       const { result } = renderHook(() => useReuploadDocument('doc-1'), { wrapper: createWrapper() });
