@@ -1,0 +1,35 @@
+import { render, screen } from '@testing-library/react';
+import { UploadButton } from './UploadButton';
+import { useAuthStore } from '@/store/auth';
+
+jest.mock('@/store/auth', () => ({
+  useAuthStore: jest.fn(),
+}));
+
+const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;
+
+describe('UploadButton', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders upload button when user has permission', () => {
+    mockUseAuthStore.mockReturnValue({
+      roles: ['admin'],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    render(<UploadButton />);
+    expect(screen.getByRole('button', { name: /subir documento/i })).toBeInTheDocument();
+  });
+
+  it('does not render when user lacks permission', () => {
+    mockUseAuthStore.mockReturnValue({
+      roles: ['auditor'],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const { container } = render(<UploadButton />);
+    expect(container.firstChild).toBeNull();
+  });
+});
