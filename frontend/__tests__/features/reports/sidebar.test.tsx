@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("Sidebar — Informes nav item", () => {
-  it.each(["researcher", "director", "director_centro", "admin", "superadmin"])(
+  it.each(["researcher", "director", "admin", "superadmin"])(
     "shows Informes linking to /reports for role %s",
     (role) => {
       setRoles([role]);

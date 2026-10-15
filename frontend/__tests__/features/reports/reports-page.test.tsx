@@ -90,7 +90,7 @@ beforeEach(() => {
 
 describe("/reports page", () => {
   it("renders the hub inside the authenticated shell for an allowed role", async () => {
-    setAuth(["director_centro"]);
+    setAuth(["director"]);
     (api.api.get as jest.Mock).mockImplementation((path: string) => {
       if (path.includes("/api/projects/"))
         return Promise.resolve({ count: 1, next: null, previous: null, results: [] });
@@ -109,7 +109,7 @@ describe("/reports page", () => {
   });
 
   it("denies access with an alert and NO api calls for a non-allowed role", async () => {
-    setAuth(["researcher"]);
+    setAuth(["evaluador"]);
     renderPage();
 
     expect(

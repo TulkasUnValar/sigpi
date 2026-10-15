@@ -2,7 +2,7 @@
  * Calls permissions + FSM action visibility — role and state filtered.
  *
  * Spec (calls-ui):
- *   - canManageCall: director+, director_centro alias, admin, superadmin.
+ *   - canManageCall: director+, admin, superadmin.
  *   - getCallActions(state, roles): the 5 transitions filtered by source
  *     state and allowed role; archivada is terminal (no outbound actions).
  *   - archive is the only destructive transition (ConfirmDialog).
@@ -12,9 +12,9 @@ import { canManageCall, MANAGER_ROLES } from "@/features/calls/permissions";
 import { getCallActions, isDestructiveCallAction, type CallAction } from "@/features/calls/fsm";
 
 describe("canManageCall", () => {
-  it("allows director, director_centro, admin and superadmin", () => {
+  it("allows director, admin and superadmin", () => {
     expect(canManageCall(["director"])).toBe(true);
-    expect(canManageCall(["director_centro"])).toBe(true);
+    expect(canManageCall(["director"])).toBe(true);
     expect(canManageCall(["admin"])).toBe(true);
     expect(canManageCall(["superadmin"])).toBe(true);
   });
@@ -30,7 +30,7 @@ describe("canManageCall", () => {
 
   it("exposes the manager role list for RoleGuard gating", () => {
     expect(MANAGER_ROLES).toContain("director");
-    expect(MANAGER_ROLES).toContain("director_centro");
+    expect(MANAGER_ROLES).toContain("director");
     expect(MANAGER_ROLES).toContain("admin");
     expect(MANAGER_ROLES).toContain("superadmin");
   });
@@ -89,8 +89,8 @@ describe("getCallActions — role filtering", () => {
     expect(getCallActions("borrador", ["researcher"])).toHaveLength(0);
   });
 
-  it("respects the director_centro alias role", () => {
-    const names = getCallActions("borrador", ["director_centro"]).map((a) => a.name);
+  it("respects the director role", () => {
+    const names = getCallActions("borrador", ["director"]).map((a) => a.name);
     expect(names).toContain("open_call");
   });
 });

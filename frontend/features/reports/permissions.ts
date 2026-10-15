@@ -15,10 +15,9 @@ const ROLE_LEVELS: Record<string, number> = {
   superadmin: 1,
   admin: 2,
   director: 3,
-  director_centro: 4,
-  researcher: 5,
-  coinvestigator: 5,
-  committee: 6,
+  researcher: 4,
+  evaluador: 5,
+  asistente: 6,
   auditor: 7,
 };
 

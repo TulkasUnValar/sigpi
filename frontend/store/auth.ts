@@ -67,12 +67,6 @@ export interface AuthActions {
    */
   switchInstitution(institutionId: string): Promise<void>;
 
-  /**
-   * Refresh the session by calling GET /auth/me/.
-   * On 200 populates the store; on 401 clears it.
-   */
-  refreshSession(): Promise<void>;
-
   /** Clear all auth state immediately (no API call). */
   clearAuth(): void;
 }
@@ -192,27 +186,6 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           set({ isLoading: false });
           throw error;
-        }
-      },
-
-      async refreshSession(): Promise<void> {
-        try {
-          const user = await api.getMe();
-          const membership = deriveActiveMembership(user);
-          set({
-            user,
-            activeInstitution: membership
-              ? { id: membership.institution.id, name: membership.institution.name }
-              : null,
-            institutions: deriveInstitutions(user.memberships),
-            roles: deriveRoles(membership),
-            centers: deriveCenters(membership),
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } catch {
-          set({ ...initialState });
-          throw new Error("Session refresh failed");
         }
       },
 

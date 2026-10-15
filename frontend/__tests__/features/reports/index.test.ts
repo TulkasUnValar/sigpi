@@ -60,7 +60,8 @@ describe("reports feature barrel", () => {
 
   it("re-exports the authorization helpers", () => {
     expect(canGenerateReport(["director"])).toBe(true);
-    expect(canGenerateReport(["researcher"])).toBe(false);
+    expect(canGenerateReport(["researcher"])).toBe(true); // researcher=4, threshold=4
+    expect(canGenerateReport(["evaluador"])).toBe(false); // evaluador=5, above threshold
     expect(canApproveReport(["director"], [{ id: "c1" }], "c1")).toBe(true);
     expect(isDirector(["admin"])).toBe(true);
     expect(isAdminPlus(["admin"])).toBe(true);
