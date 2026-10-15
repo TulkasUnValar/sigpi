@@ -80,7 +80,7 @@ jobs:
       - name: Check Ruff formatting
         run: |
           source backend/.venv-wsl/bin/activate
-          cd backend && ruff format --check apps/
+          cd backend && ruff format --check .
 
       # ADVISORY (not a gate): the backend currently carries ~1195 real type
       # errors across 129 files. Keep pyright's report visible without
