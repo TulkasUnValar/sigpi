@@ -173,7 +173,7 @@ describe("ReportHub — rendering", () => {
   });
 
   it("hides the approve action for non-directors (RB-001)", async () => {
-    useAuthStore.setState({ roles: ["investigador"] });
+    useAuthStore.setState({ roles: ["researcher"] });
     renderHub();
 
     expect(await screen.findByText("Proyecto Alpha")).toBeInTheDocument();

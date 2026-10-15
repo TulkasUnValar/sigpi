@@ -149,8 +149,8 @@ describe("/calls — list route", () => {
     expect(screen.queryByRole("link", { name: "Nueva convocatoria" })).not.toBeInTheDocument();
   });
 
-  it("shows the create CTA to a director_centro (alias role)", async () => {
-    setAuthRoles(["director_centro"]);
+  it("shows the create CTA to a director", async () => {
+    setAuthRoles(["director"]);
     (api.api.get as jest.Mock).mockResolvedValue(pageOf([]));
 
     renderWithProviders(<CallsPage />);

@@ -104,7 +104,7 @@ function renderForm(
 beforeEach(() => {
   jest.clearAllMocks();
   useAuthStore.setState({
-    roles: ["director_centro"],
+    roles: ["director"],
     isAuthenticated: true,
     isLoading: false,
     activeInstitution: { id: "inst-1", name: "Universidad Nacional" },

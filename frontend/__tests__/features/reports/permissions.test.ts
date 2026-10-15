@@ -18,8 +18,10 @@ describe("roleLevel", () => {
     expect(roleLevel("superadmin")).toBe(1);
     expect(roleLevel("admin")).toBe(2);
     expect(roleLevel("director")).toBe(3);
-    expect(roleLevel("director_centro")).toBe(4);
-    expect(roleLevel("researcher")).toBe(5);
+    expect(roleLevel("researcher")).toBe(4);
+    expect(roleLevel("evaluador")).toBe(5);
+    expect(roleLevel("asistente")).toBe(6);
+    expect(roleLevel("auditor")).toBe(7);
   });
 
   it("treats unknown roles as never-privileged", () => {
@@ -35,11 +37,11 @@ describe("canGenerateReport (RB-001: role ≤ 4; admin level ≤ 2 bypass)", () 
 
   it("allows roles at level ≤ 4", () => {
     expect(canGenerateReport(["director"])).toBe(true);
-    expect(canGenerateReport(["director_centro"])).toBe(true);
+    expect(canGenerateReport(["researcher"])).toBe(true);
   });
 
-  it("denies researcher and unknown roles", () => {
-    expect(canGenerateReport(["researcher"])).toBe(false);
+  it("denies evaluator and unknown roles", () => {
+    expect(canGenerateReport(["evaluador"])).toBe(false);
     expect(canGenerateReport([])).toBe(false);
     expect(canGenerateReport(["auditor"])).toBe(false);
   });
@@ -61,7 +63,7 @@ describe("canApproveReport (RB-001: director ≤ 3 + center membership; superuse
 
   it("denies non-director roles even with a center membership", () => {
     expect(canApproveReport(["researcher"], [{ id: "c1", name: "Centro A" }], "c1")).toBe(false);
-    expect(canApproveReport(["director_centro"], [{ id: "c1", name: "Centro A" }], "c1")).toBe(
+    expect(canApproveReport(["evaluador"], [{ id: "c1", name: "Centro A" }], "c1")).toBe(
       false,
     );
   });
@@ -79,9 +81,9 @@ describe("isDirector", () => {
     expect(isDirector(["superadmin"])).toBe(true);
   });
 
-  it("is false for researcher and director_centro", () => {
+  it("is false for researcher and evaluador", () => {
     expect(isDirector(["researcher"])).toBe(false);
-    expect(isDirector(["director_centro"])).toBe(false);
+    expect(isDirector(["evaluador"])).toBe(false);
     expect(isDirector([])).toBe(false);
   });
 });

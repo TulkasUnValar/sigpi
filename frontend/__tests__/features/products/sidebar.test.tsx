@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("Sidebar — Productos nav item", () => {
-  it.each(["researcher", "director", "director_centro", "admin", "superadmin"])(
+  it.each(["researcher", "director", "admin", "superadmin"])(
     "shows Productos linking to /products for role %s",
     (role) => {
       setRoles([role]);

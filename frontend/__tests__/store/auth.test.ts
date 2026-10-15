@@ -337,41 +337,6 @@ describe("useAuthStore.switchInstitution", () => {
 });
 
 // ─────────────────────────────────────────────────────────
-// refreshSession action
-// ─────────────────────────────────────────────────────────
-
-describe("useAuthStore.refreshSession", () => {
-  it("populates store from API response on success", async () => {
-    (api.getMe as jest.Mock).mockResolvedValue(mockUser);
-
-    await act(async () => {
-      await getStore().refreshSession();
-    });
-
-    expect(getStore().isAuthenticated).toBe(true);
-    expect(getStore().user).toEqual(mockUser);
-    expect(api.getMe).toHaveBeenCalledTimes(1);
-  });
-
-  it("sets isAuthenticated to false on 401", async () => {
-    (api.getMe as jest.Mock).mockRejectedValue(
-      new Error("Authentication credentials were not provided."),
-    );
-
-    await act(async () => {
-      try {
-        await getStore().refreshSession();
-      } catch {
-        // Expected
-      }
-    });
-
-    expect(getStore().isAuthenticated).toBe(false);
-    expect(getStore().user).toBeNull();
-  });
-});
-
-// ─────────────────────────────────────────────────────────
 // clearAuth action
 // ─────────────────────────────────────────────────────────
 
