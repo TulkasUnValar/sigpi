@@ -105,7 +105,7 @@ export function SearchResults({ results, offset, limit, onPageChange }: SearchRe
                   )}
                   {typeof hit._index === "string" && (
                     <Badge variant="secondary" className="mt-2 text-xs">
-                      {SEARCH_INDEXES.find((si) => si.value === hit._index)?.label || hit._index}
+                      {SEARCH_INDEXES.find((si) => si.value === hit._index)?.label ?? hit._index}
                     </Badge>
                   )}
                 </CardContent>

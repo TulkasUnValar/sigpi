@@ -32,7 +32,7 @@ export function ProgressReportsChart({ data }: ProgressReportsChartProps) {
       <BarChart data={chartData} aria-label="Estado de informes de avance">
         <XAxis dataKey="name" />
         <YAxis />
-        <Tooltip formatter={(value: unknown) => [value, "Informes"]} />
+        <Tooltip formatter={(value: string | number) => [value, "Informes"]} />
         <Legend />
         <Bar dataKey="Pendientes" stackId="reports" fill="#f59e0b" />
         <Bar dataKey="Observados" stackId="reports" fill="#8b5cf6" />
