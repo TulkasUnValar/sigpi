@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Megaphone,
   Package,
+  Search,
   Users,
 } from "lucide-react";
 
@@ -23,6 +24,7 @@ import { useAuthStore } from "@/store/auth";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/search", label: "Búsqueda", icon: Search },
   { href: "/projects", label: "Proyectos", icon: FolderKanban },
   { href: "/calls", label: "Convocatorias", icon: Megaphone },
   { href: "/products", label: "Productos", icon: Package },
