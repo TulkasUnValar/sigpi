@@ -209,7 +209,7 @@ describe("SearchResults", () => {
     );
 
     const links = screen.getAllByTestId("search-hit");
-    expect(links[0].getAttribute("href")).toBe("/projects/proj-1");
-    expect(links[1].getAttribute("href")).toBe("/researchers/res-1");
+    expect(links[0]?.getAttribute("href")).toBe("/projects/proj-1");
+    expect(links[1]?.getAttribute("href")).toBe("/researchers/res-1");
   });
 });

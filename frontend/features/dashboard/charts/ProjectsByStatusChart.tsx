@@ -47,13 +47,13 @@ export function ProjectsByStatusChart({ data }: ProjectsByStatusChartProps) {
           cx="50%"
           cy="50%"
           outerRadius={80}
-          label={(entry) => `${entry.status}: ${entry.count}`}
+          label={(entry: unknown) => `${(entry as { status: string }).status}: ${(entry as { count: number }).count}`}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={getColor(entry.status)} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => [value, "Proyectos"]} />
+        <Tooltip formatter={(value: unknown) => [value, "Proyectos"]} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

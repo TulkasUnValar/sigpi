@@ -37,12 +37,12 @@ export function BudgetExecutionChart({ data }: BudgetExecutionChartProps) {
         <XAxis dataKey="name" />
         <YAxis />
         <Tooltip
-          formatter={(value: number) => [
+          formatter={(value: unknown) => [
             new Intl.NumberFormat("es-CO", {
               style: "currency",
               currency: "COP",
               minimumFractionDigits: 0,
-            }).format(value),
+            }).format(Number(value)),
           ]}
         />
         <Legend />
