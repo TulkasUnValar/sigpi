@@ -1,10 +1,8 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, User, HardDrive, Tag } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import type { Document } from './types';
-import { formatDate, formatFileSize } from './utils';
 
 interface DocumentHeaderProps {
   document: Document;

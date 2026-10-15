@@ -19,12 +19,6 @@ interface DocumentsTableProps {
 
 const PAGE_SIZE = 25;
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
-
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -51,7 +45,7 @@ export function DocumentsTable({ documents, page, totalCount, onPageChange }: Do
         <FileText className="h-12 w-12 text-muted-foreground mb-4" />
         <p className="text-lg font-medium">No hay documentos</p>
         <p className="text-sm text-muted-foreground">
-          Aún no hay documentos subidos. Sube el primero usando el botón "Subir documento".
+          Aún no hay documentos subidos. Sube el primero usando el botón &quot;Subir documento&quot;.
         </p>
       </div>
     );

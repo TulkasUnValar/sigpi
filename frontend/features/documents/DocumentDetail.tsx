@@ -12,7 +12,7 @@ import { DocumentHeader } from './DocumentHeader';
 import { VersionHistory } from './VersionHistory';
 import { openPresignedUrl } from '@/lib/download';
 import { api } from '@/lib/api';
-import { formatDate, formatFileSize } from './utils';
+import { formatDate } from './utils';
 
 export function DocumentDetail() {
   const params = useParams();
@@ -29,7 +29,6 @@ export function DocumentDetail() {
       router.push('/documents');
     }
   }, [error, router]);
-
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
@@ -51,7 +50,7 @@ export function DocumentDetail() {
         `/api/documents/${documentId}/download/`
       );
       openPresignedUrl(response.download_url);
-    } catch (error) {
+    } catch {
       toast.error('Error al descargar el documento');
     }
   };
@@ -66,7 +65,7 @@ export function DocumentDetail() {
       try {
         await reuploadMutation.mutateAsync(file);
         toast.success('Nueva versión subida exitosamente');
-      } catch (error) {
+      } catch {
         toast.error('Error al subir nueva versión');
       }
     };
