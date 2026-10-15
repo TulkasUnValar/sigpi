@@ -91,6 +91,8 @@ export const queryKeys = {
       [...queryKeys.dashboard.all, "projects", institutionId] as const,
     progress: (institutionId: string | null) =>
       [...queryKeys.dashboard.all, "progress", institutionId] as const,
+    summary: (institutionId: string | null) =>
+      [...queryKeys.dashboard.all, "summary", institutionId] as const,
   },
 
   reports: {

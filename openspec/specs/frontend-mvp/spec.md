@@ -65,18 +65,23 @@ Switching institution MUST clear all scoped server cache.
 
 ## dashboard
 
-### Requirement: Role-aware home
-The dashboard MUST compose KPIs and queues from existing list endpoints (`/projects/`, `/progress/`), role-aware.
+### Requirement: Server-side aggregation
+The dashboard MUST fetch aggregated metrics from `/api/dashboard/summary/` endpoint (14 indicators per SPEC §6.12), role-aware. Client-side composition from list endpoints is deprecated due to pagination limits (25/page).
 
-#### Scenario: Director queue
+#### Scenario: Director dashboard
 - GIVEN a center director
 - WHEN rendering dashboard
-- THEN pending approvals queue + KPI cards appear
+- THEN server-side KPIs (IND-001 to IND-014) + charts (projects by status/center, budget execution, progress reports) appear
 
-#### Scenario: Investigator KPIs
+#### Scenario: Investigator dashboard
 - GIVEN an investigator
 - WHEN rendering
-- THEN "my projects" and progress KPIs appear; approvals hidden
+- THEN limited KPIs (backend scopes to own projects) appear; full approval queue hidden
+
+#### Scenario: Role-based access
+- GIVEN a user with role level 5+ (evaluador, asistente)
+- WHEN accessing dashboard
+- THEN access denied (403)
 
 ## projects-ui
 
