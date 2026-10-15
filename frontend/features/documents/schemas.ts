@@ -16,7 +16,7 @@ import { z } from "zod";
  * Mirrors the backend DocumentCreateSerializer field constraints.
  */
 export const uploadMetadataSchema = z.object({
-  filename: z.string().min(1, "El nombre del archivo es requerido"),
+  title: z.string().min(1, "El título del documento es requerido"),
   doc_type: z.string().min(1, "El tipo de documento es requerido"),
   entity_type: z.string().optional(),
   entity_id: z.string().optional(),

@@ -22,34 +22,41 @@ export interface DocumentType {
 /** A stored document with metadata, ownership, and MinIO storage info. */
 export interface Document {
   id: string;
-  filename: string;
-  content_type: string;
-  size_bytes: number;
-  doc_type: DocumentType;
+  title: string;
+  institution: string;
+  project: string | null;
   entity_type: string | null;
   entity_id: string | null;
-  uploaded_by: {
+  doc_type: DocumentType;
+  is_signed: boolean;
+  current_version: number;
+  signature: {
+    signer: string | null;
+    signed_at: string;
+    sha256: string;
+  } | null;
+  created_by: {
     id: string;
     full_name: string;
   };
   created_at: string;
   updated_at: string;
-  is_signed: boolean;
-  current_version: number;
-  institution: string;
 }
 
 /** Immutable snapshot of a document at a given version. */
 export interface DocumentVersion {
   id: string;
+  document: string;
   version: number;
-  filename: string;
+  object_key: string;
+  sha256: string;
   size_bytes: number;
+  mime_type: string;
   uploaded_by: {
     id: string;
     full_name: string;
   };
-  created_at: string;
+  uploaded_at: string;
   /** Presigned GET URL — only populated when explicitly requested. */
   download_url?: string;
 }
