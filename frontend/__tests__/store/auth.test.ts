@@ -6,11 +6,9 @@
  */
 
 import { act } from "@testing-library/react";
-import {
-  useAuthStore,
-  type AuthStore,
-  type AuthUser,
-} from "@/store/auth";
+import { useAuthStore, type AuthStore, type AuthUser } from "@/store/auth";
+import { MANAGER_ROLES } from "@/features/calls/permissions";
+import { isAdminPlus } from "@/features/reports/permissions";
 
 // ── Mock the API module ──────────────────────────────────
 jest.mock("@/lib/api", () => ({
@@ -46,7 +44,7 @@ const mockUser: AuthUser = {
   memberships: [
     {
       institution: { id: "inst-1", name: "Universidad Alpha" },
-      role: { name: "researcher", level: 4 },
+      role: { name: "Investigador", level: 4 },
       centers: [{ id: "c1", name: "Centro A" }],
       is_primary: true,
       is_active: true,
@@ -66,14 +64,14 @@ const mockSwitchResponse: api.SwitchInstitutionResponse = {
     memberships: [
       {
         institution: { id: "inst-1", name: "Universidad Alpha" },
-        role: { name: "researcher", level: 4 },
+        role: { name: "Investigador", level: 4 },
         centers: [],
         is_primary: true,
         is_active: true,
       },
       {
         institution: { id: "inst-2", name: "Universidad Beta" },
-        role: { name: "admin", level: 2 },
+        role: { name: "Admin Institucional", level: 2 },
         centers: [],
         is_primary: false,
         is_active: true,
@@ -81,7 +79,7 @@ const mockSwitchResponse: api.SwitchInstitutionResponse = {
     ],
   },
   active_institution: { id: "inst-2", name: "Universidad Beta" },
-  role: { name: "admin", level: 2 },
+  role: { name: "Admin Institucional", level: 2 },
   centers: [],
 };
 
@@ -153,9 +151,7 @@ describe("useAuthStore.login", () => {
     });
     expect(getStore().roles).toEqual(["researcher"]);
     expect(getStore().centers).toEqual([{ id: "c1", name: "Centro A" }]);
-    expect(getStore().institutions).toEqual([
-      { id: "inst-1", name: "Universidad Alpha" },
-    ]);
+    expect(getStore().institutions).toEqual([{ id: "inst-1", name: "Universidad Alpha" }]);
     expect(api.login).toHaveBeenCalledWith("test@example.com", "password123");
   });
 
@@ -195,14 +191,14 @@ describe("useAuthStore.login", () => {
       memberships: [
         {
           institution: { id: "inst-1", name: "Universidad Alpha" },
-          role: { name: "researcher", level: 4 },
+          role: { name: "Investigador", level: 4 },
           centers: [],
           is_primary: true,
           is_active: true,
         },
         {
           institution: { id: "inst-2", name: "Universidad Beta" },
-          role: { name: "admin", level: 2 },
+          role: { name: "Admin Institucional", level: 2 },
           centers: [],
           is_primary: false,
           is_active: true,
@@ -295,6 +291,34 @@ describe("useAuthStore.switchInstitution", () => {
     expect(getStore().centers).toEqual([]);
   });
 
+  it("maps a display name in the switched membership to its UI slug", async () => {
+    const directorSwitch: api.SwitchInstitutionResponse = {
+      ...mockSwitchResponse,
+      active_institution: { id: "inst-3", name: "Universidad Gamma" },
+      user: {
+        ...mockSwitchResponse.user,
+        active_institution_id: "inst-3",
+        memberships: [
+          ...mockSwitchResponse.user.memberships,
+          {
+            institution: { id: "inst-3", name: "Universidad Gamma" },
+            role: { name: "Director de Centro", level: 3 },
+            centers: [],
+            is_primary: false,
+            is_active: true,
+          },
+        ],
+      },
+    };
+    (api.switchInstitution as jest.Mock).mockResolvedValue(directorSwitch);
+
+    await act(async () => {
+      await getStore().switchInstitution("inst-3");
+    });
+
+    expect(getStore().roles).toEqual(["director"]);
+  });
+
   it("updates user with the response user", async () => {
     (api.switchInstitution as jest.Mock).mockResolvedValue(mockSwitchResponse);
 
@@ -307,9 +331,7 @@ describe("useAuthStore.switchInstitution", () => {
   });
 
   it("does not change state on failure", async () => {
-    (api.switchInstitution as jest.Mock).mockRejectedValue(
-      new Error("Not authorized"),
-    );
+    (api.switchInstitution as jest.Mock).mockRejectedValue(new Error("Not authorized"));
 
     await act(async () => {
       try {
@@ -359,5 +381,164 @@ describe("useAuthStore.clearAuth", () => {
     expect(getStore().roles).toEqual([]);
     expect(getStore().centers).toEqual([]);
     expect(getStore().isLoading).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────
+// role slug mapping (backend display name → UI slug)
+// ─────────────────────────────────────────────────────────
+
+describe("useAuthStore — role slug mapping", () => {
+  function userWithRole(name: string): AuthUser {
+    return {
+      ...mockUser,
+      memberships: [
+        {
+          institution: { id: "inst-1", name: "Universidad Alpha" },
+          role: { name, level: 3 },
+          centers: [],
+          is_primary: true,
+          is_active: true,
+        },
+      ],
+    };
+  }
+
+  const knownMappings: [string, string][] = [
+    ["Superadmin", "superadmin"],
+    ["Admin Institucional", "admin"],
+    ["Director de Centro", "director"],
+    ["Investigador", "researcher"],
+    ["Evaluador", "evaluador"],
+    ["Asistente", "asistente"],
+    ["Auditor", "auditor"],
+  ];
+
+  it.each(knownMappings)(
+    'maps the backend display name "%s" to the UI slug "%s"',
+    async (displayName, slug) => {
+      (api.login as jest.Mock).mockResolvedValue(userWithRole(displayName));
+
+      await act(async () => {
+        await getStore().login("role@example.com", "pass");
+      });
+
+      expect(getStore().roles).toEqual([slug]);
+    },
+  );
+
+  it("namespaces an unknown display name so it cannot collide with a known slug", async () => {
+    (api.login as jest.Mock).mockResolvedValue(userWithRole("Coordinador Regional"));
+
+    await act(async () => {
+      await getStore().login("unknown@example.com", "pass");
+    });
+
+    expect(getStore().roles).toEqual(["unknown_coordinador_regional"]);
+  });
+
+  it("fails closed for a blank display name", async () => {
+    (api.login as jest.Mock).mockResolvedValue(userWithRole("   "));
+
+    await act(async () => {
+      await getStore().login("blank@example.com", "pass");
+    });
+
+    expect(getStore().roles).toEqual(["unknown_"]);
+  });
+
+  it('does not let the near-miss name "Admin" grant the privileged "admin" slug', async () => {
+    (api.login as jest.Mock).mockResolvedValue(userWithRole("Admin"));
+
+    await act(async () => {
+      await getStore().login("almost-admin@example.com", "pass");
+    });
+
+    const roles = getStore().roles;
+    expect(roles).toEqual(["unknown_admin"]);
+    expect(roles).not.toContain("admin");
+    // A privileged list must not match the fail-closed unknown slug.
+    expect(["admin", "superadmin"].some((r) => roles.includes(r))).toBe(false);
+  });
+
+  it("drives the authorization outcome: director can manage calls but is not admin-plus", async () => {
+    (api.login as jest.Mock).mockResolvedValue(userWithRole("Director de Centro"));
+
+    await act(async () => {
+      await getStore().login("director-auth@example.com", "pass");
+    });
+
+    const roles = getStore().roles;
+    expect(MANAGER_ROLES.some((r) => roles.includes(r))).toBe(true);
+    expect(isAdminPlus(roles)).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────
+// persistence migration (legacy display-name roles → slugs)
+// ─────────────────────────────────────────────────────────
+
+describe("useAuthStore — persistence migration", () => {
+  const legacyUser: AuthUser = {
+    ...mockUser,
+    memberships: [
+      {
+        institution: { id: "inst-1", name: "Universidad Alpha" },
+        role: { name: "Director de Centro", level: 3 },
+        centers: [],
+        is_primary: true,
+        is_active: true,
+      },
+    ],
+  };
+
+  it("recomputes slug roles from the persisted user for a legacy session", async () => {
+    // Reproduce what the pre-fix build left in localStorage: the version
+    // defaulted to 0 and `roles` held the raw backend display name.
+    window.localStorage.setItem(
+      "sigpi-auth-store",
+      JSON.stringify({
+        state: {
+          user: legacyUser,
+          activeInstitution: { id: "inst-1", name: "Universidad Alpha" },
+          institutions: [{ id: "inst-1", name: "Universidad Alpha" }],
+          roles: ["Director de Centro"],
+          centers: [],
+          isAuthenticated: true,
+        },
+        version: 0,
+      }),
+    );
+
+    await act(async () => {
+      await useAuthStore.persist.rehydrate();
+    });
+
+    expect(getStore().roles).toEqual(["director"]);
+    expect(getStore().user).toEqual(legacyUser);
+    expect(getStore().isAuthenticated).toBe(true);
+  });
+
+  it("degrades to empty roles when the persisted user has no resolvable membership", async () => {
+    window.localStorage.setItem(
+      "sigpi-auth-store",
+      JSON.stringify({
+        state: {
+          user: { ...legacyUser, memberships: [], active_institution_id: "inst-1" },
+          activeInstitution: null,
+          institutions: [],
+          roles: ["Director de Centro"],
+          centers: [],
+          isAuthenticated: true,
+        },
+        version: 0,
+      }),
+    );
+
+    await act(async () => {
+      await useAuthStore.persist.rehydrate();
+    });
+
+    expect(getStore().roles).toEqual([]);
   });
 });
