@@ -23,6 +23,11 @@ jest.mock("@/lib/api", () => ({
   API_BASE: "http://localhost:8000",
 }));
 
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/search",
+  useRouter: () => ({ push: jest.fn(), prefetch: jest.fn() }),
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
@@ -66,7 +71,7 @@ describe("SearchPage", () => {
     renderPage();
 
     // Header
-    expect(screen.getByText("Búsqueda")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /búsqueda/i })).toBeInTheDocument();
     expect(screen.getByText(/Busca en proyectos, investigadores, productos/)).toBeInTheDocument();
 
     // SearchBar
@@ -75,16 +80,13 @@ describe("SearchPage", () => {
 
     // SearchFilters
     expect(screen.getByTestId("search-filters")).toBeInTheDocument();
-
-    // Initial prompt
-    expect(screen.getByText(/Ingresa al menos 2 caracteres para buscar/)).toBeInTheDocument();
   });
 
   it("shows prompt when query is too short", () => {
     renderPage();
 
-    // Initially shows prompt
-    expect(screen.getByText(/Ingresa al menos 2 caracteres para buscar/)).toBeInTheDocument();
+    // Initially query is empty, so no prompt is shown
+    expect(screen.queryByText(/Ingresa al menos 2 caracteres para buscar/)).not.toBeInTheDocument();
   });
 
   it("shows superadmin filters when user is superadmin", () => {

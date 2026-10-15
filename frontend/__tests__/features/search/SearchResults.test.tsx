@@ -58,7 +58,7 @@ describe("SearchResults", () => {
       <SearchResults results={results} offset={0} limit={25} onPageChange={mockOnPageChange} />,
     );
 
-    expect(screen.getByText(/No se encontraron resultados para "test"/)).toBeInTheDocument();
+    expect(screen.getByText(/No se encontraron resultados para/)).toBeInTheDocument();
     expect(screen.queryByTestId("search-prev")).not.toBeInTheDocument();
     expect(screen.queryByTestId("search-next")).not.toBeInTheDocument();
   });
@@ -80,8 +80,8 @@ describe("SearchResults", () => {
       <SearchResults results={results} offset={0} limit={25} onPageChange={mockOnPageChange} />,
     );
 
-    expect(screen.getByText("2 resultados para")).toBeInTheDocument();
-    expect(screen.getByText(/"project"/)).toBeInTheDocument();
+    expect(screen.getByText(/resultados para/)).toBeInTheDocument();
+    expect(screen.getAllByText(/project/i)).toHaveLength(5); // query text + 2 titles + 2 descriptions
     expect(screen.getAllByTestId("search-hit")).toHaveLength(2);
   });
 

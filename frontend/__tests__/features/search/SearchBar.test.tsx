@@ -85,7 +85,7 @@ describe("SearchBar", () => {
     expect(screen.getByText("Productos")).toBeInTheDocument();
     expect(screen.getByText("Convocatorias")).toBeInTheDocument();
     expect(screen.getByText("Avances")).toBeInTheDocument();
-    expect(screen.getByText("Todos")).toBeInTheDocument();
+    expect(screen.getAllByText("Todos")).toHaveLength(2);
   });
 
   it("fires onIndexChange when index selection changes", async () => {
