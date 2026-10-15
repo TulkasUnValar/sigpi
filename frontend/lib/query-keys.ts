@@ -11,6 +11,11 @@
 import type { ReportType } from "@/features/reports/types";
 
 export const queryKeys = {
+  search: {
+    all: ["search"] as const,
+    list: (institutionId: string | null, query: string, index: string, filters: unknown) =>
+      [...queryKeys.search.all, institutionId, query, index, filters] as const,
+  },
   projects: {
     all: ["projects"] as const,
     lists: () => [...queryKeys.projects.all, "list"] as const,
