@@ -47,7 +47,7 @@ export function ProjectsByStatusChart({ data }: ProjectsByStatusChartProps) {
           cx="50%"
           cy="50%"
           outerRadius={80}
-          label={(entry: any) => `${entry.status}: ${entry.count}`}
+          label={(entry: StatusData) => `${entry.status}: ${entry.count}`}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={getColor(entry.status)} />
