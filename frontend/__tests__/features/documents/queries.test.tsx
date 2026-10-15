@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useDocuments, useDocument, useDocumentTypes, useDocumentVersions } from '../queries';
+import { useDocuments, useDocument, useDocumentTypes, useDocumentVersions } from '@/features/documents/queries';
 import { api } from '@/lib/api';
 
 jest.mock('@/lib/api');

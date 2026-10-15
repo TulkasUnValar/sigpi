@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { DocumentHeader } from '../DocumentHeader';
-import type { Document } from '../types';
+import { DocumentHeader } from '@/features/documents/DocumentHeader';
+import type { Document } from '@/features/documents/types';
 
 const mockDocument: Document = {
   id: 'doc-1',

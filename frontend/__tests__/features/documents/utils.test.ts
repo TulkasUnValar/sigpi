@@ -1,4 +1,4 @@
-import { formatDate, formatFileSize } from '../utils';
+import { formatDate, formatFileSize } from '@/features/documents/utils';
 
 describe('utils', () => {
   describe('formatDate', () => {

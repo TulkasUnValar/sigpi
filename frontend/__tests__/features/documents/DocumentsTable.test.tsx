@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { DocumentsTable } from '../DocumentsTable';
-import type { Document } from '../types';
+import { DocumentsTable } from '@/features/documents/DocumentsTable';
+import type { Document } from '@/features/documents/types';
 
 const mockDocuments: Document[] = [
   {

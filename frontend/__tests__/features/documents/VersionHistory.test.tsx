@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { VersionHistory } from '../VersionHistory';
-import type { DocumentVersion } from '../types';
+import { VersionHistory } from '@/features/documents/VersionHistory';
+import type { DocumentVersion } from '@/features/documents/types';
 
 const mockVersions: DocumentVersion[] = [
   {

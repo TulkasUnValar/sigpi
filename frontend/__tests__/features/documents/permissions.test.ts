@@ -1,4 +1,4 @@
-import { canUploadDocuments, canViewDocuments } from '../permissions';
+import { canUploadDocuments, canViewDocuments } from '@/features/documents/permissions';
 
 describe('documents permissions', () => {
   describe('canUploadDocuments', () => {

@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useCreateDocument, useReuploadDocument } from '../mutations';
+import { useCreateDocument, useReuploadDocument } from '@/features/documents/mutations';
 import { api } from '@/lib/api';
 import { presignUpload } from '@/lib/storage-upload';
 
