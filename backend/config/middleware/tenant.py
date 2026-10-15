@@ -60,6 +60,7 @@ class TenantMiddleware:
         "/api/audit/",
         "/api/notifications/",
         "/api/search/",
+        "/api/dashboard/",
     ]
 
     def __init__(self, get_response):
