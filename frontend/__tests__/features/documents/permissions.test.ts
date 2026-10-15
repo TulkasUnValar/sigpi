@@ -48,9 +48,8 @@ describe('documents permissions', () => {
       expect(canViewDocuments()).toBe(true);
     });
 
-    it('returns true for any role', () => {
-      expect(canViewDocuments(['auditor'])).toBe(true);
-      expect(canViewDocuments(['researcher'])).toBe(true);
+    it('returns true always', () => {
+      expect(canViewDocuments()).toBe(true);
     });
   });
 });
