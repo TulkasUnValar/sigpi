@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { DocumentDetail } from '@/features/documents/DocumentDetail';
-import { useDocument, useDocumentVersions } from '@/features/documents/queries';
+import { useDocument } from '@/features/documents/queries';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { useDocumentVersions } from '@/features/documents/queries';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useReuploadDocument } from '@/features/documents/mutations';
 
 jest.mock('@/features/documents/queries', () => ({

@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DocumentsFilters } from '@/features/documents/DocumentsFilters';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useDocumentTypes } from '@/features/documents/queries';
 
 jest.mock('@/features/documents/queries', () => ({

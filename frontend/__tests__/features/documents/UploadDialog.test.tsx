@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { UploadDialog } from '@/features/documents/UploadDialog';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useCreateDocument } from '@/features/documents/mutations';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useDocumentTypes } from '@/features/documents/queries';
 
 jest.mock('@/features/documents/mutations', () => ({
