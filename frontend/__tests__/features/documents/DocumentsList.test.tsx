@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { DocumentsList } from './DocumentsList';
-import { useDocuments } from './queries';
+import { DocumentsList } from '@/features/documents/DocumentsList';
+import { useDocuments } from '@/features/documents/queries';
 
 jest.mock('./queries');
 jest.mock('./UploadButton', () => ({

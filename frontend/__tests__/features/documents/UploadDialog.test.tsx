@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { UploadDialog } from './UploadDialog';
+import { UploadDialog } from '@/features/documents/UploadDialog';
 
 describe('UploadDialog', () => {
   it('renders without crashing', () => {

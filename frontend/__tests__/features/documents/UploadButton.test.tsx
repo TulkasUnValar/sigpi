@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { UploadButton } from './UploadButton';
+import { UploadButton } from '@/features/documents/UploadButton';
 import { useAuthStore } from '@/store/auth';
 
 jest.mock('@/store/auth', () => ({

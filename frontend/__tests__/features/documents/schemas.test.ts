@@ -1,4 +1,4 @@
-import { uploadMetadataSchema } from './schemas';
+import { uploadMetadataSchema } from '@/features/documents/schemas';
 
 describe('documents schemas', () => {
   describe('uploadMetadataSchema', () => {

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { DocumentsFilters } from './DocumentsFilters';
+import { DocumentsFilters } from '@/features/documents/DocumentsFilters';
 
 describe('DocumentsFilters', () => {
   const mockOnChange = jest.fn();

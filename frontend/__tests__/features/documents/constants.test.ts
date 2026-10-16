@@ -1,4 +1,4 @@
-import { MAX_FILE_SIZE, DOCUMENT_ENTITY_TYPES } from './constants';
+import { MAX_FILE_SIZE, DOCUMENT_ENTITY_TYPES } from '@/features/documents/constants';
 
 describe('documents constants', () => {
   it('defines MAX_FILE_SIZE as 100MB', () => {
