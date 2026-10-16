@@ -14,10 +14,14 @@ import { openPresignedUrl } from '@/lib/download';
 import { api } from '@/lib/api';
 import { formatDate } from './utils';
 
-export function DocumentDetail() {
+interface DocumentDetailProps {
+  documentId?: string;
+}
+
+export function DocumentDetail({ documentId: propDocumentId }: DocumentDetailProps = {}) {
   const params = useParams();
   const router = useRouter();
-  const documentId = params.id as string;
+  const documentId = propDocumentId || (params.id as string);
 
   const { data: document, isLoading, error } = useDocument(documentId);
   const { data: versions } = useDocumentVersions(documentId);
