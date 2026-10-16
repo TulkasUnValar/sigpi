@@ -9,6 +9,7 @@
  */
 
 import type { ReportType } from "@/features/reports/types";
+import type { DocumentFilters } from "@/features/documents/types";
 
 export const queryKeys = {
   search: {
@@ -108,5 +109,12 @@ export const queryKeys = {
       [...queryKeys.reports.all, "pdf", institutionId, type, id] as const,
     derived: (institutionId: string | null, type: ReportType, id: string) =>
       [...queryKeys.reports.all, "derived", institutionId, type, id] as const,
+  },
+
+  documents: {
+    all: ["documents"] as const,
+    list: (filters: DocumentFilters) => [...queryKeys.documents.all, "list", filters] as const,
+    detail: (id: string) => [...queryKeys.documents.all, "detail", id] as const,
+    versions: (id: string) => [...queryKeys.documents.all, "versions", id] as const,
   },
 } as const;

@@ -56,3 +56,14 @@ export async function downloadBlob(
   anchor.remove();
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Open a presigned URL in a new browser tab.
+ *
+ * Used for MinIO downloads where the URL is absolute (not API-relative)
+ * and already contains its own short-lived credentials. No fetch is
+ * needed — the browser navigates directly to the presigned GET URL.
+ */
+export function openPresignedUrl(url: string): void {
+  window.open(url, "_blank");
+}
