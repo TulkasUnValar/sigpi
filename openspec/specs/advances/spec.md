@@ -32,7 +32,7 @@ Standalone bounded context: `apps.progress`. Depends on `projects` (Project FK, 
 | RN-P06 | `rechazado` is NOT terminal; `return_to_draft()` transitions rechazado → borrador. |
 | RN-P07 | `aprobado` IS terminal for the advance lifecycle; no outbound transitions. |
 | RN-P08 | On approval, `Project.cumulative_progress` is recalculated from the latest approved advance (not summed). |
-| RN-P09 | A Project MUST exist and be in a non-terminal state for advances to be created. |
+| RN-P09 | A Project MUST exist and be in an allowed state for advances to be created. Allowed states: `en_ejecucion`, `suspendido`, `finalizado`, `en_cierre`, or `cerrado`. Terminal states `rechazado` and `cancelado` block progress creation. |
 | RN-P10 | Institution-scoped queryset via RLS; all progress tables are tenant-scoped. |
 
 ## Data Model
@@ -114,7 +114,7 @@ Permission classes:
 | period_end < period_start | 400 | `{"detail":"Period end must be on or after period start."}` |
 | Invalid FSM transition | 400 | `{"detail":"Transition not allowed from current state."}` |
 | Not center director | 403 | `{"detail":"Only the center director can perform this action."}` |
-| Project in terminal state | 403 | `{"detail":"Cannot create advances for a closed project."}` |
+| Project in disallowed state (borrador, enviado, en_revision, observado, rechazado, cancelado) | 403 | `{"detail":"Progress reports require the project to be in execution or later states."}` |
 | Advance not in borrador for edit | 403 | `{"detail":"Advance can only be edited in draft state."}` |
 | RLS institution violation | 403 | `{"detail":"Institution access denied."}` |
 
@@ -260,7 +260,7 @@ Scenario: Observing does not change project progress
 | Case | Expected Behavior |
 |---|---|
 | Multiple advances in borrador for same project | Allowed; each is independent |
-| Submit advance when project is in terminal state (cerrado) | 403 — cannot create advances for closed projects |
+| Create advance when project is in disallowed state (borrador, enviado, en_revision, observado, rechazado, cancelado) | 403 — Progress reports require the project to be in execution or later states |
 | Approve advance after project center changes | IsCenterDirectorForProject checks current center assignment |
 | Concurrent approval attempts | FSM transition is atomic; second attempt gets 400 "Transition not allowed" |
 | cumulative_percentage = 0 on approval | Valid; Project.cumulative_progress set to 0.00 |
