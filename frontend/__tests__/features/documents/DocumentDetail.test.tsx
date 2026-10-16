@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { DocumentDetail } from '@/features/documents/DocumentDetail';
 import { useDocument } from '@/features/documents/queries';
 
-jest.mock('./queries', () => ({
+jest.mock('@/features/documents/queries', () => ({
   useDocument: jest.fn(),
 }));
 
