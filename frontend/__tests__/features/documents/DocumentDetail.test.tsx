@@ -1,9 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { DocumentDetail } from '@/features/documents/DocumentDetail';
-import { useDocument } from '@/features/documents/queries';
+import { useDocument, useDocumentVersions } from '@/features/documents/queries';
+import { useReuploadDocument } from '@/features/documents/mutations';
 
 jest.mock('@/features/documents/queries', () => ({
   useDocument: jest.fn(),
+  useDocumentVersions: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock('@/features/documents/mutations', () => ({
+  useReuploadDocument: jest.fn(() => ({ mutateAsync: jest.fn(), isPending: false })),
 }));
 
 const mockUseDocument = useDocument as jest.MockedFunction<typeof useDocument>;

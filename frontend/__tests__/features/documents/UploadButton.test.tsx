@@ -1,9 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import { UploadButton } from '@/features/documents/UploadButton';
 import { useAuthStore } from '@/store/auth';
+import { useCreateDocument } from '@/features/documents/mutations';
+import { useDocumentTypes } from '@/features/documents/queries';
 
 jest.mock('@/store/auth', () => ({
   useAuthStore: jest.fn(),
+}));
+
+jest.mock('@/features/documents/mutations', () => ({
+  useCreateDocument: jest.fn(() => ({ mutateAsync: jest.fn(), isPending: false })),
+}));
+
+jest.mock('@/features/documents/queries', () => ({
+  useDocumentTypes: jest.fn(() => ({ data: [] })),
 }));
 
 const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;

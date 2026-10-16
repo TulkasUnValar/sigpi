@@ -1,5 +1,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DocumentsFilters } from '@/features/documents/DocumentsFilters';
+import { useDocumentTypes } from '@/features/documents/queries';
+
+jest.mock('@/features/documents/queries', () => ({
+  useDocumentTypes: jest.fn(() => ({ data: [] })),
+}));
 
 describe('DocumentsFilters', () => {
   const mockOnChange = jest.fn();

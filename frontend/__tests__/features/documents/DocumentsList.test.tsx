@@ -1,8 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { DocumentsList } from '@/features/documents/DocumentsList';
-import { useDocuments } from '@/features/documents/queries';
+import { useDocuments, useDocumentTypes } from '@/features/documents/queries';
 
-jest.mock('@/features/documents/queries');
+jest.mock('@/features/documents/queries', () => ({
+  useDocuments: jest.fn(),
+  useDocumentTypes: jest.fn(() => ({ data: [] })),
+}));
+
 jest.mock('@/features/documents/UploadButton', () => ({
   UploadButton: () => <button>Subir documento</button>,
 }));
