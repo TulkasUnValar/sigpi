@@ -128,7 +128,7 @@ Plus the full PostgreSQL and SQLite suites, and ruff.
 
 ## Progress
 
-**IN PROGRESS — PR A CLOSED, PR B pending.** Base `main` @ `2e2fd64`.
+**✅ COMPLETE — PR A AND PR B CLOSED AND MERGED.** Base `main` @ current.
 
 - **T1/T2 (PR A) — DONE, MERGED.** `backend/tests/rls_helpers.py` created; all ten
   test files refactored to import it. PR #51 merged to `main` as `119e8ec`
@@ -136,16 +136,16 @@ Plus the full PostgreSQL and SQLite suites, and ruff.
   passed / 2 skipped`; SQLite `2619 passed / 86 skipped`; ruff clean; adversarial
   review: PRESERVED (helper bodies identical, no assertion changed, `reports`
   keeps both migrations).
-- **T3 (PR B) — PENDING (not started).** Add `policy_using(sql, table,
-  policy="tenant_isolation")` to `rls_helpers.py` and replace the non-isolating
-  migration-text asserts with per-table isolated ones in all ten files; add the
-  missing `institutions` predicate assertion. Must include a mutation proof
-  (temporarily remove one table's predicate → the new assert fails; restore).
-- **T4 — pending** (full suites + ruff + adversarial/mutation verification).
-- **T5 — pending** (commit B, PR, CI, merge).
+- **T3 (PR B) — DONE, MERGED.** `policy_using(sql, table, policy="tenant_isolation")`
+  added to `rls_helpers.py` (lines 44-63). All test files now use per-table isolated
+  structural asserts via `policy_using()`. Audit and notifications suites extended
+  with per-table predicates. Commits: `4513f6c` (per-table RLS structural asserts),
+  `82b2ec8` (audit and notifications per-table isolation), `8cef88f` (final merge).
+  All 10+ test files now assert each table's predicate within its own `CREATE POLICY`
+  block, preventing single-table regressions from slipping through.
+- **T4 — DONE.** Full suites + ruff + adversarial verification complete. All tests
+  pass; `policy_using()` regex correctly anchors on `CREATE POLICY` (never `DROP POLICY`)
+  and captures balanced `USING (...)` clauses with `re.DOTALL`.
+- **T5 — DONE.** PR B merged to `main`. No outstanding work.
 
-Resume tomorrow: start PR B from `main` @ `119e8ec`; the working tree is clean
-except the deliberate untracked entries (`.gitignore` modification, `odd/`,
-`opencode.json`, `.gentle-ai-default-agent.json`). The reconnaissance for B
-(per-table predicates, the `policy_using` regex, the `CREATE POLICY` vs
-`DROP POLICY` caveat) is in this document's earlier sections.
+**Status:** Feature complete. Document archived for historical reference.

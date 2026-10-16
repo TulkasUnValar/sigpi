@@ -39,38 +39,37 @@ Implement full-text search across projects, researchers, products, calls, and ad
   - ✅ All 5 indexes created in Meilisearch
   - ✅ Search API responding correctly
 
-### Phase 2: Frontend (search feature)
+### Phase 2: Frontend (search feature) ✅ COMPLETE
 
-- [ ] **Task 4: Create search feature structure**
-  - Files:
-    - `frontend/features/search/queries.ts` (useSearch hook)
-    - `frontend/features/search/types.ts` (Meili SearchResults shape)
-    - `frontend/features/search/constants.ts` (index metadata, route mapping)
+- [x] **Task 4: Create search feature structure**
+  - ✅ Files:
+    - `frontend/features/search/queries.ts` (useSearch hook, 61 lines)
+    - `frontend/features/search/types.ts` (SearchHit, SearchResults, SearchIndex, SearchFilters)
+    - `frontend/features/search/constants.ts` (SEARCH_INDEXES, DEFAULT_SEARCH_INDEX)
     - `frontend/features/search/index.ts` (barrel export)
   - Estimated: ~100 lines
 
-- [ ] **Task 5: Create search UI components**
-  - Files:
-    - `frontend/features/search/SearchBar.tsx` (input + index selector)
-    - `frontend/features/search/SearchResults.tsx` (result cards with highlighting)
+- [x] **Task 5: Create search UI components**
+  - ✅ Files:
+    - `frontend/features/search/SearchBar.tsx` (debounced input + index selector, 99 lines)
+    - `frontend/features/search/SearchResults.tsx` (paginated results with highlighting, 157 lines)
     - `frontend/features/search/SearchFilters.tsx` (filter panel)
-  - Use existing UI primitives (Card, Input, Badge, Button)
+  - Uses existing UI primitives (Card, Input, Badge, Button, Select)
   - Estimated: ~250 lines
 
-- [ ] **Task 6: Create search page**
-  - File: `frontend/app/search/page.tsx`
-  - Thin adapter over AuthenticatedLayout
-  - Integrate SearchBar, SearchResults, SearchFilters
-  - Handle loading/empty/error states
-  - Estimated: ~100 lines
+- [x] **Task 6: Create search page**
+  - ✅ File: `frontend/app/search/page.tsx` (134 lines)
+  - ✅ Thin adapter over AuthenticatedLayout
+  - ✅ Integrates SearchBar, SearchResults, SearchFilters
+  - ✅ Handles loading/empty/error states
 
-- [ ] **Task 7: Integrate search into navigation**
-  - Add "Búsqueda" entry to Sidebar NAV_ITEMS
-  - Add query key factory to `lib/query-keys.ts`
+- [x] **Task 7: Integrate search into navigation**
+  - ✅ Added "Búsqueda" entry to Sidebar NAV_ITEMS (line 27)
+  - ✅ Added query key factory to `lib/query-keys.ts` (lines 15-19)
   - Estimated: ~30 lines
 
-- [ ] **Task 8: Create frontend tests**
-  - Files:
+- [x] **Task 8: Create frontend tests**
+  - ✅ Files:
     - `frontend/__tests__/features/search/queries.test.ts`
     - `frontend/__tests__/features/search/SearchBar.test.tsx`
     - `frontend/__tests__/features/search/SearchResults.test.tsx`

@@ -101,5 +101,61 @@ Implementar dashboard con 14 indicadores de BI (SPEC §6.12) usando endpoint ser
 ~1300 líneas (backend ~650, frontend ~600, docs ~50)
 
 ## Progreso
-- Rama: `feat/dashboard-metrics` (crear)
-- PR: pendiente
+
+**✅ COMPLETE — ALL TASKS MERGED.** Base `main` @ current.
+
+### Backend
+- [x] **T1: Crear app dashboard** ✅
+  - App creada en `backend/apps/dashboard/`
+  - Archivos: services.py, views.py, serializers.py, urls.py, permissions.py
+
+- [x] **T2: Implementar DashboardSummaryService** ✅
+  - Método `summary()` retorna los 14 indicadores (IND-001 a IND-014)
+  - Agregados server-side correctos
+
+- [x] **T3: Implementar endpoint /api/dashboard/summary/** ✅
+  - ViewSet con `@action(detail=False, methods=['get'])`
+  - Permissions: role-based (superadmin, admin, director, researcher, auditor)
+  - Scoping por institution (superadmin bypass)
+
+- [x] **T4: Agregar /api/dashboard/ a TENANT_REQUIRED_PREFIXES** ✅
+  - Middleware configurado
+
+- [x] **T5: Tests del backend** ✅
+  - test_services.py (31 tests)
+  - test_views.py (13 tests)
+  - Total: 44 tests pasando
+
+### Frontend
+- [x] **T6: Instalar recharts** ✅
+  - Dependencia instalada
+
+- [x] **T7: Crear useDashboardSummary hook** ✅
+  - `features/dashboard/queries.ts` creado
+  - Query key factory en `lib/query-keys.ts`
+
+- [x] **T8: Crear componentes de charts** ✅
+  - `charts/ProjectsByStatusChart.tsx` (pie chart)
+  - `charts/ProjectsByCenterChart.tsx` (bar chart)
+  - `charts/BudgetExecutionChart.tsx` (bar chart)
+  - `charts/ProgressReportsChart.tsx` (stacked bar)
+
+- [x] **T9: Actualizar dashboard page** ✅
+  - `app/dashboard/page.tsx` usa `useDashboardSummary()`
+  - KPIs desde datos del servidor
+  - Role-aware rendering
+
+- [x] **T10: Tests del frontend** ✅
+  - Tests de hooks y componentes
+
+### Documentación
+- [x] **T11: Actualizar spec frontend-mvp** ✅
+  - Spec actualizado en commit `49f56a0`
+
+## Commits de Merge
+- `394151f` - PR #64: implement metrics dashboard with 14 indicators
+- `c708822` - implement frontend charts and KPIs
+- `7911008` - implement /api/dashboard/summary/ endpoint
+- `49f56a0` - update frontend-mvp spec
+
+**Status:** Feature complete. All 14 indicators implemented, tested, and merged to main.
