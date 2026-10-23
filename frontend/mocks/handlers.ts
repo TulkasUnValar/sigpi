@@ -46,6 +46,15 @@ import {
   fixtureReportApproveSuccess,
   fixtureReportPdfBytes,
   fixtureReportPreviewHtml,
+  mockBudget,
+  mockBudgetListItem,
+  mockBudgetListItem2,
+  mockBudgetLine,
+  mockBudgetLine2,
+  mockBudgetAttachment,
+  mockBudgetExecution,
+  mockFundingSource,
+  mockFundingSource2,
 } from "@/fixtures";
 import { ALLOWED_PROJECT_STATES, PRODUCT_TYPES } from "@/features/products/constants";
 import { REPORT_TYPES } from "@/features/reports/constants";
@@ -226,6 +235,27 @@ let productsAttachmentsStore: Record<string, (typeof fixtureProductAttachments)[
   Object.fromEntries(
     Object.entries(fixtureProductAttachments).map(([k, v]) => [k, v.map((a) => ({ ...a }))]),
   );
+
+// ── Budgets in-memory stores (seeded from fixtures) ───────
+// The handlers mutate these so CRUD behaves like a real DRF backend
+// during dev/tests. RN-020 validation is enforced in execution creation.
+
+let budgetsStore = [mockBudgetListItem, mockBudgetListItem2].map((b) => ({ ...b }));
+const budgetDetailStore: Record<string, (typeof mockBudget)> = {
+  [mockBudget.id]: { ...mockBudget },
+};
+const budgetLinesStore: Record<string, Array<typeof mockBudgetLine>> = {
+  [mockBudget.id]: [{ ...mockBudgetLine }, { ...mockBudgetLine2 }],
+};
+const fundingSourcesStore: Record<string, Array<typeof mockFundingSource>> = {
+  [mockBudget.project]: [{ ...mockFundingSource }, { ...mockFundingSource2 }],
+};
+const budgetExecutionsStore: Record<string, Array<typeof mockBudgetExecution>> = {
+  [mockBudgetLine.id]: [{ ...mockBudgetExecution }],
+};
+const budgetAttachmentsStore: Record<string, Array<typeof mockBudgetAttachment>> = {
+  [mockBudget.id]: [{ ...mockBudgetAttachment }],
+};
 
 /** Valid type codes mirroring ProductType choices. */
 const VALID_PRODUCT_TYPES = Object.keys(PRODUCT_TYPES);
@@ -1588,5 +1618,328 @@ export const handlers = [
       (a) => !(a.researcher === params.id && a.id === params.attId),
     );
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Budgets CRUD ─────────────────────────────────────────────────
+  // List with optional filters (project, status)
+  http.get("http://localhost:8000/api/budgets/", ({ request }) => {
+    const url = new URL(request.url);
+    const project = url.searchParams.get("project");
+    const status = url.searchParams.get("status");
+
+    let rows = budgetsStore.map((b) => ({ ...b }));
+    if (project) rows = rows.filter((b) => b.project === project);
+    if (status) rows = rows.filter((b) => b.status === status);
+
+    return HttpResponse.json(page(rows));
+  }),
+
+  // Create budget (RF-B01: duplicate project → 409)
+  http.post("http://localhost:8000/api/budgets/", async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    const project = String(body.project ?? "");
+
+    // Check for duplicate budget per project
+    if (budgetsStore.some((b) => b.project === project)) {
+      return HttpResponse.json({ detail: "Project already has a budget." }, { status: 409 });
+    }
+
+    const budget = {
+      id: `budget-${Date.now()}`,
+      project,
+      institution: "inst-1",
+      name: String(body.name ?? ""),
+      approved_amount: String(body.approved_amount ?? "0.00"),
+      status: "draft",
+      created_at: new Date().toISOString(),
+    };
+    budgetsStore = [...budgetsStore, budget];
+    budgetDetailStore[budget.id] = { ...budget, lines: [], attachments: [], updated_at: budget.created_at };
+    return HttpResponse.json(budgetDetailStore[budget.id], { status: 201 });
+  }),
+
+  // Budget detail
+  http.get("http://localhost:8000/api/budgets/:id/", ({ params }) => {
+    const id = String(params.id);
+    const budget = budgetDetailStore[id];
+    if (!budget) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    return HttpResponse.json(budget);
+  }),
+
+  // Update budget (PATCH)
+  http.patch("http://localhost:8000/api/budgets/:id/", async ({ params, request }) => {
+    const id = String(params.id);
+    const budget = budgetDetailStore[id];
+    if (!budget) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...budget, ...body, updated_at: new Date().toISOString() };
+    budgetDetailStore[id] = updated;
+
+    // Update list item too
+    budgetsStore = budgetsStore.map((b) =>
+      b.id === id ? { ...b, name: updated.name, approved_amount: updated.approved_amount } : b,
+    );
+
+    return HttpResponse.json(updated);
+  }),
+
+  // Delete budget
+  http.delete("http://localhost:8000/api/budgets/:id/", ({ params }) => {
+    const id = String(params.id);
+    if (!budgetDetailStore[id]) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    budgetsStore = budgetsStore.filter((b) => b.id !== id);
+    delete budgetDetailStore[id];
+    delete budgetLinesStore[id];
+    delete budgetAttachmentsStore[id];
+
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Budget Lines CRUD ────────────────────────────────────────────
+  http.get("http://localhost:8000/api/budgets/:id/lines/", ({ params }) => {
+    const budgetId = String(params.id);
+    const lines = budgetLinesStore[budgetId] ?? [];
+    return HttpResponse.json(page(lines));
+  }),
+
+  http.post("http://localhost:8000/api/budgets/:id/lines/", async ({ params, request }) => {
+    const budgetId = String(params.id);
+    if (!budgetDetailStore[budgetId]) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const line = {
+      id: `line-${Date.now()}`,
+      budget: budgetId,
+      name: String(body.name ?? ""),
+      approved_amount: String(body.approved_amount ?? "0.00"),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    budgetLinesStore[budgetId] = [...(budgetLinesStore[budgetId] ?? []), line];
+    return HttpResponse.json(line, { status: 201 });
+  }),
+
+  http.patch("http://localhost:8000/api/budgets/:id/lines/:lid/", async ({ params, request }) => {
+    const budgetId = String(params.id);
+    const lineId = String(params.lid);
+    const lines = budgetLinesStore[budgetId];
+    if (!lines) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const idx = lines.findIndex((l) => l.id === lineId);
+    if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...lines[idx], ...body, updated_at: new Date().toISOString() };
+    budgetLinesStore[budgetId] = lines.map((l) => (l.id === lineId ? updated : l));
+    return HttpResponse.json(updated);
+  }),
+
+  // Delete line (409 if has executions)
+  http.delete("http://localhost:8000/api/budgets/:id/lines/:lid/", ({ params }) => {
+    const budgetId = String(params.id);
+    const lineId = String(params.lid);
+    const lines = budgetLinesStore[budgetId];
+    if (!lines) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const idx = lines.findIndex((l) => l.id === lineId);
+    if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    // Check for executions
+    const executions = budgetExecutionsStore[lineId];
+    if (executions && executions.length > 0) {
+      return HttpResponse.json({ detail: "Cannot delete line with executions." }, { status: 409 });
+    }
+
+    budgetLinesStore[budgetId] = lines.filter((l) => l.id !== lineId);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Budget Executions (RN-020 validation) ───────────────────────
+  http.get("http://localhost:8000/api/budgets/:id/lines/:lid/executions/", ({ params }) => {
+    const lineId = String(params.lid);
+    const executions = budgetExecutionsStore[lineId] ?? [];
+    return HttpResponse.json(page(executions));
+  }),
+
+  http.post(
+    "http://localhost:8000/api/budgets/:id/lines/:lid/executions/",
+    async ({ params, request }) => {
+      const lineId = String(params.lid);
+      const budgetId = String(params.id);
+
+      const lines = budgetLinesStore[budgetId];
+      const line = lines?.find((l) => l.id === lineId);
+      if (!line) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+      const body = (await request.json()) as Record<string, unknown>;
+      const amount = parseFloat(String(body.amount ?? "0"));
+      const approvedAmount = parseFloat(line.approved_amount);
+
+      // Calculate total executed
+      const executions = budgetExecutionsStore[lineId] ?? [];
+      const totalExecuted = executions.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+
+      const authorizedBy = body.authorized_by as string | null;
+      const authorizedAt = body.authorized_at as string | null;
+
+      // RN-020: check if execution exceeds approved amount
+      if (totalExecuted + amount > approvedAmount) {
+        // Allow only if authorized
+        if (!authorizedBy || !authorizedAt) {
+          return HttpResponse.json(
+            { detail: "Execution exceeds approved budget for this line." },
+            { status: 400 },
+          );
+        }
+      }
+
+      const execution = {
+        id: `exec-${Date.now()}`,
+        line: lineId,
+        amount: String(amount.toFixed(2)),
+        executed_at: String(body.executed_at ?? new Date().toISOString().split("T")[0]),
+        authorized_by: authorizedBy,
+        authorized_at: authorizedAt,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      budgetExecutionsStore[lineId] = [...executions, execution];
+      return HttpResponse.json(execution, { status: 201 });
+    },
+  ),
+
+  // ── Funding Sources CRUD (nested under project) ─────────────────
+  http.get("http://localhost:8000/api/projects/:pid/funding-sources/", ({ params }) => {
+    const projectId = String(params.pid);
+    const sources = fundingSourcesStore[projectId] ?? [];
+    return HttpResponse.json(page(sources));
+  }),
+
+  http.post("http://localhost:8000/api/projects/:pid/funding-sources/", async ({ params, request }) => {
+    const projectId = String(params.pid);
+    const body = (await request.json()) as Record<string, unknown>;
+    const source = {
+      id: `source-${Date.now()}`,
+      project: projectId,
+      name: String(body.name ?? ""),
+      amount: String(body.amount ?? "0.00"),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    fundingSourcesStore[projectId] = [...(fundingSourcesStore[projectId] ?? []), source];
+    return HttpResponse.json(source, { status: 201 });
+  }),
+
+  http.patch(
+    "http://localhost:8000/api/projects/:pid/funding-sources/:sid/",
+    async ({ params, request }) => {
+      const projectId = String(params.pid);
+      const sourceId = String(params.sid);
+      const sources = fundingSourcesStore[projectId];
+      if (!sources) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+      const idx = sources.findIndex((s) => s.id === sourceId);
+      if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+      const body = (await request.json()) as Record<string, unknown>;
+      const updated = { ...sources[idx], ...body, updated_at: new Date().toISOString() };
+      fundingSourcesStore[projectId] = sources.map((s) => (s.id === sourceId ? updated : s));
+      return HttpResponse.json(updated);
+    },
+  ),
+
+  http.delete("http://localhost:8000/api/projects/:pid/funding-sources/:sid/", ({ params }) => {
+    const projectId = String(params.pid);
+    const sourceId = String(params.sid);
+    const sources = fundingSourcesStore[projectId];
+    if (!sources) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    fundingSourcesStore[projectId] = sources.filter((s) => s.id !== sourceId);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Budget Attachments CRUD (metadata only, RF-B05) ─────────────
+  http.get("http://localhost:8000/api/budgets/:id/attachments/", ({ params }) => {
+    const budgetId = String(params.id);
+    const attachments = budgetAttachmentsStore[budgetId] ?? [];
+    return HttpResponse.json(page(attachments));
+  }),
+
+  http.post("http://localhost:8000/api/budgets/:id/attachments/", async ({ params, request }) => {
+    const budgetId = String(params.id);
+    if (!budgetDetailStore[budgetId]) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const externalUrl = String(body.external_url ?? "");
+
+    // RF-B05: external_url required
+    if (!externalUrl) {
+      return HttpResponse.json({ detail: "external_url is required." }, { status: 400 });
+    }
+
+    const attachment = {
+      id: `att-${Date.now()}`,
+      budget: budgetId,
+      name: String(body.name ?? ""),
+      doc_type: String(body.doc_type ?? "otro"),
+      external_url: externalUrl,
+      created_at: new Date().toISOString(),
+    };
+    budgetAttachmentsStore[budgetId] = [...(budgetAttachmentsStore[budgetId] ?? []), attachment];
+    return HttpResponse.json(attachment, { status: 201 });
+  }),
+
+  http.patch("http://localhost:8000/api/budgets/:id/attachments/:aid/", async ({ params, request }) => {
+    const budgetId = String(params.id);
+    const attachmentId = String(params.aid);
+    const attachments = budgetAttachmentsStore[budgetId];
+    if (!attachments) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const idx = attachments.findIndex((a) => a.id === attachmentId);
+    if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const updated = { ...attachments[idx], ...body };
+    budgetAttachmentsStore[budgetId] = attachments.map((a) => (a.id === attachmentId ? updated : a));
+    return HttpResponse.json(updated);
+  }),
+
+  http.delete("http://localhost:8000/api/budgets/:id/attachments/:aid/", ({ params }) => {
+    const budgetId = String(params.id);
+    const attachmentId = String(params.aid);
+    const attachments = budgetAttachmentsStore[budgetId];
+    if (!attachments) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+
+    budgetAttachmentsStore[budgetId] = attachments.filter((a) => a.id !== attachmentId);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── Budget Summary (IND-007/008/009) ────────────────────────────
+  http.get("http://localhost:8000/api/budgets/:id/summary/", ({ params }) => {
+    const budgetId = String(params.id);
+    const lines = budgetLinesStore[budgetId] ?? [];
+
+    // IND-007: Total approved (sum of line approved_amounts)
+    const approved = lines.reduce((sum, l) => sum + parseFloat(l.approved_amount), 0);
+
+    // IND-008: Total executed (sum of all execution amounts)
+    let executed = 0;
+    for (const line of lines) {
+      const executions = budgetExecutionsStore[line.id] ?? [];
+      executed += executions.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    }
+
+    // IND-009: Balance
+    const balance = approved - executed;
+
+    const summary = {
+      approved: approved.toFixed(2),
+      executed: executed.toFixed(2),
+      balance: balance.toFixed(2),
+    };
+
+    return HttpResponse.json(summary);
   }),
 ];

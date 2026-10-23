@@ -117,4 +117,24 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.documents.all, "detail", id] as const,
     versions: (id: string) => [...queryKeys.documents.all, "versions", id] as const,
   },
+
+  budgets: {
+    all: ["budgets"] as const,
+    lists: () => [...queryKeys.budgets.all, "list"] as const,
+    list: (institutionId: string | null, params: object = {}) =>
+      [...queryKeys.budgets.lists(), institutionId, params] as const,
+    details: () => [...queryKeys.budgets.all, "detail"] as const,
+    detail: (institutionId: string | null, id: string) =>
+      [...queryKeys.budgets.details(), institutionId, id] as const,
+    lines: (institutionId: string | null, budgetId: string) =>
+      [...queryKeys.budgets.detail(institutionId, budgetId), "lines"] as const,
+    executions: (institutionId: string | null, budgetId: string, lineId: string) =>
+      [...queryKeys.budgets.lines(institutionId, budgetId), lineId, "executions"] as const,
+    sources: (institutionId: string | null, projectId: string) =>
+      [...queryKeys.budgets.all, "sources", institutionId, projectId] as const,
+    attachments: (institutionId: string | null, budgetId: string) =>
+      [...queryKeys.budgets.detail(institutionId, budgetId), "attachments"] as const,
+    summary: (institutionId: string | null, budgetId: string) =>
+      [...queryKeys.budgets.detail(institutionId, budgetId), "summary"] as const,
+  },
 } as const;

@@ -79,6 +79,19 @@ import {
   fixtureReportPdfBytes,
   fixtureReportPreviewHtml,
 } from "@/fixtures/reports";
+import {
+  mockBudget,
+  mockBudgetListItem,
+  mockBudgetListItem2,
+  mockBudgetLine,
+  mockBudgetLine2,
+  mockBudgetAttachment,
+  mockBudgetExecution,
+  mockBudgetExecutionAuthorized,
+  mockBudgetSummary,
+  mockFundingSource,
+  mockFundingSource2,
+} from "@/fixtures/budgets";
 
 /** Lightweight project shape consumed by the dashboard selectors. */
 export interface SeedProjectSummary {
@@ -202,4 +215,17 @@ export {
   fixtureReportApproveSuccess,
   fixtureReportPdfBytes,
   fixtureReportPreviewHtml,
+};
+export {
+  mockBudget,
+  mockBudgetListItem,
+  mockBudgetListItem2,
+  mockBudgetLine,
+  mockBudgetLine2,
+  mockBudgetAttachment,
+  mockBudgetExecution,
+  mockBudgetExecutionAuthorized,
+  mockBudgetSummary,
+  mockFundingSource,
+  mockFundingSource2,
 };

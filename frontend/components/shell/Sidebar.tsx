@@ -17,6 +17,7 @@ import {
   Package,
   Search,
   Users,
+  Wallet,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/search", label: "Búsqueda", icon: Search },
   { href: "/projects", label: "Proyectos", icon: FolderKanban },
   { href: "/calls", label: "Convocatorias", icon: Megaphone },
+  { href: "/budgets", label: "Presupuesto", icon: Wallet },
   { href: "/products", label: "Productos", icon: Package },
   { href: "/researchers", label: "Investigadores", icon: Users },
   { href: "/reports", label: "Informes", icon: FileText },
