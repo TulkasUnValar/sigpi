@@ -13,8 +13,8 @@ Permission model (spec §Security):
 - create/update/delete: director_centro (level ≤ 3) + institution match.
 - Execution overrun authorization requires CanAuthorizeExecution (level ≤ 3).
 
-All mutations delegate to BudgetService inside perform_* hooks; views never
-bypass the service layer (RN-020 enforcement + audit).
+All mutations delegate to the service layer inside perform_* hooks; views
+never touch models directly (RN-020 enforcement + audit).
 
 Design reference: openspec/changes/budgets/design.md — API and Permissions
 Spec reference:   openspec/changes/budgets/specs/budgets/spec.md — API Contract
@@ -58,7 +58,14 @@ from apps.budgets.serializers import (
     BudgetSerializer,
     FundingSourceSerializer,
 )
-from apps.budgets.services import BudgetService, BudgetSummaryService, DuplicateBudgetError
+from apps.budgets.services import (
+    BudgetAttachmentService,
+    BudgetLineService,
+    BudgetService,
+    BudgetSummaryService,
+    DuplicateBudgetError,
+    FundingSourceService,
+)
 from apps.projects.models import Project
 
 
@@ -230,10 +237,30 @@ class BudgetLineViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         budget = self._get_parent_budget()
         data = serializer.validated_data
-        line = BudgetLine(budget=budget, **data)
-        line.full_clean()
-        line.save()
-        serializer.instance = line
+        try:
+            line = BudgetLineService.create(
+                budget=budget,
+                user=self.request.user,
+                name=data["name"],
+                approved_amount=data["approved_amount"],
+            )
+            serializer.instance = line
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
+
+    def perform_update(self, serializer):
+        line = self.get_object()
+        try:
+            updated = BudgetLineService.update(line, self.request.user, **serializer.validated_data)
+            serializer.instance = updated
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
+
+    def perform_destroy(self, instance):
+        try:
+            BudgetLineService.delete(instance, self.request.user)
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
 
 
 # ──────────────────────────────────────────────────────────
@@ -341,10 +368,33 @@ class BudgetAttachmentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         budget = self._get_parent_budget()
         data = serializer.validated_data
-        att = BudgetAttachment(budget=budget, **data)
-        att.full_clean()
-        att.save()
-        serializer.instance = att
+        try:
+            attachment = BudgetAttachmentService.create(
+                budget=budget,
+                user=self.request.user,
+                name=data["name"],
+                doc_type=data["doc_type"],
+                external_url=data["external_url"],
+            )
+            serializer.instance = attachment
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
+
+    def perform_update(self, serializer):
+        attachment = self.get_object()
+        try:
+            updated = BudgetAttachmentService.update(
+                attachment, self.request.user, **serializer.validated_data
+            )
+            serializer.instance = updated
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
+
+    def perform_destroy(self, instance):
+        try:
+            BudgetAttachmentService.delete(instance, self.request.user)
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
 
 
 # ──────────────────────────────────────────────────────────
@@ -391,7 +441,29 @@ class FundingSourceViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         project = self._get_parent_project()
         data = serializer.validated_data
-        source = FundingSource(project=project, **data)
-        source.full_clean()
-        source.save()
-        serializer.instance = source
+        try:
+            source = FundingSourceService.create(
+                project=project,
+                user=self.request.user,
+                name=data["name"],
+                amount=data["amount"],
+            )
+            serializer.instance = source
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
+
+    def perform_update(self, serializer):
+        source = self.get_object()
+        try:
+            updated = FundingSourceService.update(
+                source, self.request.user, **serializer.validated_data
+            )
+            serializer.instance = updated
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))
+
+    def perform_destroy(self, instance):
+        try:
+            FundingSourceService.delete(instance, self.request.user)
+        except ValidationError as e:
+            raise DRFValidationError(_extract_error(e))

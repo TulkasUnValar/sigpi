@@ -4,6 +4,11 @@ Service layer for budgets — business logic + audit orchestration.
 BudgetService: atomic create/update/delete and execution writes, with
 RN-020 enforcement (sum of executions per line ≤ approved unless authorized)
 and BUDGET_* audit events via AuditEventEmitter.
+BudgetLineService: atomic CRUD for BudgetLine with BUDGET_LINE_* audit events.
+BudgetAttachmentService: atomic CRUD for BudgetAttachment (metadata-only)
+with BUDGET_ATTACHMENT_* audit events.
+FundingSourceService: atomic CRUD for FundingSource with FUNDING_SOURCE_*
+audit events.
 BudgetSummaryService: aggregates approved/executed/balance per budget.
 
 Views never bypass this service — all mutations go through it inside a
@@ -23,9 +28,11 @@ from django.db.models import Sum
 from apps.accounts.audit import AuditEventEmitter
 from apps.budgets.models import (
     Budget,
+    BudgetAttachment,
     BudgetExecution,
     BudgetLine,
     BudgetStatus,
+    FundingSource,
 )
 from apps.budgets.signals import budget_overrun_attempted
 
@@ -195,6 +202,245 @@ class BudgetService:
             except Exception:  # pragma: no cover — receivers must never raise
                 logger.exception("budget_overrun_attempted receiver failed")
             raise
+
+
+# ──────────────────────────────────────────────
+# BudgetLineService
+# ──────────────────────────────────────────────
+
+
+class BudgetLineService:
+    """Owns BudgetLine mutation and audit inside transactions."""
+
+    @staticmethod
+    def create(budget, user, name, approved_amount):
+        """Create a BudgetLine under a budget. Emits BUDGET_LINE_CREATED."""
+        with transaction.atomic():
+            line = BudgetLine(
+                budget=budget,
+                name=name,
+                approved_amount=approved_amount,
+            )
+            line.full_clean()
+            line.save()
+
+            AuditEventEmitter().emit(
+                event_type="BUDGET_LINE_CREATED",
+                user=user,
+                institution_id=budget.institution_id,
+                details={
+                    "line_id": str(line.pk),
+                    "budget_id": str(budget.pk),
+                    "name": name,
+                    "approved_amount": str(approved_amount),
+                },
+            )
+            return line
+
+    @staticmethod
+    def update(line, user, **data):
+        """Update line fields. Emits BUDGET_LINE_UPDATED."""
+        with transaction.atomic():
+            for field, value in data.items():
+                setattr(line, field, value)
+            line.full_clean()
+            line.save()
+
+            AuditEventEmitter().emit(
+                event_type="BUDGET_LINE_UPDATED",
+                user=user,
+                institution_id=line.budget.institution_id,
+                details={
+                    "line_id": str(line.pk),
+                    "budget_id": str(line.budget_id),
+                    "name": line.name,
+                    "approved_amount": str(line.approved_amount),
+                },
+            )
+            return line
+
+    @staticmethod
+    def delete(line, user):
+        """Delete a line (cascade removes its executions). Emits BUDGET_LINE_DELETED."""
+        with transaction.atomic():
+            line_id = str(line.pk)
+            budget_id = str(line.budget_id)
+            institution_id = line.budget.institution_id
+            name = line.name
+            line.delete()
+
+            AuditEventEmitter().emit(
+                event_type="BUDGET_LINE_DELETED",
+                user=user,
+                institution_id=institution_id,
+                details={
+                    "line_id": line_id,
+                    "budget_id": budget_id,
+                    "name": name,
+                },
+            )
+
+
+# ──────────────────────────────────────────────
+# BudgetAttachmentService
+# ──────────────────────────────────────────────
+
+
+class BudgetAttachmentService:
+    """Owns BudgetAttachment (metadata-only) mutation and audit."""
+
+    @staticmethod
+    def create(budget, user, name, doc_type, external_url):
+        """Create a metadata-only attachment. Emits BUDGET_ATTACHMENT_CREATED."""
+        with transaction.atomic():
+            attachment = BudgetAttachment(
+                budget=budget,
+                name=name,
+                doc_type=doc_type,
+                external_url=external_url,
+            )
+            attachment.full_clean()
+            attachment.save()
+
+            AuditEventEmitter().emit(
+                event_type="BUDGET_ATTACHMENT_CREATED",
+                user=user,
+                institution_id=budget.institution_id,
+                details={
+                    "attachment_id": str(attachment.pk),
+                    "budget_id": str(budget.pk),
+                    "name": name,
+                    "doc_type": doc_type,
+                },
+            )
+            return attachment
+
+    @staticmethod
+    def update(attachment, user, **data):
+        """Update attachment fields. Emits BUDGET_ATTACHMENT_UPDATED."""
+        with transaction.atomic():
+            for field, value in data.items():
+                setattr(attachment, field, value)
+            attachment.full_clean()
+            attachment.save()
+
+            AuditEventEmitter().emit(
+                event_type="BUDGET_ATTACHMENT_UPDATED",
+                user=user,
+                institution_id=attachment.budget.institution_id,
+                details={
+                    "attachment_id": str(attachment.pk),
+                    "budget_id": str(attachment.budget_id),
+                    "name": attachment.name,
+                    "doc_type": attachment.doc_type,
+                },
+            )
+            return attachment
+
+    @staticmethod
+    def delete(attachment, user):
+        """Delete an attachment. Emits BUDGET_ATTACHMENT_DELETED."""
+        with transaction.atomic():
+            attachment_id = str(attachment.pk)
+            budget_id = str(attachment.budget_id)
+            institution_id = attachment.budget.institution_id
+            name = attachment.name
+            doc_type = attachment.doc_type
+            attachment.delete()
+
+            AuditEventEmitter().emit(
+                event_type="BUDGET_ATTACHMENT_DELETED",
+                user=user,
+                institution_id=institution_id,
+                details={
+                    "attachment_id": attachment_id,
+                    "budget_id": budget_id,
+                    "name": name,
+                    "doc_type": doc_type,
+                },
+            )
+
+
+# ──────────────────────────────────────────────
+# FundingSourceService
+# ──────────────────────────────────────────────
+
+
+class FundingSourceService:
+    """Owns FundingSource mutation and audit inside transactions."""
+
+    @staticmethod
+    def create(project, user, name, amount):
+        """Create a funding source (multiple per project, RN-019).
+
+        Emits FUNDING_SOURCE_CREATED.
+        """
+        with transaction.atomic():
+            source = FundingSource(
+                project=project,
+                name=name,
+                amount=amount,
+            )
+            source.full_clean()
+            source.save()
+
+            AuditEventEmitter().emit(
+                event_type="FUNDING_SOURCE_CREATED",
+                user=user,
+                institution_id=project.institution_id,
+                details={
+                    "source_id": str(source.pk),
+                    "project_id": str(project.pk),
+                    "name": name,
+                    "amount": str(amount),
+                },
+            )
+            return source
+
+    @staticmethod
+    def update(source, user, **data):
+        """Update source fields. Emits FUNDING_SOURCE_UPDATED."""
+        with transaction.atomic():
+            for field, value in data.items():
+                setattr(source, field, value)
+            source.full_clean()
+            source.save()
+
+            AuditEventEmitter().emit(
+                event_type="FUNDING_SOURCE_UPDATED",
+                user=user,
+                institution_id=source.project.institution_id,
+                details={
+                    "source_id": str(source.pk),
+                    "project_id": str(source.project_id),
+                    "name": source.name,
+                    "amount": str(source.amount),
+                },
+            )
+            return source
+
+    @staticmethod
+    def delete(source, user):
+        """Delete a funding source. Emits FUNDING_SOURCE_DELETED."""
+        with transaction.atomic():
+            source_id = str(source.pk)
+            project_id = str(source.project_id)
+            institution_id = source.project.institution_id
+            name = source.name
+            amount = source.amount
+            source.delete()
+
+            AuditEventEmitter().emit(
+                event_type="FUNDING_SOURCE_DELETED",
+                user=user,
+                institution_id=institution_id,
+                details={
+                    "source_id": source_id,
+                    "project_id": project_id,
+                    "name": name,
+                    "amount": str(amount),
+                },
+            )
 
 
 # ──────────────────────────────────────────────
