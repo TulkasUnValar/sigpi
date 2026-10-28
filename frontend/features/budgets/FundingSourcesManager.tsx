@@ -15,7 +15,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useFundingSources } from "@/features/budgets/queries";
 import {
   useCreateFundingSource,
@@ -55,6 +55,12 @@ export function FundingSourcesManager({
   const updateMutation = useUpdateFundingSource(projectId, editingSource?.id ?? "");
   const deleteMutation = useDeleteFundingSource(projectId);
 
+  const sourcesArray = sources ?? [];
+  const totalSources = useMemo(
+    () => sourcesArray.reduce((sum, source) => sum + parseDecimal(source.amount), 0),
+    [sourcesArray]
+  );
+
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
   }
@@ -67,18 +73,23 @@ export function FundingSourcesManager({
     );
   }
 
-  const sourcesArray = sources ?? [];
-  const totalSources = sourcesArray.reduce(
-    (sum, source) => sum + parseDecimal(source.amount),
-    0
-  );
   const budgetLimit = parseDecimal(budgetApprovedAmount);
   const coverage = budgetLimit > 0 ? (totalSources / budgetLimit) * 100 : 0;
   const showCoverage = coverage < 100;
 
+  const validateAmount = (value: string): boolean => {
+    const num = parseFloat(value);
+    return !isNaN(num) && num >= 0;
+  };
+
   const handleCreate = async () => {
     if (!formName.trim() || !formAmount.trim()) {
       toast.error("Complete todos los campos.");
+      return;
+    }
+
+    if (!validateAmount(formAmount)) {
+      toast.error("El monto debe ser un número válido mayor o igual a 0.");
       return;
     }
 
@@ -99,6 +110,11 @@ export function FundingSourcesManager({
     if (!editingSource) return;
     if (!formName.trim() || !formAmount.trim()) {
       toast.error("Complete todos los campos.");
+      return;
+    }
+
+    if (!validateAmount(formAmount)) {
+      toast.error("El monto debe ser un número válido mayor o igual a 0.");
       return;
     }
 
@@ -179,23 +195,31 @@ export function FundingSourcesManager({
       {(showCreateForm || editingSource) && (
         <div className="rounded-lg border bg-card p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre</label>
+            <label htmlFor="source-name" className="block text-sm font-medium mb-1">Nombre</label>
             <input
+              id="source-name"
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="Nombre de la fuente"
+              aria-label="Nombre de la fuente de financiamiento"
+              disabled={isFormPending}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Monto</label>
+            <label htmlFor="source-amount" className="block text-sm font-medium mb-1">Monto</label>
             <input
-              type="text"
+              id="source-amount"
+              type="number"
+              step="0.01"
+              min="0"
               value={formAmount}
               onChange={(e) => setFormAmount(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="0.00"
+              aria-label="Monto de la fuente de financiamiento"
+              disabled={isFormPending}
             />
           </div>
           <div className="flex gap-2">

@@ -72,10 +72,6 @@ jest.mock("@/lib/api", () => ({
 
 import * as api from "@/lib/api";
 
-const toastModule = jest.requireMock("sonner") as {
-  toast: { success: jest.Mock; error: jest.Mock };
-};
-
 const budgetExecution = {
   id: "exec-1",
   line: "line-1",
@@ -99,7 +95,12 @@ function setAuthRoles(roles: string[], userId = "user-1") {
     activeInstitution: { id: "inst-1", name: "Universidad Nacional" },
     institutions: [],
     centers: [],
-    user: { id: userId, email: "test@example.com" } as any,
+    user: { 
+      id: userId, 
+      email: "test@example.com",
+      is_active: true,
+      date_joined: "2026-01-01T00:00:00Z"
+    },
   });
 }
 

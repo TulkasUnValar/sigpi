@@ -69,9 +69,23 @@ export function AttachmentsManager({ budgetId }: AttachmentsManagerProps) {
 
   const attachmentsArray = attachments ?? [];
 
+  const validateUrl = (value: string): boolean => {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleCreate = async () => {
     if (!formName.trim() || !formUrl.trim()) {
       toast.error("Complete todos los campos.");
+      return;
+    }
+
+    if (!validateUrl(formUrl)) {
+      toast.error("Ingrese una URL válida.");
       return;
     }
 
@@ -91,6 +105,11 @@ export function AttachmentsManager({ budgetId }: AttachmentsManagerProps) {
     if (!editingAttachment) return;
     if (!formName.trim() || !formUrl.trim()) {
       toast.error("Complete todos los campos.");
+      return;
+    }
+
+    if (!validateUrl(formUrl)) {
+      toast.error("Ingrese una URL válida.");
       return;
     }
 
@@ -175,23 +194,29 @@ export function AttachmentsManager({ budgetId }: AttachmentsManagerProps) {
       {(showCreateForm || editingAttachment) && (
         <div className="rounded-lg border bg-card p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre</label>
+            <label htmlFor="attachment-name" className="block text-sm font-medium mb-1">Nombre</label>
             <input
+              id="attachment-name"
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="Nombre del adjunto"
+              aria-label="Nombre del adjunto"
+              disabled={isFormPending}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label htmlFor="attachment-type" className="block text-sm font-medium mb-1">
               Tipo de Documento
             </label>
             <select
+              id="attachment-type"
               value={formDocType}
               onChange={(e) => setFormDocType(e.target.value as BudgetDocType)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
+              aria-label="Tipo de documento del adjunto"
+              disabled={isFormPending}
             >
               {BUDGET_DOC_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -201,13 +226,16 @@ export function AttachmentsManager({ budgetId }: AttachmentsManagerProps) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">URL Externa</label>
+            <label htmlFor="attachment-url" className="block text-sm font-medium mb-1">URL Externa</label>
             <input
+              id="attachment-url"
               type="url"
               value={formUrl}
               onChange={(e) => setFormUrl(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="https://..."
+              aria-label="URL externa del adjunto"
+              disabled={isFormPending}
             />
           </div>
           <div className="flex gap-2">

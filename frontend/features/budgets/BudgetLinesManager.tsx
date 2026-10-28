@@ -14,7 +14,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useBudgetLines } from "@/features/budgets/queries";
 import {
@@ -57,6 +57,12 @@ export function BudgetLinesManager({
   const updateMutation = useUpdateBudgetLine(budgetId, editingLine?.id ?? "");
   const deleteMutation = useDeleteBudgetLine(budgetId);
 
+  const linesArray = lines ?? [];
+  const totalLines = useMemo(
+    () => linesArray.reduce((sum, line) => sum + parseDecimal(line.approved_amount), 0),
+    [linesArray]
+  );
+
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
   }
@@ -69,17 +75,22 @@ export function BudgetLinesManager({
     );
   }
 
-  const linesArray = lines ?? [];
-  const totalLines = linesArray.reduce(
-    (sum, line) => sum + parseDecimal(line.approved_amount),
-    0
-  );
   const budgetLimit = parseDecimal(budgetApprovedAmount);
   const exceedsBudget = totalLines > budgetLimit;
+
+  const validateAmount = (value: string): boolean => {
+    const num = parseFloat(value);
+    return !isNaN(num) && num >= 0;
+  };
 
   const handleCreate = async () => {
     if (!formName.trim() || !formAmount.trim()) {
       toast.error("Complete todos los campos.");
+      return;
+    }
+
+    if (!validateAmount(formAmount)) {
+      toast.error("El monto debe ser un número válido mayor o igual a 0.");
       return;
     }
 
@@ -183,25 +194,33 @@ export function BudgetLinesManager({
       {(showCreateForm || editingLine) && (
         <div className="rounded-lg border bg-card p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre</label>
+            <label htmlFor="line-name" className="block text-sm font-medium mb-1">Nombre</label>
             <input
+              id="line-name"
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="Nombre del rubro"
+              aria-label="Nombre de la línea de presupuesto"
+              disabled={isFormPending}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label htmlFor="line-amount" className="block text-sm font-medium mb-1">
               Monto Aprobado
             </label>
             <input
-              type="text"
+              id="line-amount"
+              type="number"
+              step="0.01"
+              min="0"
               value={formAmount}
               onChange={(e) => setFormAmount(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="0.00"
+              aria-label="Monto aprobado de la línea"
+              disabled={isFormPending}
             />
           </div>
           <div className="flex gap-2">

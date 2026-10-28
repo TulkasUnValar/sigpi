@@ -22,16 +22,16 @@ El SPEC §6.3 (RF-022, RF-023) requiere integración con CvLAC/GrupLAC, pero §1
 ## Checklist
 
 ### Backend
-- [ ] Agregar campos cvlac_url y gruplac_url al modelo Researcher
-- [ ] Agregar validación de formato URL
-- [ ] Actualizar serializer para incluir nuevos campos
-- [ ] Agregar tests para validación
+- [x] Agregar campos cvlac_url y gruplac_url al modelo Researcher
+- [x] Agregar validación de formato URL
+- [x] Actualizar serializer para incluir nuevos campos
+- [x] Agregar tests para validación
 
 ### Frontend
-- [ ] Agregar inputs para CvLAC/GrupLAC en el formulario de perfil
-- [ ] Mostrar enlaces en la vista de detalle del investigador
-- [ ] Validación de formato URL en el frontend
-- [ ] Tests RTL para el nuevo formulario
+- [x] Agregar inputs para CvLAC/GrupLAC en el formulario de perfil
+- [x] Mostrar enlaces en la vista de detalle del investigador
+- [x] Validación de formato URL en el frontend
+- [x] Tests RTL para el nuevo formulario
 
 ### Documentación
 - [ ] Actualizar SPEC o design docs si es necesario
@@ -45,5 +45,6 @@ El SPEC §6.3 (RF-022, RF-023) requiere integración con CvLAC/GrupLAC, pero §1
 - TypeScript y ESLint sin errores
 
 ## Progreso
-- **Estado**: En implementación
-- **Próximo paso**: Delegar implementación
+- **Estado**: Completado ✅
+- **Commit**: feat(researchers): add GrupLAC provider to external profiles
+- **Próximo paso**: Módulo 2 - Mejoras de calidad
