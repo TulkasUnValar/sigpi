@@ -34,6 +34,7 @@ class ProviderChoices(models.TextChoices):
     """External profile provider choices (RN-EXT-01)."""
 
     CVLAC = "cvlac", "CvLAC"
+    GRUPLAC = "gruplac", "GrupLAC"
     ORCID = "orcid", "ORCID"
     GOOGLE_SCHOLAR = "google_scholar", "Google Scholar"
     LINKEDIN = "linkedin", "LinkedIn"

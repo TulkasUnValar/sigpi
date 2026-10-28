@@ -3,13 +3,14 @@
  * nested managers.
  *
  * Spec (researchers-ui external profiles / attachments):
- *   - Provider ∈ cvlac, orcid, google_scholar, linkedin, researchgate.
+ *   - Provider ∈ cvlac, gruplac, orcid, google_scholar, linkedin, researchgate.
  *   - Attachment type ∈ cv, certificate, photo, other.
  */
 
 /** Allowed external profile providers (read-only). */
 export const PROFILE_PROVIDERS = [
   "cvlac",
+  "gruplac",
   "orcid",
   "google_scholar",
   "linkedin",
@@ -26,6 +27,7 @@ export type AttachmentType = (typeof ATTACHMENT_TYPES)[number];
 /** Spanish label for each profile provider. */
 export const PROVIDER_LABELS: Record<ProfileProvider, string> = {
   cvlac: "CvLAC",
+  gruplac: "GrupLAC",
   orcid: "ORCID",
   google_scholar: "Google Scholar",
   linkedin: "LinkedIn",
