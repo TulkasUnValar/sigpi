@@ -150,7 +150,7 @@ describe("BudgetLinesManager", () => {
     );
 
     expect(await screen.findByText("Rubro 1")).toBeInTheDocument();
-    expect(screen.getByRole("cell", { name: /\$ 5\.000,00/ })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: /\$\s*5\.000,00/ })).toBeInTheDocument();
   });
 
   it("creates item successfully", async () => {
@@ -276,7 +276,7 @@ describe("FundingSourcesManager", () => {
     );
 
     expect(await screen.findByText("Fuente 1")).toBeInTheDocument();
-    expect(screen.getByRole("cell", { name: /\$ 8\.000,00/ })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: /\$\s*8\.000,00/ })).toBeInTheDocument();
   });
 
   it("creates item successfully", async () => {

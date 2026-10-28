@@ -15,6 +15,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useBudgetLines } from "@/features/budgets/queries";
 import {
   useCreateBudgetLine,
@@ -254,6 +255,12 @@ export function BudgetLinesManager({
                   {canManage && (
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
+                        <Link
+                          href={`/budgets/${budgetId}/lines/${line.id}/executions`}
+                          className="rounded-md border border-input px-3 py-1 text-sm hover:bg-muted"
+                        >
+                          Ver ejecuciones
+                        </Link>
                         <button
                           onClick={() => startEdit(line)}
                           className="rounded-md border border-input px-3 py-1 text-sm hover:bg-muted"

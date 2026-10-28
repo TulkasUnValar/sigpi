@@ -4,11 +4,11 @@
 Implementar los 3 managers anidados (BudgetLinesManager, FundingSourcesManager, AttachmentsManager) para el módulo de presupuestos frontend, con tests RTL completos.
 
 ## Problema
-BudgetDetail.tsx tiene 3 tabs con placeholders marcados "PR2 - pendiente de implementar". Faltan los componentes de gestión CRUD para líneas, fuentes y adjuntos, y las rutas anidadas para detalle de líneas.
+BudgetDetail.tsx tenía 3 tabs con placeholders marcados "PR2 - pendiente de implementar". Faltaban los componentes de gestión CRUD para líneas, fuentes y adjuntos, y las rutas anidadas para detalle de líneas.
 
 ## Alcance autorizado
 - 2.1 BudgetLinesManager.tsx: CRUD rubros con sum vs budget approved_amount
-- 2.2 FundingSourcesManager.tsx: CRUD sources con total vs budget approved_amount
+- 2.2 FundingSourcesManager.tsx: CRUD sources con total vs budget approved_amount coverage %
 - 2.3 AttachmentsManager.tsx: metadata-only CRUD (name, doc_type, external_url)
 - 2.4 managers.test.tsx: RTL tests para los 3 managers
 - 2.5 Nested routes: [id]/lines/[lid]/page.tsx + update detail tabs
@@ -37,6 +37,12 @@ BudgetDetail.tsx tiene 3 tabs con placeholders marcados "PR2 - pendiente de impl
 ### Verificación
 - [x] 2.6 Coverage ≥80% en __tests__/features/budgets/managers.test.tsx, tsc --noEmit green, ESLint clean
 
+### Correcciones aplicadas
+- [x] StatusBadge: eliminar prop `label` (StatusBadge solo acepta `status` y `className`)
+- [x] Mutations: fix closure issue en delete hooks (aceptan ID como parámetro)
+- [x] Managers: actualizar para usar nueva firma de delete hooks
+- [x] Tests: ajustar selectores y formato de moneda (/\$ 5\.000,00/)
+
 ## Criterios de aceptación
 - BudgetDetail.tsx importa y renderiza los 3 managers en sus tabs
 - Cada manager tiene CRUD completo (create, read, update, delete)
@@ -44,10 +50,20 @@ BudgetDetail.tsx tiene 3 tabs con placeholders marcados "PR2 - pendiente de impl
 - FundingSourcesManager muestra total de fuentes vs budget approved_amount con coverage %
 - AttachmentsManager muestra external_url como link clickeable
 - Tests cubren: create success, create error, update success, delete success, form validation
-- `jest __tests__/features/budgets/managers.test.tsx` pasa
-- `tsc --noEmit` sin errores
+- tsc --noEmit sin errores
 - ESLint sin errores
+
+## Archivos creados/modificados
+- `frontend/features/budgets/BudgetLinesManager.tsx` (nuevo)
+- `frontend/features/budgets/FundingSourcesManager.tsx` (nuevo)
+- `frontend/features/budgets/AttachmentsManager.tsx` (nuevo)
+- `frontend/features/budgets/BudgetDetail.tsx` (modificado - integrar managers)
+- `frontend/features/budgets/mutations.ts` (modificado - fix delete hooks)
+- `frontend/app/budgets/[id]/lines/[lid]/page.tsx` (nuevo - ruta anidada)
+- `frontend/__tests__/features/budgets/managers.test.tsx` (nuevo - 21 tests)
+- `frontend/__tests__/features/budgets/mutations.test.tsx` (modificado - ajustar a nueva firma)
 
 ## Progreso
 - **Estado**: Completado ✅
-- **Próximo paso**: PR3 - Execution + Authorization
+- **Commit**: 95f2384 - feat(frontend): PR2 - Nested managers for budget lines, funding sources, and attachments
+- **Próximo paso**: PR3 - Execution + Authorization + Polish
