@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useBudgets } from "@/features/budgets/queries";
 import { useBudgetPermissions } from "@/features/budgets/permissions";
-import { BUDGET_STATUS_LABELS, BUDGET_STATUS_OPTIONS, formatCurrency } from "@/features/budgets/constants";
+import { BUDGET_STATUS_OPTIONS, formatCurrency } from "@/features/budgets/constants";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -64,7 +64,9 @@ export function BudgetList() {
       <div className="flex gap-4">
         <select
           value={filters.status ?? ""}
-          onChange={(e) => setFilters({ ...filters, status: e.target.value || undefined })}
+          onChange={(e) =>
+            setFilters({ ...filters, status: (e.target.value as BudgetStatus) || undefined })
+          }
           className="rounded-md border border-input bg-background px-3 py-2"
         >
           <option value="">Todos los estados</option>
@@ -115,11 +117,9 @@ function BudgetRow({ budget }: { budget: BudgetListItem }) {
         </Link>
       </td>
       <td className="px-4 py-3">{budget.name}</td>
-      <td className="px-4 py-3 text-right font-mono">
-        {formatCurrency(budget.approved_amount)}
-      </td>
+      <td className="px-4 py-3 text-right font-mono">{formatCurrency(budget.approved_amount)}</td>
       <td className="px-4 py-3">
-        <StatusBadge status={budget.status} label={BUDGET_STATUS_LABELS[budget.status as BudgetStatus]} />
+        <StatusBadge status={budget.status} />
       </td>
       <td className="px-4 py-3 text-sm text-muted-foreground">
         {new Date(budget.created_at).toLocaleDateString("es-CO")}

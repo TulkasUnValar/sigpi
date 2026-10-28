@@ -32,7 +32,7 @@ describe("budgetFormSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].path).toContain("project");
+      expect(result.error.issues[0]!.path).toContain("project");
     }
   });
 
@@ -44,7 +44,7 @@ describe("budgetFormSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].path).toContain("name");
+      expect(result.error.issues[0]!.path).toContain("name");
     }
   });
 
@@ -56,7 +56,7 @@ describe("budgetFormSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].path).toContain("approved_amount");
+      expect(result.error.issues[0]!.path).toContain("approved_amount");
     }
   });
 
@@ -68,7 +68,7 @@ describe("budgetFormSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].path).toContain("approved_amount");
+      expect(result.error.issues[0]!.path).toContain("approved_amount");
     }
   });
 

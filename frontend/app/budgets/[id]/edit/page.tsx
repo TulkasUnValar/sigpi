@@ -4,6 +4,8 @@
  * Thin route wrapper that renders the BudgetForm feature component in edit mode.
  */
 
+"use client";
+
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { BudgetForm, useBudget } from "@/features/budgets";
 import { useParams } from "next/navigation";

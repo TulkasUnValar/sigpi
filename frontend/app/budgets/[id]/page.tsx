@@ -4,6 +4,8 @@
  * Thin route wrapper that renders the BudgetDetail feature component.
  */
 
+"use client";
+
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { BudgetDetail } from "@/features/budgets";
 import { useParams } from "next/navigation";

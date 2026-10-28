@@ -1,0 +1,22 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "actions": "Actions"
+  },
+  "login": {
+    "title": "Sign In",
+    "subtitle": "Research Project Management Information System",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "error": "Invalid credentials"
+  }
+}

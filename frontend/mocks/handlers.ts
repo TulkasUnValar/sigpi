@@ -9,6 +9,14 @@
 
 import { http, HttpResponse } from "msw";
 
+import type {
+  BudgetAttachment,
+  BudgetDocType,
+  BudgetLine,
+  BudgetStatus,
+  FundingSource,
+} from "@/features/budgets/types";
+
 import {
   fixtureProjects,
   fixtureAdvances,
@@ -241,7 +249,7 @@ let productsAttachmentsStore: Record<string, (typeof fixtureProductAttachments)[
 // during dev/tests. RN-020 validation is enforced in execution creation.
 
 let budgetsStore = [mockBudgetListItem, mockBudgetListItem2].map((b) => ({ ...b }));
-const budgetDetailStore: Record<string, (typeof mockBudget)> = {
+const budgetDetailStore: Record<string, typeof mockBudget> = {
   [mockBudget.id]: { ...mockBudget },
 };
 const budgetLinesStore: Record<string, Array<typeof mockBudgetLine>> = {
@@ -1647,14 +1655,20 @@ export const handlers = [
     const budget = {
       id: `budget-${Date.now()}`,
       project,
+      project_name: String(body.project_name ?? "Proyecto"),
       institution: "inst-1",
       name: String(body.name ?? ""),
       approved_amount: String(body.approved_amount ?? "0.00"),
-      status: "draft",
+      status: "draft" as BudgetStatus,
       created_at: new Date().toISOString(),
     };
     budgetsStore = [...budgetsStore, budget];
-    budgetDetailStore[budget.id] = { ...budget, lines: [], attachments: [], updated_at: budget.created_at };
+    budgetDetailStore[budget.id] = {
+      ...budget,
+      lines: [],
+      attachments: [],
+      updated_at: budget.created_at,
+    };
     return HttpResponse.json(budgetDetailStore[budget.id], { status: 201 });
   }),
 
@@ -1706,7 +1720,8 @@ export const handlers = [
 
   http.post("http://localhost:8000/api/budgets/:id/lines/", async ({ params, request }) => {
     const budgetId = String(params.id);
-    if (!budgetDetailStore[budgetId]) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    if (!budgetDetailStore[budgetId])
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
 
     const body = (await request.json()) as Record<string, unknown>;
     const line = {
@@ -1731,7 +1746,17 @@ export const handlers = [
     if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
 
     const body = (await request.json()) as Record<string, unknown>;
-    const updated = { ...lines[idx], ...body, updated_at: new Date().toISOString() };
+    const current = lines[idx]!;
+    const updated: BudgetLine = {
+      ...current,
+      ...body,
+      id: current.id,
+      budget: current.budget,
+      name: String(body.name ?? current.name),
+      approved_amount: String(body.approved_amount ?? current.approved_amount),
+      created_at: current.created_at,
+      updated_at: new Date().toISOString(),
+    };
     budgetLinesStore[budgetId] = lines.map((l) => (l.id === lineId ? updated : l));
     return HttpResponse.json(updated);
   }),
@@ -1817,20 +1842,23 @@ export const handlers = [
     return HttpResponse.json(page(sources));
   }),
 
-  http.post("http://localhost:8000/api/projects/:pid/funding-sources/", async ({ params, request }) => {
-    const projectId = String(params.pid);
-    const body = (await request.json()) as Record<string, unknown>;
-    const source = {
-      id: `source-${Date.now()}`,
-      project: projectId,
-      name: String(body.name ?? ""),
-      amount: String(body.amount ?? "0.00"),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    fundingSourcesStore[projectId] = [...(fundingSourcesStore[projectId] ?? []), source];
-    return HttpResponse.json(source, { status: 201 });
-  }),
+  http.post(
+    "http://localhost:8000/api/projects/:pid/funding-sources/",
+    async ({ params, request }) => {
+      const projectId = String(params.pid);
+      const body = (await request.json()) as Record<string, unknown>;
+      const source = {
+        id: `source-${Date.now()}`,
+        project: projectId,
+        name: String(body.name ?? ""),
+        amount: String(body.amount ?? "0.00"),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      fundingSourcesStore[projectId] = [...(fundingSourcesStore[projectId] ?? []), source];
+      return HttpResponse.json(source, { status: 201 });
+    },
+  ),
 
   http.patch(
     "http://localhost:8000/api/projects/:pid/funding-sources/:sid/",
@@ -1844,7 +1872,17 @@ export const handlers = [
       if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
 
       const body = (await request.json()) as Record<string, unknown>;
-      const updated = { ...sources[idx], ...body, updated_at: new Date().toISOString() };
+      const current = sources[idx]!;
+      const updated: FundingSource = {
+        ...current,
+        ...body,
+        id: current.id,
+        project: current.project,
+        name: String(body.name ?? current.name),
+        amount: String(body.amount ?? current.amount),
+        created_at: current.created_at,
+        updated_at: new Date().toISOString(),
+      };
       fundingSourcesStore[projectId] = sources.map((s) => (s.id === sourceId ? updated : s));
       return HttpResponse.json(updated);
     },
@@ -1869,7 +1907,8 @@ export const handlers = [
 
   http.post("http://localhost:8000/api/budgets/:id/attachments/", async ({ params, request }) => {
     const budgetId = String(params.id);
-    if (!budgetDetailStore[budgetId]) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    if (!budgetDetailStore[budgetId])
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
 
     const body = (await request.json()) as Record<string, unknown>;
     const externalUrl = String(body.external_url ?? "");
@@ -1883,7 +1922,7 @@ export const handlers = [
       id: `att-${Date.now()}`,
       budget: budgetId,
       name: String(body.name ?? ""),
-      doc_type: String(body.doc_type ?? "otro"),
+      doc_type: String(body.doc_type ?? "otro") as BudgetDocType,
       external_url: externalUrl,
       created_at: new Date().toISOString(),
     };
@@ -1891,20 +1930,35 @@ export const handlers = [
     return HttpResponse.json(attachment, { status: 201 });
   }),
 
-  http.patch("http://localhost:8000/api/budgets/:id/attachments/:aid/", async ({ params, request }) => {
-    const budgetId = String(params.id);
-    const attachmentId = String(params.aid);
-    const attachments = budgetAttachmentsStore[budgetId];
-    if (!attachments) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+  http.patch(
+    "http://localhost:8000/api/budgets/:id/attachments/:aid/",
+    async ({ params, request }) => {
+      const budgetId = String(params.id);
+      const attachmentId = String(params.aid);
+      const attachments = budgetAttachmentsStore[budgetId];
+      if (!attachments) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
 
-    const idx = attachments.findIndex((a) => a.id === attachmentId);
-    if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+      const idx = attachments.findIndex((a) => a.id === attachmentId);
+      if (idx === -1) return HttpResponse.json({ detail: "Not found." }, { status: 404 });
 
-    const body = (await request.json()) as Record<string, unknown>;
-    const updated = { ...attachments[idx], ...body };
-    budgetAttachmentsStore[budgetId] = attachments.map((a) => (a.id === attachmentId ? updated : a));
-    return HttpResponse.json(updated);
-  }),
+      const body = (await request.json()) as Record<string, unknown>;
+      const current = attachments[idx]!;
+      const updated: BudgetAttachment = {
+        ...current,
+        ...body,
+        id: current.id,
+        budget: current.budget,
+        name: String(body.name ?? current.name),
+        doc_type: (body.doc_type as BudgetDocType) ?? current.doc_type,
+        external_url: String(body.external_url ?? current.external_url),
+        created_at: current.created_at,
+      };
+      budgetAttachmentsStore[budgetId] = attachments.map((a) =>
+        a.id === attachmentId ? updated : a,
+      );
+      return HttpResponse.json(updated);
+    },
+  ),
 
   http.delete("http://localhost:8000/api/budgets/:id/attachments/:aid/", ({ params }) => {
     const budgetId = String(params.id);

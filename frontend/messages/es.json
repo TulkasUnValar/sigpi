@@ -1,0 +1,22 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "actions": "Acciones"
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "subtitle": "Sistema de Información para la Gestión de Proyectos de Investigación",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submit": "Ingresar",
+    "error": "Credenciales inválidas"
+  }
+}

@@ -98,8 +98,12 @@ function setAuthRoles(roles: string[], userId = "user-1") {
     user: {
       id: userId,
       email: "test@example.com",
+      auth_source: "local",
+      is_superuser: false,
       is_active: true,
-      date_joined: "2026-01-01T00:00:00Z"
+      active_institution_id: "inst-1",
+      active_role: "researcher",
+      memberships: [],
     },
   });
 }
@@ -119,11 +123,7 @@ describe("BudgetExecutionsManager", () => {
     (api.api.get as jest.Mock).mockResolvedValue(pageOf([]));
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
     expect(await screen.findByText("No hay ejecuciones")).toBeInTheDocument();
@@ -134,11 +134,7 @@ describe("BudgetExecutionsManager", () => {
     (api.api.get as jest.Mock).mockResolvedValue(pageOf([budgetExecution]));
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
     // Wait for table to render
@@ -158,21 +154,12 @@ describe("BudgetExecutionsManager", () => {
     });
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: /registrar ejecución/i })
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /registrar ejecución/i }));
 
-    await userEvent.type(
-      screen.getByPlaceholderText(/0\.00/i),
-      "2000.00"
-    );
+    await userEvent.type(screen.getByPlaceholderText(/0\.00/i), "2000.00");
 
     const dateInput = screen.getByLabelText(/fecha de ejecución/i);
     fireEvent.change(dateInput, { target: { value: "2026-02-01" } });
@@ -185,7 +172,7 @@ describe("BudgetExecutionsManager", () => {
         expect.objectContaining({
           amount: "2000.00",
           executed_at: "2026-02-01",
-        })
+        }),
       );
     });
   });
@@ -196,25 +183,16 @@ describe("BudgetExecutionsManager", () => {
     (api.api.post as jest.Mock).mockRejectedValue(
       Object.assign(new Error("La ejecución excede el presupuesto aprobado del rubro."), {
         status: 400,
-      })
+      }),
     );
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: /registrar ejecución/i })
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /registrar ejecución/i }));
 
-    await userEvent.type(
-      screen.getByPlaceholderText(/0\.00/i),
-      "10000.00"
-    );
+    await userEvent.type(screen.getByPlaceholderText(/0\.00/i), "10000.00");
 
     const dateInput = screen.getByLabelText(/fecha de ejecución/i);
     fireEvent.change(dateInput, { target: { value: "2026-02-01" } });
@@ -223,9 +201,7 @@ describe("BudgetExecutionsManager", () => {
 
     // Should show authorization dialog instead of direct error
     await waitFor(() => {
-      expect(
-        screen.getByText(/sobre-ejecución detectada/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/sobre-ejecución detectada/i)).toBeInTheDocument();
     });
   });
 
@@ -234,17 +210,11 @@ describe("BudgetExecutionsManager", () => {
     (api.api.get as jest.Mock).mockResolvedValue(pageOf([budgetExecution]));
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
     await screen.findByText("No hay ejecuciones").catch(() => {});
-    expect(
-      screen.queryByRole("button", { name: /registrar ejecución/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /registrar ejecución/i })).not.toBeInTheDocument();
   });
 
   it("shows executed sum vs approved amount", async () => {
@@ -259,11 +229,7 @@ describe("BudgetExecutionsManager", () => {
     (api.api.get as jest.Mock).mockResolvedValue(pageOf([exec1, exec2]));
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
     // Wait for executions to load
@@ -271,7 +237,7 @@ describe("BudgetExecutionsManager", () => {
 
     // Check summary text - should show "Ejecutado: $3.500,00 de $5.000,00 aprobado"
     expect(
-      screen.getByText(/ejecutado:.*\$ 3\.500,00.*de.*\$ 5\.000,00.*aprobado/i)
+      screen.getByText(/ejecutado:.*\$ 3\.500,00.*de.*\$ 5\.000,00.*aprobado/i),
     ).toBeInTheDocument();
   });
 
@@ -281,21 +247,12 @@ describe("BudgetExecutionsManager", () => {
     (api.api.get as jest.Mock).mockResolvedValue(pageOf([exec1]));
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: /registrar ejecución/i })
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /registrar ejecución/i }));
 
-    await userEvent.type(
-      screen.getByPlaceholderText(/0\.00/i),
-      "2000.00"
-    );
+    await userEvent.type(screen.getByPlaceholderText(/0\.00/i), "2000.00");
 
     const dateInput = screen.getByLabelText(/fecha de ejecución/i);
     fireEvent.change(dateInput, { target: { value: "2026-02-01" } });
@@ -304,9 +261,7 @@ describe("BudgetExecutionsManager", () => {
 
     // Should show authorization dialog
     await waitFor(() => {
-      expect(
-        screen.getByText(/sobre-ejecución detectada/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/sobre-ejecución detectada/i)).toBeInTheDocument();
     });
   });
 
@@ -321,21 +276,12 @@ describe("BudgetExecutionsManager", () => {
     });
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: /registrar ejecución/i })
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /registrar ejecución/i }));
 
-    await userEvent.type(
-      screen.getByPlaceholderText(/0\.00/i),
-      "10000.00"
-    );
+    await userEvent.type(screen.getByPlaceholderText(/0\.00/i), "10000.00");
 
     const dateInput = screen.getByLabelText(/fecha de ejecución/i);
     fireEvent.change(dateInput, { target: { value: "2026-02-01" } });
@@ -344,9 +290,7 @@ describe("BudgetExecutionsManager", () => {
 
     // Dialog should appear
     await waitFor(() => {
-      expect(
-        screen.getByText(/sobre-ejecución detectada/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/sobre-ejecución detectada/i)).toBeInTheDocument();
     });
 
     // Click authorize button
@@ -360,7 +304,7 @@ describe("BudgetExecutionsManager", () => {
           executed_at: "2026-02-01",
           authorized_by: "user-admin-1",
           authorized_at: expect.any(String),
-        })
+        }),
       );
     });
   });
@@ -370,17 +314,11 @@ describe("BudgetExecutionsManager", () => {
     (api.api.get as jest.Mock).mockResolvedValue(pageOf([]));
 
     renderWithProviders(
-      <BudgetExecutionsManager
-        budgetId="budget-1"
-        lineId="line-1"
-        lineApprovedAmount="5000.00"
-      />
+      <BudgetExecutionsManager budgetId="budget-1" lineId="line-1" lineApprovedAmount="5000.00" />,
     );
 
     // asistente role should not see create button
     await screen.findByText("No hay ejecuciones");
-    expect(
-      screen.queryByRole("button", { name: /registrar ejecución/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /registrar ejecución/i })).not.toBeInTheDocument();
   });
 });
