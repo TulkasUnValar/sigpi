@@ -95,8 +95,8 @@ function setAuthRoles(roles: string[], userId = "user-1") {
     activeInstitution: { id: "inst-1", name: "Universidad Nacional" },
     institutions: [],
     centers: [],
-    user: { 
-      id: userId, 
+    user: {
+      id: userId,
       email: "test@example.com",
       is_active: true,
       date_joined: "2026-01-01T00:00:00Z"

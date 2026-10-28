@@ -55,7 +55,7 @@ export function FundingSourcesManager({
   const updateMutation = useUpdateFundingSource(projectId, editingSource?.id ?? "");
   const deleteMutation = useDeleteFundingSource(projectId);
 
-  const sourcesArray = sources ?? [];
+  const sourcesArray = useMemo(() => sources ?? [], [sources]);
   const totalSources = useMemo(
     () => sourcesArray.reduce((sum, source) => sum + parseDecimal(source.amount), 0),
     [sourcesArray]

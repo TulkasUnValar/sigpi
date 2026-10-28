@@ -34,8 +34,8 @@ El SPEC §6.3 (RF-022, RF-023) requiere integración con CvLAC/GrupLAC, pero §1
 - [x] Tests RTL para el nuevo formulario
 
 ### Documentación
-- [ ] Actualizar SPEC o design docs si es necesario
-- [ ] Documentar que es integración manual (no automática)
+- [x] Actualizar SPEC o design docs si es necesario
+- [x] Documentar que es integración manual (no automática)
 
 ## Criterios de aceptación
 - Investigadores pueden registrar URLs de CvLAC/GrupLAC

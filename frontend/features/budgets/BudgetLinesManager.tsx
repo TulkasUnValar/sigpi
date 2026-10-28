@@ -57,7 +57,7 @@ export function BudgetLinesManager({
   const updateMutation = useUpdateBudgetLine(budgetId, editingLine?.id ?? "");
   const deleteMutation = useDeleteBudgetLine(budgetId);
 
-  const linesArray = lines ?? [];
+  const linesArray = useMemo(() => lines ?? [], [lines]);
   const totalLines = useMemo(
     () => linesArray.reduce((sum, line) => sum + parseDecimal(line.approved_amount), 0),
     [linesArray]

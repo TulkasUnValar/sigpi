@@ -1,0 +1,111 @@
+site_name: SIGPI - Sistema de Información para la Gestión de Proyectos de Investigación
+site_description: Documentación técnica y funcional del sistema SIGPI
+site_url: https://sigpi.readthedocs.io/
+
+theme:
+  name: material
+  language: es
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+
+repo_name: Gentleman-Programming/sigpi
+repo_url: https://github.com/Gentleman-Programming/sigpi
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_source: true
+
+nav:
+  - Inicio: index.md
+  - Arquitectura:
+    - Visión General: architecture/overview.md
+    - Stack Tecnológico: architecture/tech-stack.md
+    - Estructura del Proyecto: architecture/project-structure.md
+    - Patrones de Diseño: architecture/design-patterns.md
+  - Backend:
+    - Introducción: backend/index.md
+    - Configuración: backend/setup.md
+    - Módulos:
+      - Accounts: backend/modules/accounts.md
+      - Institutions: backend/modules/institutions.md
+      - Researchers: backend/modules/researchers.md
+      - Projects: backend/modules/projects.md
+      - Progress: backend/modules/progress.md
+      - Budgets: backend/modules/budgets.md
+      - Documents: backend/modules/documents.md
+      - Audit: backend/modules/audit.md
+      - Search: backend/modules/search.md
+    - API REST: api/index.md
+    - Autenticación: api/authentication.md
+    - Endpoints: api/endpoints.md
+  - Frontend:
+    - Introducción: frontend/index.md
+    - Configuración: frontend/setup.md
+    - Estructura: frontend/structure.md
+    - Componentes: frontend/components.md
+    - Estado: frontend/state-management.md
+    - Módulos:
+      - Dashboard: frontend/modules/dashboard.md
+      - Budgets: frontend/modules/budgets.md
+      - Projects: frontend/modules/projects.md
+      - Researchers: frontend/modules/researchers.md
+  - Guías:
+    - Instalación: guides/installation.md
+    - Desarrollo: guides/development.md
+    - Despliegue: guides/deployment.md
+    - Contribución: guides/contributing.md
+  - Especificación:
+    - Requisitos: spec/requirements.md
+    - Casos de Uso: spec/use-cases.md
+    - Reglas de Negocio: spec/business-rules.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Gentleman-Programming/sigpi
+
+copyright: Copyright &copy; 2026 SIGPI Team
