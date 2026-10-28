@@ -20,6 +20,7 @@ import { ProjectsByStatusChart } from "@/features/dashboard/charts/ProjectsBySta
 import { ProjectsByCenterChart } from "@/features/dashboard/charts/ProjectsByCenterChart";
 import { BudgetExecutionChart } from "@/features/dashboard/charts/BudgetExecutionChart";
 import { ProgressReportsChart } from "@/features/dashboard/charts/ProgressReportsChart";
+import { formatCurrency } from "@/features/budgets/constants";
 
 export default function DashboardPage() {
   const { roles } = useAuthStore();
@@ -73,6 +74,11 @@ export default function DashboardPage() {
             <KpiCard title="Avances pendientes" value={indicators["IND-005"]} />
             <KpiCard title="Progreso promedio" value={`${indicators["IND-006"].toFixed(1)}%`} />
             <KpiCard title="Proyectos completos" value={indicators["IND-013"]} />
+            <KpiCard title="Presupuesto aprobado" value={formatCurrency(indicators["IND-007"])} />
+            <KpiCard title="Presupuesto ejecutado" value={formatCurrency(indicators["IND-008"])} />
+            <KpiCard title="Saldo presupuestal" value={formatCurrency(indicators["IND-009"])} />
+            <ProfileCompletenessCard data={indicators["IND-012"]} />
+            <KpiCard title="Proyectos en convocatorias externas" value={indicators["IND-014"]} />
           </>
         ) : (
           <>
@@ -120,6 +126,61 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </section>
+
+      {/* Productos destacados */}
+      <section className="mt-8 grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top proyectos con más productos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-64 overflow-y-auto">
+              <table className="w-full">
+                <thead className="border-b bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Proyecto</th>
+                    <th className="px-4 py-3 text-right font-medium">Productos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {indicators["IND-010"].slice(0, 5).map((item) => (
+                    <tr key={item.project_id} className="border-b">
+                      <td className="px-4 py-3">{item.name}</td>
+                      <td className="px-4 py-3 text-right">{item.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top investigadores con más productos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-64 overflow-y-auto">
+              <table className="w-full">
+                <thead className="border-b bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Investigador</th>
+                    <th className="px-4 py-3 text-right font-medium">Productos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {indicators["IND-011"].slice(0, 5).map((item) => (
+                    <tr key={item.researcher_id} className="border-b">
+                      <td className="px-4 py-3">{item.full_name}</td>
+                      <td className="px-4 py-3 text-right">{item.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </AuthenticatedLayout>
   );
 }
@@ -132,6 +193,34 @@ function KpiCard({ title, value }: { title: string; value: string | number }) {
       </CardHeader>
       <CardContent>
         <p className="text-3xl font-bold">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProfileCompletenessCard({
+  data,
+}: {
+  data: { total: number; complete: number; rate: number };
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          Perfiles completos
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-3xl font-bold">{data.rate.toFixed(1)}%</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {data.complete} de {data.total} investigadores
+        </p>
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${Math.min(100, Math.max(0, data.rate))}%` }}
+          />
+        </div>
       </CardContent>
     </Card>
   );
