@@ -18,6 +18,7 @@ const config = [
     ignores: [
       "node_modules/**",
       ".next/**",
+      ".next-backup/**",
       "coverage/**",
       "out/**",
       "public/mockServiceWorker.js",
