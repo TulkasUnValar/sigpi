@@ -146,12 +146,12 @@ export const useUpdateBudgetLine = (budgetId: string, lineId: string) => {
 };
 
 /** Hook: Delete a budget line. */
-export const useDeleteBudgetLine = (budgetId: string, lineId: string) => {
+export const useDeleteBudgetLine = (budgetId: string) => {
   const queryClient = useQueryClient();
   const institutionId = useAuthStore((state) => state.activeInstitution?.id ?? null);
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (lineId: string) => {
       await api.delete(`/api/budgets/${budgetId}/lines/${lineId}/`);
     },
     onSuccess: () => {
@@ -220,12 +220,12 @@ export const useUpdateFundingSource = (projectId: string, sourceId: string) => {
 };
 
 /** Hook: Delete a funding source. */
-export const useDeleteFundingSource = (projectId: string, sourceId: string) => {
+export const useDeleteFundingSource = (projectId: string) => {
   const queryClient = useQueryClient();
   const institutionId = useAuthStore((state) => state.activeInstitution?.id ?? null);
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (sourceId: string) => {
       await api.delete(`/api/projects/${projectId}/funding-sources/${sourceId}/`);
     },
     onSuccess: () => {
@@ -330,12 +330,12 @@ export const useUpdateBudgetAttachment = (budgetId: string, attachmentId: string
 };
 
 /** Hook: Delete a budget attachment. */
-export const useDeleteBudgetAttachment = (budgetId: string, attachmentId: string) => {
+export const useDeleteBudgetAttachment = (budgetId: string) => {
   const queryClient = useQueryClient();
   const institutionId = useAuthStore((state) => state.activeInstitution?.id ?? null);
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (attachmentId: string) => {
       await api.delete(`/api/budgets/${budgetId}/attachments/${attachmentId}/`);
     },
     onSuccess: () => {

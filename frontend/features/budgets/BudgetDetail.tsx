@@ -16,13 +16,15 @@ import { useState } from "react";
 import { useBudget } from "@/features/budgets/queries";
 import { useDeleteBudget } from "@/features/budgets/mutations";
 import { useBudgetPermissions } from "@/features/budgets/permissions";
-import { BUDGET_STATUS_LABELS, formatCurrency } from "@/features/budgets/constants";
+import { formatCurrency } from "@/features/budgets/constants";
 import { BudgetSummary } from "@/features/budgets/BudgetSummary";
+import { BudgetLinesManager } from "@/features/budgets/BudgetLinesManager";
+import { FundingSourcesManager } from "@/features/budgets/FundingSourcesManager";
+import { AttachmentsManager } from "@/features/budgets/AttachmentsManager";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { toast } from "sonner";
-import type { BudgetStatus } from "@/features/budgets/types";
 
 interface BudgetDetailProps {
   budgetId: string;
@@ -95,10 +97,7 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
           <h1 className="text-3xl font-bold">{budget.name}</h1>
           <p className="mt-2 text-muted-foreground">Proyecto: {budget.project}</p>
           <div className="mt-2">
-            <StatusBadge
-              status={budget.status}
-              label={BUDGET_STATUS_LABELS[budget.status as BudgetStatus]}
-            />
+            <StatusBadge status={budget.status} />
           </div>
         </div>
 
@@ -159,10 +158,7 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
                 <div>
                   <dt className="text-sm font-medium text-muted-foreground">Estado</dt>
                   <dd className="mt-1">
-                    <StatusBadge
-                      status={budget.status}
-                      label={BUDGET_STATUS_LABELS[budget.status as BudgetStatus]}
-                    />
+                    <StatusBadge status={budget.status} />
                   </dd>
                 </div>
                 <div>
@@ -184,25 +180,25 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
 
         {activeTab === "lines" && (
           <div className="rounded-lg border bg-card p-6">
-            <p className="text-muted-foreground">
-              Gestión de líneas de presupuesto (PR2 - pendiente de implementar)
-            </p>
+            <BudgetLinesManager
+              budgetId={budgetId}
+              budgetApprovedAmount={budget.approved_amount}
+            />
           </div>
         )}
 
         {activeTab === "sources" && (
           <div className="rounded-lg border bg-card p-6">
-            <p className="text-muted-foreground">
-              Gestión de fuentes de financiamiento (PR2 - pendiente de implementar)
-            </p>
+            <FundingSourcesManager
+              projectId={budget.project}
+              budgetApprovedAmount={budget.approved_amount}
+            />
           </div>
         )}
 
         {activeTab === "attachments" && (
           <div className="rounded-lg border bg-card p-6">
-            <p className="text-muted-foreground">
-              Gestión de adjuntos (PR2 - pendiente de implementar)
-            </p>
+            <AttachmentsManager budgetId={budgetId} />
           </div>
         )}
       </div>
@@ -214,6 +210,7 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
         title="Eliminar presupuesto"
         description="¿Estás seguro de que deseas eliminar este presupuesto? Esta acción no se puede deshacer."
         confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
         onConfirm={handleDelete}
       />
     </div>

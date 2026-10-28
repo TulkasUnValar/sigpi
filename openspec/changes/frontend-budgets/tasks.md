@@ -38,14 +38,14 @@ Delivery strategy: auto-chain
 - [ ] 1.10 `BudgetDetail.tsx`+`BudgetSummary.tsx`+`[id]/page.tsx`: Overview tab with summary indicators (IND-007/008/009), edit/delete controls. AC: detail/summary. ~280 ln
 - [ ] 1.11 Verify: coverage ≥80%, tsc, ESLint. AC: floor met. ~50 ln
 
-## PR2 — Nested Managers
+## PR2 — Nested Managers ✅
 
-- [ ] 2.1 `BudgetLinesManager.tsx`: CRUD rubros with approved_amount; show sum vs budget approved_amount. AC: create/edit/delete/sum warning. ~220 ln
-- [ ] 2.2 `FundingSourcesManager.tsx`: CRUD sources (name, amount); show total vs budget approved_amount. AC: create/edit/delete/coverage %. ~200 ln
-- [ ] 2.3 `AttachmentsManager.tsx`: metadata-only CRUD (name, doc_type, external_url). AC: metadata + delete-refresh. ~150 ln
-- [ ] 2.4 `managers.test.tsx` (RED): RTL managers + nested fixtures. AC: handler tests, validation. ~350 ln
-- [ ] 2.5 Nested routes: `[id]/lines/[lid]/page.tsx`, update detail tabs. AC: routing. ~80 ln
-- [ ] 2.6 Verify: coverage ≥80%, tsc, ESLint. AC: floor met. ~50 ln
+- [x] 2.1 `BudgetLinesManager.tsx`: CRUD rubros with approved_amount; show sum vs budget approved_amount. AC: create/edit/delete/sum warning. ~220 ln
+- [x] 2.2 `FundingSourcesManager.tsx`: CRUD sources (name, amount); show total vs budget approved_amount. AC: create/edit/delete/coverage %. ~200 ln
+- [x] 2.3 `AttachmentsManager.tsx`: metadata-only CRUD (name, doc_type, external_url). AC: metadata + delete-refresh. ~150 ln
+- [x] 2.4 `managers.test.tsx` (RED): RTL managers + nested fixtures. AC: handler tests, validation. ~350 ln
+- [x] 2.5 Nested routes: `[id]/lines/[lid]/page.tsx`, update detail tabs. AC: routing. ~80 ln
+- [x] 2.6 Verify: coverage ≥80%, tsc, ESLint. AC: floor met. ~50 ln
 
 ## PR3 — Execution + Authorization + Polish
 
@@ -68,5 +68,5 @@ Delivery strategy: auto-chain
 ## Apply Status
 
 - PR1: NOT STARTED
-- PR2: NOT STARTED
+- PR2: COMPLETED
 - PR3: NOT STARTED

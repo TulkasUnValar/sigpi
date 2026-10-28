@@ -365,11 +365,11 @@ describe("useDeleteBudgetLine", () => {
     mockApi.delete.mockResolvedValue({});
 
     const { result } = renderHook(
-      () => useDeleteBudgetLine("budget-1", "line-1"),
+      () => useDeleteBudgetLine("budget-1"),
       { wrapper: createWrapper() },
     );
 
-    result.current.mutate();
+    result.current.mutate("line-1");
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -382,11 +382,11 @@ describe("useDeleteBudgetLine", () => {
     mockApi.delete.mockRejectedValue(error);
 
     const { result } = renderHook(
-      () => useDeleteBudgetLine("budget-1", "line-1"),
+      () => useDeleteBudgetLine("budget-1"),
       { wrapper: createWrapper() },
     );
 
-    result.current.mutate();
+    result.current.mutate("line-1");
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
@@ -499,11 +499,11 @@ describe("useDeleteFundingSource", () => {
     mockApi.delete.mockResolvedValue({});
 
     const { result } = renderHook(
-      () => useDeleteFundingSource("project-1", "source-1"),
+      () => useDeleteFundingSource("project-1"),
       { wrapper: createWrapper() },
     );
 
-    result.current.mutate();
+    result.current.mutate("source-1");
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -625,11 +625,11 @@ describe("useDeleteBudgetAttachment", () => {
     mockApi.delete.mockResolvedValue({});
 
     const { result } = renderHook(
-      () => useDeleteBudgetAttachment("budget-1", "att-1"),
+      () => useDeleteBudgetAttachment("budget-1"),
       { wrapper: createWrapper() },
     );
 
-    result.current.mutate();
+    result.current.mutate("att-1");
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
