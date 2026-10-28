@@ -3,13 +3,17 @@ ViewSets for dashboard endpoints.
 
 DashboardViewSet exposes the /api/dashboard/summary/ endpoint with 14 indicators.
 Institution-scoped via request.institution_id (set by TenantMiddleware).
+
+SupersetEmbedView provides embed configuration for Apache Superset dashboards.
 """
 
+from django.conf import settings
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.dashboard.permissions import IsDashboardAuthorized
 from apps.dashboard.serializers import DashboardSummarySerializer
@@ -82,3 +86,41 @@ class DashboardViewSet(viewsets.ViewSet):
         serializer = DashboardSummarySerializer(summary_data)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SupersetEmbedView(APIView):
+    """
+    Get Superset embed configuration for dashboards.
+
+    Returns the Superset URL and dashboard ID for iframe integration.
+    Requires authentication. Future: generate guest tokens for embedded analytics.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        """
+        GET /api/dashboard/superset-embed/
+
+        Returns Superset embed configuration.
+
+        Query params:
+            dashboard_id: Superset dashboard ID (default: "1")
+
+        Response shape:
+        {
+            'superset_url': str,
+            'dashboard_id': str,
+            'embed_url': str,
+        }
+        """
+        dashboard_id = request.query_params.get("dashboard_id", "1")
+
+        return Response(
+            {
+                "superset_url": settings.SUPERSET_URL,
+                "dashboard_id": dashboard_id,
+                "embed_url": f"{settings.SUPERSET_URL}/superset/dashboard/{dashboard_id}/",
+            },
+            status=status.HTTP_200_OK,
+        )

@@ -63,10 +63,29 @@ class TenantMiddleware:
         "/api/dashboard/",
     ]
 
+    # Endpoints that are exempt from tenant requirement (configuration/utility endpoints)
+    TENANT_EXEMPT_PATHS = [
+        "/api/dashboard/superset-embed/",
+    ]
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
+        # Skip tenant requirement for exempt paths
+        if request.path in self.TENANT_EXEMPT_PATHS:
+            request.institution_id = request.session.get("institution_id")
+            request.active_membership = None
+            set_audit_context(
+                user=request.user if request.user.is_authenticated else None,
+                ip_address=AuditEventEmitter.extract_ip(request),
+                institution_id=request.institution_id,
+            )
+            try:
+                return self.get_response(request)
+            finally:
+                reset_audit_context()
+
         request.institution_id = request.session.get("institution_id")
         request.active_membership = None
 

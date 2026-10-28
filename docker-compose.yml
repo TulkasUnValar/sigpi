@@ -137,7 +137,9 @@ services:
       redis:
         condition: service_started
 
-  # ── PostgreSQL 16 ───────────────────────────────────────
+  # ── PostgreSQL 16 (primary) ─────────────────────────────
+  # WAL configured for streaming replication to db-replica.
+  # init-db.sh creates the replication and readonly roles.
   db:
     image: postgres:16-alpine
     container_name: sigpi-db
@@ -146,8 +148,14 @@ services:
       - POSTGRES_DB=sigpi
       - POSTGRES_USER=sigpi
       - POSTGRES_PASSWORD=sigpi
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=2
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     ports:
       - "5432:5432"
     healthcheck:
@@ -155,6 +163,63 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - sigpi-net
+
+  # ── PostgreSQL 16 (read replica) ────────────────────────
+  # Hot standby fed by streaming replication from db.
+  # Superset connects here so BI queries never hit the primary.
+  db-replica:
+    image: postgres:16-alpine
+    container_name: sigpi-db-replica
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=sigpi
+      - PGUSER=sigpi_replicator
+      - PGPASSWORD=replicator_password
+    command: >
+      bash -c "
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        gosu postgres pg_basebackup -h db -U sigpi_replicator -D /var/lib/postgresql/data -P -R -X stream
+        chmod 700 /var/lib/postgresql/data
+      fi &&
+      exec gosu postgres postgres -c hot_standby=on
+      "
+    volumes:
+      - pg_replica_data:/var/lib/postgresql/data
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sigpi_replicator -d sigpi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sigpi-net
+
+  # ── Apache Superset (BI) ────────────────────────────────
+  # Connects to db-replica for analytics queries.
+  # Default login: admin/admin — change immediately.
+  superset:
+    image: apache/superset:latest
+    container_name: sigpi-superset
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: 'superset-dev-secret-key-change-in-production'
+      DATABASE_DB: sigpi
+      DATABASE_HOST: db-replica
+      DATABASE_PASSWORD: 'readonly_password'
+      DATABASE_PORT: 5432
+      DATABASE_USER: sigpi_readonly
+      SUPERSET_LOAD_EXAMPLES: 'no'
+    volumes:
+      - superset_data:/app/superset_home
+    depends_on:
+      db-replica:
+        condition: service_healthy
     networks:
       - sigpi-net
 
@@ -269,6 +334,8 @@ services:
 
 volumes:
   pgdata:
+  pg_replica_data:
+  superset_data:
   redisdata:
   kcpgdata:
   miniodata:

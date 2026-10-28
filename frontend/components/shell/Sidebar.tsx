@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   Building2,
   FileText,
   FolderKanban,
@@ -41,8 +42,18 @@ const INSTITUTIONS_NAV = {
   icon: Building2,
 };
 
+/** "Análisis Avanzado" — Apache Superset BI, role-gated (director/admin/auditor). */
+const ANALYTICS_NAV = {
+  href: "/analytics",
+  label: "Análisis Avanzado",
+  icon: BarChart3,
+};
+
 /** Roles that may manage the institutional hierarchy (PR1: superadmin/admin). */
 const INSTITUTION_ADMIN_ROLES = ["superadmin", "admin"];
+
+/** Roles that may access advanced analytics with Apache Superset. */
+const ANALYTICS_ROLES = ["director", "admin", "auditor"];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -50,8 +61,12 @@ export function Sidebar() {
 
   const isDirector = roles.includes("director") || roles.includes("admin");
   const canManageInstitutions = roles.some((r) => INSTITUTION_ADMIN_ROLES.includes(r));
+  const canAccessAnalytics = roles.some((r) => ANALYTICS_ROLES.includes(r));
 
-  const items = canManageInstitutions ? [...NAV_ITEMS, INSTITUTIONS_NAV] : NAV_ITEMS;
+  let items = canManageInstitutions ? [...NAV_ITEMS, INSTITUTIONS_NAV] : NAV_ITEMS;
+  if (canAccessAnalytics) {
+    items = [...items, ANALYTICS_NAV];
+  }
 
   return (
     <nav aria-label="Navegación principal" className="flex h-full flex-col gap-1 p-4">

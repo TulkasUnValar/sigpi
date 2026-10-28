@@ -351,3 +351,11 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
+
+# ──────────────────────────────────────────────────────────
+# Apache Superset (BI Advanced)
+# ──────────────────────────────────────────────────────────
+# Superset connects to the read replica for analytics queries.
+# The embed endpoint returns configuration for iframe integration.
+SUPERSET_URL = os.environ.get("SUPERSET_URL", "http://localhost:8088")
+SUPERSET_API_KEY = os.environ.get("SUPERSET_API_KEY", "")
