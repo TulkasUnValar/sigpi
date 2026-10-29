@@ -13,9 +13,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useBudgets } from "@/features/budgets/queries";
 import { useBudgetPermissions } from "@/features/budgets/permissions";
-import { BUDGET_STATUS_OPTIONS, formatCurrency } from "@/features/budgets/constants";
+import { BUDGET_STATUS_VALUES, formatCurrency } from "@/features/budgets/constants";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -25,6 +26,7 @@ export function BudgetList() {
   const [filters, setFilters] = useState<BudgetFilter>({});
   const { data, isLoading, error } = useBudgets(filters);
   const { canManage } = useBudgetPermissions();
+  const t = useTranslations("budgets");
 
   if (isLoading) {
     return (
@@ -38,7 +40,7 @@ export function BudgetList() {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Error al cargar presupuestos: {(error as Error).message}
+        {t("list.errorLoading", { message: (error as Error).message })}
       </div>
     );
   }
@@ -49,13 +51,13 @@ export function BudgetList() {
     <div className="space-y-6">
       {/* Header with create CTA */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Presupuestos</h1>
+        <h1 className="text-2xl font-bold">{t("list.title")}</h1>
         {canManage && (
           <Link
             href="/budgets/new"
             className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
-            Nuevo presupuesto
+            {t("list.createNew")}
           </Link>
         )}
       </div>
@@ -69,10 +71,10 @@ export function BudgetList() {
           }
           className="rounded-md border border-input bg-background px-3 py-2"
         >
-          <option value="">Todos los estados</option>
-          {BUDGET_STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          <option value="">{t("list.allStatuses")}</option>
+          {BUDGET_STATUS_VALUES.map((status) => (
+            <option key={status} value={status}>
+              {t(`status.${status}`)}
             </option>
           ))}
         </select>
@@ -81,19 +83,19 @@ export function BudgetList() {
       {/* Table or Empty State */}
       {budgets.length === 0 ? (
         <EmptyState
-          title="No hay presupuestos"
-          description="Aún no se han creado presupuestos para los proyectos."
+          title={t("list.emptyTitle")}
+          description={t("list.emptyDescription")}
         />
       ) : (
         <div className="rounded-lg border">
           <table className="w-full">
             <thead className="border-b bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left font-medium">Proyecto</th>
-                <th className="px-4 py-3 text-left font-medium">Nombre</th>
-                <th className="px-4 py-3 text-right font-medium">Monto Aprobado</th>
-                <th className="px-4 py-3 text-left font-medium">Estado</th>
-                <th className="px-4 py-3 text-left font-medium">Creado</th>
+                <th className="px-4 py-3 text-left font-medium">{t("table.project")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("table.name")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("table.approvedAmount")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("table.status")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("table.created")}</th>
               </tr>
             </thead>
             <tbody>

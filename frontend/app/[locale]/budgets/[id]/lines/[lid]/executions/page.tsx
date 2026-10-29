@@ -11,11 +11,13 @@ import { useParams } from "next/navigation";
 import { useBudgetLines } from "@/features/budgets/queries";
 import { BudgetExecutionsManager } from "@/features/budgets/BudgetExecutionsManager";
 import { Skeleton } from "@/components/shared/Skeleton";
+import { useTranslations } from "next-intl";
 
 export default function BudgetExecutionsPage() {
   const params = useParams<{ id: string; lid: string }>();
   const budgetId = params.id;
   const lineId = params.lid;
+  const t = useTranslations("budgets");
 
   const { data: lines, isLoading, error } = useBudgetLines(budgetId);
 
@@ -31,7 +33,7 @@ export default function BudgetExecutionsPage() {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Error al cargar línea: {(error as Error).message}
+        {t("pages.executions.errorLoading", { message: (error as Error).message })}
       </div>
     );
   }
@@ -41,7 +43,7 @@ export default function BudgetExecutionsPage() {
   if (!line) {
     return (
       <div className="rounded-lg border p-4">
-        <p className="text-muted-foreground">Línea no encontrada.</p>
+        <p className="text-muted-foreground">{t("pages.executions.notFound")}</p>
       </div>
     );
   }
@@ -53,9 +55,9 @@ export default function BudgetExecutionsPage() {
           href={`/budgets/${budgetId}`}
           className="mb-2 inline-block text-sm text-muted-foreground hover:text-foreground"
         >
-          ← Volver a líneas
+          {t("pages.executions.backToLines")}
         </Link>
-        <h1 className="text-3xl font-bold">Ejecuciones — {line.name}</h1>
+        <h1 className="text-3xl font-bold">{t("pages.executions.title", { name: line.name })}</h1>
       </div>
 
       <BudgetExecutionsManager

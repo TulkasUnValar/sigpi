@@ -10,11 +10,13 @@ import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { BudgetForm, useBudget } from "@/features/budgets";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/shared/Skeleton";
+import { useTranslations } from "next-intl";
 
 export default function EditBudgetPage() {
   const params = useParams();
   const budgetId = String(params.id);
   const { data: budget, isLoading, error } = useBudget(budgetId);
+  const t = useTranslations("budgets");
 
   if (isLoading) {
     return (
@@ -31,7 +33,7 @@ export default function EditBudgetPage() {
     return (
       <AuthenticatedLayout>
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-          Error al cargar presupuesto: {(error as Error).message}
+          {t("pages.edit.errorLoading", { message: (error as Error).message })}
         </div>
       </AuthenticatedLayout>
     );
@@ -41,7 +43,7 @@ export default function EditBudgetPage() {
     return (
       <AuthenticatedLayout>
         <div className="rounded-lg border p-4">
-          <p className="text-muted-foreground">Presupuesto no encontrado.</p>
+          <p className="text-muted-foreground">{t("pages.edit.notFound")}</p>
         </div>
       </AuthenticatedLayout>
     );
@@ -51,9 +53,9 @@ export default function EditBudgetPage() {
     <AuthenticatedLayout>
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Editar presupuesto</h1>
+          <h1 className="text-3xl font-bold">{t("pages.edit.title")}</h1>
           <p className="mt-2 text-muted-foreground">
-            Modifica el nombre o monto aprobado del presupuesto.
+            {t("pages.edit.description")}
           </p>
         </div>
         <BudgetForm mode="edit" budget={budget} />

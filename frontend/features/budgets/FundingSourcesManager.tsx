@@ -16,6 +16,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useFundingSources } from "@/features/budgets/queries";
 import {
   useCreateFundingSource,
@@ -42,6 +43,8 @@ export function FundingSourcesManager({
   const { data: sources, isLoading, error } = useFundingSources(projectId);
   const createMutation = useCreateFundingSource(projectId);
   const { canManage } = useBudgetPermissions();
+  const t = useTranslations("budgets");
+  const tc = useTranslations("common");
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingSource, setEditingSource] = useState<FundingSource | null>(null);
@@ -68,7 +71,7 @@ export function FundingSourcesManager({
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Error al cargar fuentes: {(error as Error).message}
+        {t("fundingSources.errorLoading", { message: (error as Error).message })}
       </div>
     );
   }
@@ -84,12 +87,12 @@ export function FundingSourcesManager({
 
   const handleCreate = async () => {
     if (!formName.trim() || !formAmount.trim()) {
-      toast.error("Complete todos los campos.");
+      toast.error(t("fundingSources.fillAllFields"));
       return;
     }
 
     if (!validateAmount(formAmount)) {
-      toast.error("El monto debe ser un número válido mayor o igual a 0.");
+      toast.error(t("fundingSources.invalidAmount"));
       return;
     }
 
@@ -109,12 +112,12 @@ export function FundingSourcesManager({
   const handleUpdate = async () => {
     if (!editingSource) return;
     if (!formName.trim() || !formAmount.trim()) {
-      toast.error("Complete todos los campos.");
+      toast.error(t("fundingSources.fillAllFields"));
       return;
     }
 
     if (!validateAmount(formAmount)) {
-      toast.error("El monto debe ser un número válido mayor o igual a 0.");
+      toast.error(t("fundingSources.invalidAmount"));
       return;
     }
 
@@ -173,13 +176,13 @@ export function FundingSourcesManager({
     <div className="space-y-4">
       {/* Header with create CTA */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Fuentes de Financiamiento</h2>
+        <h2 className="text-xl font-semibold">{t("fundingSources.title")}</h2>
         {canManage && !showCreateForm && !editingSource && (
           <button
             onClick={startCreate}
             className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
-            Agregar fuente
+            {t("fundingSources.addSource")}
           </button>
         )}
       </div>
@@ -187,7 +190,7 @@ export function FundingSourcesManager({
       {/* Coverage info */}
       {showCoverage && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-900">
-          Cobertura: {coverage.toFixed(2)}%
+          {t("fundingSources.coverage", { percentage: coverage.toFixed(2) })}
         </div>
       )}
 
@@ -195,20 +198,20 @@ export function FundingSourcesManager({
       {(showCreateForm || editingSource) && (
         <div className="rounded-lg border bg-card p-4 space-y-3">
           <div>
-            <label htmlFor="source-name" className="block text-sm font-medium mb-1">Nombre</label>
+            <label htmlFor="source-name" className="block text-sm font-medium mb-1">{t("fundingSources.nameLabel")}</label>
             <input
               id="source-name"
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
-              placeholder="Nombre de la fuente"
-              aria-label="Nombre de la fuente de financiamiento"
+              placeholder={t("fundingSources.namePlaceholder")}
+              aria-label={t("fundingSources.nameAriaLabel")}
               disabled={isFormPending}
             />
           </div>
           <div>
-            <label htmlFor="source-amount" className="block text-sm font-medium mb-1">Monto</label>
+            <label htmlFor="source-amount" className="block text-sm font-medium mb-1">{t("fundingSources.amountLabel")}</label>
             <input
               id="source-amount"
               type="number"
@@ -218,7 +221,7 @@ export function FundingSourcesManager({
               onChange={(e) => setFormAmount(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="0.00"
-              aria-label="Monto de la fuente de financiamiento"
+              aria-label={t("fundingSources.amountAriaLabel")}
               disabled={isFormPending}
             />
           </div>
@@ -228,13 +231,13 @@ export function FundingSourcesManager({
               disabled={isFormPending}
               className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {editingSource ? "Guardar" : "Crear"}
+              {editingSource ? tc("save") : tc("create")}
             </button>
             <button
               onClick={editingSource ? cancelEdit : cancelCreate}
               className="rounded-md border border-input px-4 py-2 hover:bg-muted"
             >
-              Cancelar
+              {tc("cancel")}
             </button>
           </div>
         </div>
@@ -243,18 +246,18 @@ export function FundingSourcesManager({
       {/* Table or Empty State */}
       {sourcesArray.length === 0 ? (
         <EmptyState
-          title="No hay fuentes"
-          description="Aún no se han creado fuentes de financiamiento."
+          title={t("fundingSources.emptyTitle")}
+          description={t("fundingSources.emptyDescription")}
         />
       ) : (
         <div className="rounded-lg border">
           <table className="w-full">
             <thead className="border-b bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left font-medium">Nombre</th>
-                <th className="px-4 py-3 text-right font-medium">Monto</th>
+                <th className="px-4 py-3 text-left font-medium">{t("table.name")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("table.amount")}</th>
                 {canManage && (
-                  <th className="px-4 py-3 text-left font-medium">Acciones</th>
+                  <th className="px-4 py-3 text-left font-medium">{tc("actions")}</th>
                 )}
               </tr>
             </thead>
@@ -275,13 +278,13 @@ export function FundingSourcesManager({
                           onClick={() => startEdit(source)}
                           className="rounded-md border border-input px-3 py-1 text-sm hover:bg-muted"
                         >
-                          Editar
+                          {tc("edit")}
                         </button>
                         <button
                           onClick={() => setDeleteSource(source)}
                           className="rounded-md border border-destructive bg-destructive px-3 py-1 text-sm text-destructive-foreground hover:bg-destructive/90"
                         >
-                          Eliminar
+                          {tc("delete")}
                         </button>
                       </div>
                     </td>
@@ -295,17 +298,20 @@ export function FundingSourcesManager({
 
       {/* Summary */}
       <div className="text-sm text-muted-foreground">
-        Total: {formatCurrency(totalSources)} de {formatCurrency(budgetLimit)}
+        {t("fundingSources.total", {
+          total: formatCurrency(totalSources),
+          limit: formatCurrency(budgetLimit),
+        })}
       </div>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={!!deleteSource}
         onOpenChange={(open) => !open && setDeleteSource(null)}
-        title="Eliminar fuente"
-        description={`¿Estás seguro de que deseas eliminar "${deleteSource?.name}"? Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
+        title={t("fundingSources.deleteConfirmTitle")}
+        description={t("fundingSources.deleteConfirmDescription", { name: deleteSource?.name ?? "" })}
+        confirmLabel={tc("delete")}
+        cancelLabel={tc("cancel")}
         onConfirm={handleDelete}
       />
     </div>

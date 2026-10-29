@@ -1,15 +1,9 @@
 /**
- * Budgets feature constants — Spanish labels, status mappings, doc types.
+ * Budgets feature constants — status variants, currency formatting, value arrays.
+ * Labels are now in translation files (budgets.status.*, budgets.docType.*).
  */
 
 import type { BudgetDocType, BudgetStatus } from "./types";
-
-/** Budget status Spanish labels. */
-export const BUDGET_STATUS_LABELS: Record<BudgetStatus, string> = {
-  draft: "Borrador",
-  approved: "Aprobado",
-  closed: "Cerrado",
-};
 
 /** Budget status badge variants (shadcn). */
 export const BUDGET_STATUS_VARIANTS: Record<BudgetStatus, "default" | "secondary" | "destructive"> = {
@@ -18,35 +12,23 @@ export const BUDGET_STATUS_VARIANTS: Record<BudgetStatus, "default" | "secondary
   closed: "destructive",
 };
 
-/** Document type Spanish labels. */
-export const BUDGET_DOC_TYPE_LABELS: Record<BudgetDocType, string> = {
-  acta_inicio: "Acta de inicio",
-  acta_comite: "Acta de comité",
-  acta_aprobacion: "Acta de aprobación",
-  acta_cierre: "Acta de cierre",
-  formulacion: "Formulación del proyecto",
-  informe_parcial: "Informe parcial",
-  informe_final: "Informe final",
-  evidencia_producto: "Evidencia de producto",
-  presupuesto: "Presupuesto",
-  carta_aval: "Carta o aval",
-  certificacion: "Certificación",
-  otro: "Otro",
-};
+/** Budget status values for iteration. */
+export const BUDGET_STATUS_VALUES: BudgetStatus[] = ["draft", "approved", "closed"];
 
-/** Document type options for select inputs. */
-export const BUDGET_DOC_TYPE_OPTIONS = Object.entries(BUDGET_DOC_TYPE_LABELS).map(
-  ([value, label]) => ({
-    value: value as BudgetDocType,
-    label,
-  })
-);
-
-/** Budget status options for filters. */
-export const BUDGET_STATUS_OPTIONS: { value: BudgetStatus; label: string }[] = [
-  { value: "draft", label: "Borrador" },
-  { value: "approved", label: "Aprobado" },
-  { value: "closed", label: "Cerrado" },
+/** Document type values for iteration. */
+export const BUDGET_DOC_TYPE_VALUES: BudgetDocType[] = [
+  "acta_inicio",
+  "acta_comite",
+  "acta_aprobacion",
+  "acta_cierre",
+  "formulacion",
+  "informe_parcial",
+  "informe_final",
+  "evidencia_producto",
+  "presupuesto",
+  "carta_aval",
+  "certificacion",
+  "otro",
 ];
 
 /** Currency formatter for COP. */

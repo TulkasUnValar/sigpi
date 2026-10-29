@@ -15,6 +15,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useBudgetExecutions } from "@/features/budgets/queries";
 import { useCreateBudgetExecution } from "@/features/budgets/mutations";
 import { useBudgetPermissions } from "@/features/budgets/permissions";
@@ -41,6 +42,8 @@ export function BudgetExecutionsManager({
   const createMutation = useCreateBudgetExecution(budgetId, lineId);
   const { canManage, canAuthorize } = useBudgetPermissions();
   const user = useAuthStore((state) => state.user);
+  const t = useTranslations("budgets");
+  const tc = useTranslations("common");
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [authorizationDialog, setAuthorizationDialog] = useState<{
@@ -59,7 +62,7 @@ export function BudgetExecutionsManager({
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Error al cargar ejecuciones: {(error as Error).message}
+        {t("executions.errorLoading", { message: (error as Error).message })}
       </div>
     );
   }
@@ -73,7 +76,7 @@ export function BudgetExecutionsManager({
 
   const handleCreate = async () => {
     if (!formAmount.trim() || !formExecutedAt.trim()) {
-      toast.error("Complete todos los campos.");
+      toast.error(t("executions.fillAllFields"));
       return;
     }
 
@@ -109,7 +112,7 @@ export function BudgetExecutionsManager({
     if (!authorizationDialog) return;
 
     if (!canAuthorize) {
-      toast.error("No tiene permisos para autorizar sobre-ejecuciones.");
+      toast.error(t("executions.noAuthPermission"));
       setAuthorizationDialog(null);
       return;
     }
@@ -149,13 +152,13 @@ export function BudgetExecutionsManager({
     <div className="space-y-4">
       {/* Header with create CTA */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Ejecuciones del Rubro</h2>
+        <h2 className="text-xl font-semibold">{t("executions.title")}</h2>
         {canManage && !showCreateForm && (
           <button
             onClick={startCreate}
             className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
-            Registrar ejecución
+            {t("executions.registerExecution")}
           </button>
         )}
       </div>
@@ -164,26 +167,26 @@ export function BudgetExecutionsManager({
       {showCreateForm && (
         <div className="rounded-lg border bg-card p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">Monto</label>
+            <label className="block text-sm font-medium mb-1">{t("executions.amountLabel")}</label>
             <input
               type="text"
               value={formAmount}
               onChange={(e) => setFormAmount(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="0.00"
-              aria-label="Monto de la ejecución"
+              aria-label={t("executions.amountAriaLabel")}
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Fecha de Ejecución
+              {t("executions.executionDateLabel")}
             </label>
             <input
               type="date"
               value={formExecutedAt}
               onChange={(e) => setFormExecutedAt(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
-              aria-label="Fecha de ejecución"
+              aria-label={t("executions.executionDateAriaLabel")}
             />
           </div>
           <div className="flex gap-2">
@@ -192,13 +195,13 @@ export function BudgetExecutionsManager({
               disabled={isFormPending}
               className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              Registrar
+              {t("executions.register")}
             </button>
             <button
               onClick={cancelCreate}
               className="rounded-md border border-input px-4 py-2 hover:bg-muted"
             >
-              Cancelar
+              {tc("cancel")}
             </button>
           </div>
         </div>
@@ -207,23 +210,23 @@ export function BudgetExecutionsManager({
       {/* Table or Empty State */}
       {executionsArray.length === 0 ? (
         <EmptyState
-          title="No hay ejecuciones"
-          description="Aún no se han registrado ejecuciones para este rubro."
+          title={t("executions.emptyTitle")}
+          description={t("executions.emptyDescription")}
         />
       ) : (
         <div className="rounded-lg border">
           <table className="w-full">
             <thead className="border-b bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-right font-medium">Monto</th>
+                <th className="px-4 py-3 text-right font-medium">{t("table.amount")}</th>
                 <th className="px-4 py-3 text-left font-medium">
-                  Fecha Ejecución
+                  {t("table.executionDate")}
                 </th>
                 <th className="px-4 py-3 text-left font-medium">
-                  Autorizado Por
+                  {t("table.authorizedBy")}
                 </th>
                 <th className="px-4 py-3 text-left font-medium">
-                  Fecha Autorización
+                  {t("table.authorizationDate")}
                 </th>
               </tr>
             </thead>
@@ -256,17 +259,20 @@ export function BudgetExecutionsManager({
 
       {/* Summary */}
       <div className="text-sm text-muted-foreground">
-        Ejecutado: {formatCurrency(totalExecuted)} de {formatCurrency(approvedAmount)} aprobado
+        {t("executions.executedSummary", {
+          executed: formatCurrency(totalExecuted),
+          approved: formatCurrency(approvedAmount),
+        })}
       </div>
 
       {/* Authorization Dialog */}
       <ConfirmDialog
         open={!!authorizationDialog}
         onOpenChange={(open) => !open && setAuthorizationDialog(null)}
-        title="Sobre-ejecución detectada"
-        description="La ejecución excede el presupuesto aprobado del rubro. ¿Desea autorizar esta ejecución?"
-        confirmLabel="Autorizar"
-        cancelLabel="Cancelar"
+        title={t("executions.overExecutionTitle")}
+        description={t("executions.overExecutionDescription")}
+        confirmLabel={t("executions.authorize")}
+        cancelLabel={tc("cancel")}
         destructive={false}
         onConfirm={handleAuthorizedCreate}
       />

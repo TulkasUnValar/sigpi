@@ -16,6 +16,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useBudgetLines } from "@/features/budgets/queries";
 import {
   useCreateBudgetLine,
@@ -42,6 +43,8 @@ export function BudgetLinesManager({
   const { data: lines, isLoading, error } = useBudgetLines(budgetId);
   const createMutation = useCreateBudgetLine(budgetId);
   const { canManage } = useBudgetPermissions();
+  const t = useTranslations("budgets");
+  const tc = useTranslations("common");
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingLine, setEditingLine] = useState<BudgetLine | null>(null);
@@ -70,7 +73,7 @@ export function BudgetLinesManager({
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Error al cargar líneas: {(error as Error).message}
+        {t("lines.errorLoading", { message: (error as Error).message })}
       </div>
     );
   }
@@ -85,12 +88,12 @@ export function BudgetLinesManager({
 
   const handleCreate = async () => {
     if (!formName.trim() || !formAmount.trim()) {
-      toast.error("Complete todos los campos.");
+      toast.error(t("lines.fillAllFields"));
       return;
     }
 
     if (!validateAmount(formAmount)) {
-      toast.error("El monto debe ser un número válido mayor o igual a 0.");
+      toast.error(t("lines.invalidAmount"));
       return;
     }
 
@@ -111,7 +114,7 @@ export function BudgetLinesManager({
   const handleUpdate = async () => {
     if (!editingLine) return;
     if (!formName.trim() || !formAmount.trim()) {
-      toast.error("Complete todos los campos.");
+      toast.error(t("lines.fillAllFields"));
       return;
     }
 
@@ -172,13 +175,13 @@ export function BudgetLinesManager({
     <div className="space-y-4">
       {/* Header with create CTA */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Líneas de Presupuesto</h2>
+        <h2 className="text-xl font-semibold">{t("lines.title")}</h2>
         {canManage && !showCreateForm && !editingLine && (
           <button
             onClick={startCreate}
             className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
-            Agregar línea
+            {t("lines.addLine")}
           </button>
         )}
       </div>
@@ -186,7 +189,7 @@ export function BudgetLinesManager({
       {/* Warning if exceeds budget */}
       {exceedsBudget && (
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-          La suma de líneas excede el presupuesto aprobado
+          {t("lines.exceedsBudget")}
         </div>
       )}
 
@@ -194,21 +197,21 @@ export function BudgetLinesManager({
       {(showCreateForm || editingLine) && (
         <div className="rounded-lg border bg-card p-4 space-y-3">
           <div>
-            <label htmlFor="line-name" className="block text-sm font-medium mb-1">Nombre</label>
+            <label htmlFor="line-name" className="block text-sm font-medium mb-1">{t("lines.nameLabel")}</label>
             <input
               id="line-name"
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
-              placeholder="Nombre del rubro"
-              aria-label="Nombre de la línea de presupuesto"
+              placeholder={t("lines.namePlaceholder")}
+              aria-label={t("lines.nameAriaLabel")}
               disabled={isFormPending}
             />
           </div>
           <div>
             <label htmlFor="line-amount" className="block text-sm font-medium mb-1">
-              Monto Aprobado
+              {t("lines.approvedAmountLabel")}
             </label>
             <input
               id="line-amount"
@@ -219,7 +222,7 @@ export function BudgetLinesManager({
               onChange={(e) => setFormAmount(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               placeholder="0.00"
-              aria-label="Monto aprobado de la línea"
+              aria-label={t("lines.approvedAmountAriaLabel")}
               disabled={isFormPending}
             />
           </div>
@@ -229,13 +232,13 @@ export function BudgetLinesManager({
               disabled={isFormPending}
               className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {editingLine ? "Guardar" : "Crear"}
+              {editingLine ? tc("save") : tc("create")}
             </button>
             <button
               onClick={editingLine ? cancelEdit : cancelCreate}
               className="rounded-md border border-input px-4 py-2 hover:bg-muted"
             >
-              Cancelar
+              {tc("cancel")}
             </button>
           </div>
         </div>
@@ -244,20 +247,20 @@ export function BudgetLinesManager({
       {/* Table or Empty State */}
       {linesArray.length === 0 ? (
         <EmptyState
-          title="No hay líneas"
-          description="Aún no se han creado líneas de presupuesto."
+          title={t("lines.emptyTitle")}
+          description={t("lines.emptyDescription")}
         />
       ) : (
         <div className="rounded-lg border">
           <table className="w-full">
             <thead className="border-b bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left font-medium">Nombre</th>
+                <th className="px-4 py-3 text-left font-medium">{t("table.name")}</th>
                 <th className="px-4 py-3 text-right font-medium">
-                  Monto Aprobado
+                  {t("table.approvedAmount")}
                 </th>
                 {canManage && (
-                  <th className="px-4 py-3 text-left font-medium">Acciones</th>
+                  <th className="px-4 py-3 text-left font-medium">{tc("actions")}</th>
                 )}
               </tr>
             </thead>
@@ -278,19 +281,19 @@ export function BudgetLinesManager({
                           href={`/budgets/${budgetId}/lines/${line.id}/executions`}
                           className="rounded-md border border-input px-3 py-1 text-sm hover:bg-muted"
                         >
-                          Ver ejecuciones
+                          {t("lines.viewExecutions")}
                         </Link>
                         <button
                           onClick={() => startEdit(line)}
                           className="rounded-md border border-input px-3 py-1 text-sm hover:bg-muted"
                         >
-                          Editar
+                          {tc("edit")}
                         </button>
                         <button
                           onClick={() => setDeleteLine(line)}
                           className="rounded-md border border-destructive bg-destructive px-3 py-1 text-sm text-destructive-foreground hover:bg-destructive/90"
                         >
-                          Eliminar
+                          {tc("delete")}
                         </button>
                       </div>
                     </td>
@@ -304,17 +307,20 @@ export function BudgetLinesManager({
 
       {/* Summary */}
       <div className="text-sm text-muted-foreground">
-        Total: {formatCurrency(totalLines)} de {formatCurrency(budgetLimit)}
+        {t("lines.total", {
+          total: formatCurrency(totalLines),
+          limit: formatCurrency(budgetLimit),
+        })}
       </div>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={!!deleteLine}
         onOpenChange={(open) => !open && setDeleteLine(null)}
-        title="Eliminar línea"
-        description={`¿Estás seguro de que deseas eliminar "${deleteLine?.name}"? Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
+        title={t("lines.deleteConfirmTitle")}
+        description={t("lines.deleteConfirmDescription", { name: deleteLine?.name ?? "" })}
+        confirmLabel={tc("delete")}
+        cancelLabel={tc("cancel")}
         onConfirm={handleDelete}
       />
     </div>

@@ -9,6 +9,7 @@
 
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useBudgetSummary } from "@/features/budgets/queries";
 import { formatCurrency } from "@/features/budgets/constants";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -19,6 +20,7 @@ interface BudgetSummaryProps {
 
 export function BudgetSummary({ budgetId }: BudgetSummaryProps) {
   const { data: summary, isLoading, error } = useBudgetSummary(budgetId);
+  const t = useTranslations("budgets");
 
   if (isLoading) {
     return (
@@ -33,7 +35,7 @@ export function BudgetSummary({ budgetId }: BudgetSummaryProps) {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Error al cargar resumen: {(error as Error).message}
+        {t("summary.errorLoading", { message: (error as Error).message })}
       </div>
     );
   }
@@ -52,13 +54,13 @@ export function BudgetSummary({ budgetId }: BudgetSummaryProps) {
       <div className="grid grid-cols-3 gap-4">
         {/* IND-007: Approved */}
         <div className="rounded-lg border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Aprobado (IND-007)</p>
+          <p className="text-sm text-muted-foreground">{t("summary.approved")}</p>
           <p className="mt-2 text-2xl font-bold text-primary">{formatCurrency(summary.approved)}</p>
         </div>
 
         {/* IND-008: Executed */}
         <div className="rounded-lg border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Ejecutado (IND-008)</p>
+          <p className="text-sm text-muted-foreground">{t("summary.executed")}</p>
           <p className="mt-2 text-2xl font-bold text-accent">{formatCurrency(summary.executed)}</p>
           <div className="mt-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -75,7 +77,7 @@ export function BudgetSummary({ budgetId }: BudgetSummaryProps) {
 
         {/* IND-009: Balance */}
         <div className="rounded-lg border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Saldo (IND-009)</p>
+          <p className="text-sm text-muted-foreground">{t("summary.balance")}</p>
           <p
             className={`mt-2 text-2xl font-bold ${
               balance < 0 ? "text-destructive" : "text-success"

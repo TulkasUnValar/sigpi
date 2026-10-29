@@ -13,6 +13,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useBudget } from "@/features/budgets/queries";
 import { useDeleteBudget } from "@/features/budgets/mutations";
 import { useBudgetPermissions } from "@/features/budgets/permissions";
@@ -39,6 +40,8 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
   const { canManage } = useBudgetPermissions();
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const t = useTranslations("budgets");
+  const tc = useTranslations("common");
 
   if (isLoading) {
     return (
@@ -52,7 +55,7 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Error al cargar presupuesto: {(error as Error).message}
+        {t("detail.errorLoading", { message: (error as Error).message })}
       </div>
     );
   }
@@ -60,7 +63,7 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
   if (!budget) {
     return (
       <div className="rounded-lg border p-4">
-        <p className="text-muted-foreground">Presupuesto no encontrado.</p>
+        <p className="text-muted-foreground">{t("detail.notFound")}</p>
       </div>
     );
   }
@@ -68,7 +71,7 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
   const handleDelete = async () => {
     try {
       await deleteMutation.mutateAsync();
-      toast.success("Presupuesto eliminado correctamente.");
+      toast.success(t("detail.deletedSuccess"));
       router.push("/budgets");
     } catch (error) {
       // Error already handled by mutation
@@ -77,10 +80,10 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
   };
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: "overview", label: "Resumen" },
-    { key: "lines", label: "Líneas" },
-    { key: "sources", label: "Fuentes" },
-    { key: "attachments", label: "Adjuntos" },
+    { key: "overview", label: t("detail.tabOverview") },
+    { key: "lines", label: t("detail.tabLines") },
+    { key: "sources", label: t("detail.tabSources") },
+    { key: "attachments", label: t("detail.tabAttachments") },
   ];
 
   return (
@@ -92,10 +95,10 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
             href="/budgets"
             className="mb-2 inline-block text-sm text-muted-foreground hover:text-foreground"
           >
-            ← Volver a presupuestos
+            {t("detail.backToList")}
           </Link>
           <h1 className="text-3xl font-bold">{budget.name}</h1>
-          <p className="mt-2 text-muted-foreground">Proyecto: {budget.project}</p>
+          <p className="mt-2 text-muted-foreground">{t("detail.projectLabel")} {budget.project}</p>
           <div className="mt-2">
             <StatusBadge status={budget.status} />
           </div>
@@ -107,13 +110,13 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
               href={`/budgets/${budgetId}/edit`}
               className="rounded-md border border-input px-4 py-2 hover:bg-muted"
             >
-              Editar
+              {tc("edit")}
             </Link>
             <button
               onClick={() => setShowDeleteDialog(true)}
               className="rounded-md border border-destructive bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90"
             >
-              Eliminar
+              {tc("delete")}
             </button>
           </div>
         )}
@@ -147,28 +150,28 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
 
             {/* Budget Details */}
             <div className="rounded-lg border bg-card p-6">
-              <h2 className="mb-4 text-xl font-semibold">Detalles del Presupuesto</h2>
+              <h2 className="mb-4 text-xl font-semibold">{t("detail.detailsTitle")}</h2>
               <dl className="grid grid-cols-2 gap-4">
                 <div>
-                  <dt className="text-sm font-medium text-muted-foreground">Monto Aprobado</dt>
+                  <dt className="text-sm font-medium text-muted-foreground">{t("table.approvedAmount")}</dt>
                   <dd className="mt-1 text-lg font-mono">
                     {formatCurrency(budget.approved_amount)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-muted-foreground">Estado</dt>
+                  <dt className="text-sm font-medium text-muted-foreground">{t("table.status")}</dt>
                   <dd className="mt-1">
                     <StatusBadge status={budget.status} />
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-muted-foreground">Creado</dt>
+                  <dt className="text-sm font-medium text-muted-foreground">{t("table.created")}</dt>
                   <dd className="mt-1 text-sm">
                     {new Date(budget.created_at).toLocaleString("es-CO")}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-muted-foreground">Actualizado</dt>
+                  <dt className="text-sm font-medium text-muted-foreground">{t("table.updated")}</dt>
                   <dd className="mt-1 text-sm">
                     {new Date(budget.updated_at).toLocaleString("es-CO")}
                   </dd>
@@ -207,10 +210,10 @@ export function BudgetDetail({ budgetId }: BudgetDetailProps) {
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title="Eliminar presupuesto"
-        description="¿Estás seguro de que deseas eliminar este presupuesto? Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
+        title={t("detail.deleteConfirmTitle")}
+        description={t("detail.deleteConfirmDescription")}
+        confirmLabel={tc("delete")}
+        cancelLabel={tc("cancel")}
         onConfirm={handleDelete}
       />
     </div>

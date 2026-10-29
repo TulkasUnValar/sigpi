@@ -30,17 +30,17 @@ import type {
 
 const decimalString = z
   .string()
-  .min(1, "El monto es obligatorio.")
-  .refine((val) => !isNaN(parseFloat(val)), "Debe ser un número válido.")
-  .refine((val) => parseFloat(val) >= 0, "El monto no puede ser negativo.");
+  .min(1, "amountRequired")
+  .refine((val) => !isNaN(parseFloat(val)), "amountInvalid")
+  .refine((val) => parseFloat(val) >= 0, "amountNegative");
 
 // ─────────────────────────────────────────────────────────
 // Budget form schema (create/edit)
 // ─────────────────────────────────────────────────────────
 
 export const budgetFormSchema = z.object({
-  project: z.string().min(1, "El proyecto es obligatorio."),
-  name: z.string().min(1, "El nombre es obligatorio."),
+  project: z.string().min(1, "projectRequired"),
+  name: z.string().min(1, "nameRequired"),
   approved_amount: decimalString,
 });
 
@@ -70,7 +70,7 @@ export function buildUpdateBudgetPayload(values: Partial<BudgetFormValues>): Upd
 // ─────────────────────────────────────────────────────────
 
 export const budgetLineFormSchema = z.object({
-  name: z.string().min(1, "El nombre del rubro es obligatorio."),
+  name: z.string().min(1, "lineNameRequired"),
   approved_amount: decimalString,
 });
 
@@ -97,7 +97,7 @@ export function buildUpdateBudgetLinePayload(
 // ─────────────────────────────────────────────────────────
 
 export const fundingSourceFormSchema = z.object({
-  name: z.string().min(1, "El nombre de la fuente es obligatorio."),
+  name: z.string().min(1, "sourceNameRequired"),
   amount: decimalString,
 });
 
@@ -127,7 +127,7 @@ export function buildUpdateFundingSourcePayload(
 
 export const budgetExecutionFormSchema = z.object({
   amount: decimalString,
-  executed_at: z.string().min(1, "La fecha de ejecución es obligatoria."),
+  executed_at: z.string().min(1, "executionDateRequired"),
   authorized_by: z.string().optional().nullable(),
   authorized_at: z.string().optional().nullable(),
 });
@@ -165,11 +165,11 @@ const DOC_TYPES = [
 ] as const;
 
 export const budgetAttachmentFormSchema = z.object({
-  name: z.string().min(1, "El nombre es obligatorio."),
+  name: z.string().min(1, "attachmentNameRequired"),
   doc_type: z.enum(DOC_TYPES, {
-    errorMap: () => ({ message: "El tipo de documento es obligatorio." }),
+    errorMap: () => ({ message: "docTypeRequired" }),
   }),
-  external_url: z.string().url("Debe ser una URL válida.").min(1, "La URL es obligatoria."),
+  external_url: z.string().url("urlInvalid").min(1, "urlRequired"),
 });
 
 export type BudgetAttachmentFormValues = z.infer<typeof budgetAttachmentFormSchema>;

@@ -44,11 +44,9 @@ export { useBudgetPermissions, canManageBudget, canAuthorizeExecution } from "./
 
 // Constants
 export {
-  BUDGET_STATUS_LABELS,
   BUDGET_STATUS_VARIANTS,
-  BUDGET_DOC_TYPE_LABELS,
-  BUDGET_DOC_TYPE_OPTIONS,
-  BUDGET_STATUS_OPTIONS,
+  BUDGET_STATUS_VALUES,
+  BUDGET_DOC_TYPE_VALUES,
   formatCurrency,
   parseDecimal,
 } from "./constants";

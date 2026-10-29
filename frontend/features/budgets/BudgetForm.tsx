@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { budgetFormSchema, type BudgetFormValues, buildCreateBudgetPayload } from "@/features/budgets/schemas";
 import { useCreateBudget, useUpdateBudget } from "@/features/budgets/mutations";
 import { useProjectsList } from "@/features/projects/queries";
@@ -31,6 +32,7 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
   const createMutation = useCreateBudget();
   const updateMutation = useUpdateBudget(budget?.id ?? "");
   const { data: projectsData } = useProjectsList();
+  const t = useTranslations("budgets");
 
   const {
     register,
@@ -76,13 +78,20 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
   const projects = projectsData?.results ?? [];
   const isSubmittingForm = isSubmitting || createMutation.isPending || updateMutation.isPending;
 
+  // Helper to translate validation error messages
+  const getErrorMessage = (message: string | undefined) => {
+    if (!message) return "";
+    const key = `validation.${message}` as const;
+    return t(key);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Project selector (only for create) */}
       {mode === "create" && (
         <div>
           <label htmlFor="project" className="mb-2 block text-sm font-medium">
-            Proyecto *
+            {t("form.projectRequired")}
           </label>
           <select
             id="project"
@@ -90,7 +99,7 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
             className="w-full rounded-md border border-input bg-background px-3 py-2"
             disabled={isSubmittingForm}
           >
-            <option value="">Selecciona un proyecto</option>
+            <option value="">{t("form.projectPlaceholder")}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.title}
@@ -98,7 +107,7 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
             ))}
           </select>
           {errors.project && (
-            <p className="mt-1 text-sm text-destructive">{errors.project.message}</p>
+            <p className="mt-1 text-sm text-destructive">{getErrorMessage(errors.project.message)}</p>
           )}
         </div>
       )}
@@ -106,7 +115,7 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
       {/* Project display (for edit mode) */}
       {mode === "edit" && budget && (
         <div>
-          <label className="mb-2 block text-sm font-medium">Proyecto</label>
+          <label className="mb-2 block text-sm font-medium">{t("form.projectLabel")}</label>
           <p className="rounded-md border border-input bg-muted px-3 py-2">
             {projects.find((p) => p.id === budget.project)?.title ?? budget.project}
           </p>
@@ -116,25 +125,25 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
       {/* Name */}
       <div>
         <label htmlFor="name" className="mb-2 block text-sm font-medium">
-          Nombre *
+          {t("form.nameRequired")}
         </label>
         <input
           id="name"
           type="text"
           {...register("name")}
           className="w-full rounded-md border border-input bg-background px-3 py-2"
-          placeholder="Ej: Presupuesto 2026"
+          placeholder={t("form.namePlaceholder")}
           disabled={isSubmittingForm}
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+          <p className="mt-1 text-sm text-destructive">{getErrorMessage(errors.name.message)}</p>
         )}
       </div>
 
       {/* Approved Amount */}
       <div>
         <label htmlFor="approved_amount" className="mb-2 block text-sm font-medium">
-          Monto Aprobado *
+          {t("form.approvedAmountRequired")}
         </label>
         <input
           id="approved_amount"
@@ -145,10 +154,10 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
           disabled={isSubmittingForm}
         />
         {errors.approved_amount && (
-          <p className="mt-1 text-sm text-destructive">{errors.approved_amount.message}</p>
+          <p className="mt-1 text-sm text-destructive">{getErrorMessage(errors.approved_amount.message)}</p>
         )}
         <p className="mt-1 text-xs text-muted-foreground">
-          Formato: {formatCurrency("10000.00")}
+          {t("form.formatLabel")} {formatCurrency("10000.00")}
         </p>
       </div>
 
@@ -160,10 +169,10 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
           className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           {isSubmittingForm
-            ? "Guardando..."
+            ? t("form.saving")
             : mode === "create"
-              ? "Crear presupuesto"
-              : "Guardar cambios"}
+              ? t("form.createSubmit")
+              : t("form.updateSubmit")}
         </button>
         <button
           type="button"
@@ -171,7 +180,7 @@ export function BudgetForm({ budget, mode }: BudgetFormProps) {
           disabled={isSubmittingForm}
           className="rounded-md border border-input px-4 py-2 hover:bg-muted"
         >
-          Cancelar
+          {t("form.cancel")}
         </button>
       </div>
     </form>
