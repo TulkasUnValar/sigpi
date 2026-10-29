@@ -1,5 +1,10 @@
-# SIGPI — Docker Compose (development)
+# SIGPI — Docker Compose (multi-environment)
 # Stack: Django 6.0 + PostgreSQL 16 + Redis 7 + Keycloak 26 + MinIO + Meilisearch 1.53
+#
+# Usage:
+#   docker compose --env-file .env.local up -d      # Local development
+#   docker compose --env-file .env.staging up -d    # Staging environment
+#   docker compose --env-file .env.production up -d # Production environment
 
 # ── Shared backend block ──────────────────────────────────
 # Build context, bind mount and environment for the Django image. Reused by

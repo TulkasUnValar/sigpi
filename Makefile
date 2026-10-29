@@ -33,8 +33,50 @@ audit: format check test
 
 # Start development stack
 docker-up:
-	docker compose up -d
+	docker compose --env-file .env.local up -d
 
 # Stop development stack
 docker-down:
-	docker compose down
+	docker compose --env-file .env.local down
+
+# ============================================================================
+# Deployment Commands by Environment
+# ============================================================================
+
+# Deploy to local environment
+deploy-local:
+	@echo "🚀 Deploying to LOCAL environment..."
+	docker compose --env-file .env.local up -d --build
+	@echo "✅ Local deployment complete"
+	@echo "📊 Backend: http://localhost:8000"
+	@echo "📊 Frontend: http://localhost:3000"
+	@echo "📊 Superset: http://localhost:8088"
+
+# Deploy to staging environment
+deploy-staging:
+	@echo "🚀 Deploying to STAGING environment..."
+	docker compose --env-file .env.staging up -d --build
+	@echo "✅ Staging deployment complete"
+
+# Deploy to production environment
+deploy-production:
+	@echo "🚀 Deploying to PRODUCTION environment..."
+	@echo "⚠️  WARNING: You are deploying to PRODUCTION!"
+	@read -p "Are you sure? (yes/no): " confirm && [ "$$confirm" = "yes" ] || exit 1
+	docker compose --env-file .env.production up -d --build
+	@echo "✅ Production deployment complete"
+
+# Stop all services for specific environment
+deploy-down:
+	@echo "🛑 Stopping services..."
+	docker compose --env-file .env.local down || \
+	docker compose --env-file .env.staging down || \
+	docker compose --env-file .env.production down
+	@echo "✅ Services stopped"
+
+# View logs for specific environment
+deploy-logs:
+	@echo "📋 Showing logs..."
+	docker compose --env-file .env.local logs -f || \
+	docker compose --env-file .env.staging logs -f || \
+	docker compose --env-file .env.production logs -f

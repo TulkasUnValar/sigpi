@@ -83,6 +83,8 @@ frontend/playwright/.cache/
 # ── Docker ────────────────────────────────────────────────
 *.env
 !.env.example
+!.env.staging
+!.env.production
 .env.local
 .env.*.local
 
