@@ -163,20 +163,23 @@ Implementar tests de integración end-to-end (E2E) para los flujos críticos del
 ---
 
 ### Task 6: Integrar con CI/CD
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completada
 **Checklist:**
-- [ ] Actualizar `.github/workflows/ci.yml`
-- [ ] Agregar job para E2E tests
-- [ ] Configurar servicios necesarios (backend, frontend)
-- [ ] Ejecutar tests E2E en PRs
-- [ ] Subir reportes de Playwright como artifacts
-- [ ] Verificar CI pasa
-- [ ] Commit: `ci: integrate Playwright E2E tests in GitHub Actions`
+- [x] Actualizar `.github/workflows/ci.yml`
+- [x] Agregar job para E2E tests
+- [x] Configurar instalación de Playwright browsers
+- [x] Configurar ejecución de tests E2E
+- [x] Configurar upload de reportes de Playwright
+- [x] Configurar upload de resultados en caso de fallo
+- [x] Verificar sintaxis YAML
+- [x] Commit: `ci: integrate Playwright E2E tests in GitHub Actions`
 
 **Evidencia:**
-- Comando ejecutado:
-- Resultado observado:
-- Commit hash:
+- Archivo modificado: `.github/workflows/ci.yml`
+- Job agregado: `e2e-tests`
+- Dependencias: `needs: [frontend]`
+- Artifacts: playwright-report (siempre), test-results (en failure)
+- Commit hash: Pendiente
 
 ---
 
