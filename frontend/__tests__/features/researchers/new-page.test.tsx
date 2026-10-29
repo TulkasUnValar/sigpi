@@ -46,7 +46,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import NewResearcherPage from "@/app/researchers/new/page";
+import NewResearcherPage from "@/app/[locale]/researchers/new/page";
 
 function renderPage(roles: string[]) {
   useAuthStore.setState({

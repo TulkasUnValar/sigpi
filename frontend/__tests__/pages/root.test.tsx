@@ -15,7 +15,7 @@ jest.mock("next/navigation", () => ({
   redirect: (url: string) => mockRedirect(url),
 }));
 
-import RootPage from "@/app/page";
+import RootPage from "@/app/[locale]/page";
 
 beforeEach(() => {
   jest.clearAllMocks();

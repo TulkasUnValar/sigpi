@@ -48,7 +48,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import ProjectDetailPage from "@/app/projects/[id]/page";
+import ProjectDetailPage from "@/app/[locale]/projects/[id]/page";
 
 const detail = {
   id: "p1",

@@ -69,10 +69,10 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import CallsPage from "@/app/calls/page";
-import NewCallPage from "@/app/calls/new/page";
-import CallDetailPage from "@/app/calls/[id]/page";
-import EditCallPage from "@/app/calls/[id]/edit/page";
+import CallsPage from "@/app/[locale]/calls/page";
+import NewCallPage from "@/app/[locale]/calls/new/page";
+import CallDetailPage from "@/app/[locale]/calls/[id]/page";
+import EditCallPage from "@/app/[locale]/calls/[id]/edit/page";
 
 const toastModule = jest.requireMock("sonner") as {
   toast: { success: jest.Mock; error: jest.Mock };

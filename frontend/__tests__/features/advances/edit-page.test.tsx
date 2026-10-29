@@ -63,7 +63,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import EditAdvancePage from "@/app/projects/[id]/advances/[advanceId]/edit/page";
+import EditAdvancePage from "@/app/[locale]/projects/[id]/advances/[advanceId]/edit/page";
 
 const borradorDetail = {
   id: "a1",

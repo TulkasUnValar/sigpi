@@ -48,10 +48,10 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import SedesPage from "@/app/institutions/[id]/sedes/page";
-import NewSedePage from "@/app/institutions/[id]/sedes/new/page";
-import SedeDetailPage from "@/app/institutions/[id]/sedes/[sedeId]/page";
-import EditSedePage from "@/app/institutions/[id]/sedes/[sedeId]/edit/page";
+import SedesPage from "@/app/[locale]/institutions/[id]/sedes/page";
+import NewSedePage from "@/app/[locale]/institutions/[id]/sedes/new/page";
+import SedeDetailPage from "@/app/[locale]/institutions/[id]/sedes/[sedeId]/page";
+import EditSedePage from "@/app/[locale]/institutions/[id]/sedes/[sedeId]/edit/page";
 
 const sedeRow = {
   id: "sede-1",

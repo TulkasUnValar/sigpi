@@ -44,7 +44,7 @@ jest.mock("next/link", () => ({
   ),
 }));
 
-import SearchPage from "@/app/search/page";
+import SearchPage from "@/app/[locale]/search/page";
 
 beforeEach(() => {
   useAuthStore.setState({

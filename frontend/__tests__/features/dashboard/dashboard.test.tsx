@@ -65,7 +65,7 @@ jest.mock("recharts", () => ({
 
 import * as api from "@/lib/api";
 import { formatCurrency } from "@/features/budgets/constants";
-import DashboardPage from "@/app/dashboard/page";
+import DashboardPage from "@/app/[locale]/dashboard/page";
 import type { DashboardSummary } from "@/features/dashboard/queries";
 
 const mockSummary: DashboardSummary = {

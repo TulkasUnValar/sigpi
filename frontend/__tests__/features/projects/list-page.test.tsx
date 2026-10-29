@@ -47,7 +47,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import ProjectsPage from "@/app/projects/page";
+import ProjectsPage from "@/app/[locale]/projects/page";
 
 function makeProject(id: string) {
   return {

@@ -48,7 +48,7 @@ jest.mock("@/features/dashboard/SupersetDashboard", () => ({
   SupersetDashboard: () => <div data-testid="superset-dashboard">Superset Dashboard Mock</div>,
 }));
 
-import AnalyticsPage from "@/app/analytics/page";
+import AnalyticsPage from "@/app/[locale]/analytics/page";
 
 function renderAnalytics(roles: string[]) {
   useAuthStore.setState({

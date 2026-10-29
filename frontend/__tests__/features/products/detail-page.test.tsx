@@ -68,7 +68,7 @@ jest.mock("@/lib/api", () => ({
 
 import * as api from "@/lib/api";
 import { ApiError } from "@/lib/errors";
-import ProductDetailPage from "@/app/products/[id]/page";
+import ProductDetailPage from "@/app/[locale]/products/[id]/page";
 
 const toastModule = jest.requireMock("sonner") as {
   toast: { success: jest.Mock; error: jest.Mock };

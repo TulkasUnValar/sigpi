@@ -51,10 +51,10 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import LinesPage from "@/app/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/page";
-import NewLinePage from "@/app/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/new/page";
-import LineDetailPage from "@/app/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/[lineId]/page";
-import EditLinePage from "@/app/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/[lineId]/edit/page";
+import LinesPage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/page";
+import NewLinePage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/new/page";
+import LineDetailPage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/[lineId]/page";
+import EditLinePage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/[groupId]/lines/[lineId]/edit/page";
 
 const lineRow = {
   id: "line-1",

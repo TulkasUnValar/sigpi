@@ -80,10 +80,10 @@ jest.mock("@/features/projects/queries", () => ({
 }));
 
 import * as api from "@/lib/api";
-import BudgetsPage from "@/app/budgets/page";
-import NewBudgetPage from "@/app/budgets/new/page";
-import BudgetDetailPage from "@/app/budgets/[id]/page";
-import EditBudgetPage from "@/app/budgets/[id]/edit/page";
+import BudgetsPage from "@/app/[locale]/budgets/page";
+import NewBudgetPage from "@/app/[locale]/budgets/new/page";
+import BudgetDetailPage from "@/app/[locale]/budgets/[id]/page";
+import EditBudgetPage from "@/app/[locale]/budgets/[id]/edit/page";
 
 const toastModule = jest.requireMock("sonner") as {
   toast: { success: jest.Mock; error: jest.Mock };

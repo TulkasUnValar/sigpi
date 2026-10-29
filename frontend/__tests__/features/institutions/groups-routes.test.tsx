@@ -46,10 +46,10 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import GroupsPage from "@/app/institutions/[id]/centers/[centerId]/groups/page";
-import NewGroupPage from "@/app/institutions/[id]/centers/[centerId]/groups/new/page";
-import GroupDetailPage from "@/app/institutions/[id]/centers/[centerId]/groups/[groupId]/page";
-import EditGroupPage from "@/app/institutions/[id]/centers/[centerId]/groups/[groupId]/edit/page";
+import GroupsPage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/page";
+import NewGroupPage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/new/page";
+import GroupDetailPage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/[groupId]/page";
+import EditGroupPage from "@/app/[locale]/institutions/[id]/centers/[centerId]/groups/[groupId]/edit/page";
 
 const groupRow = {
   id: "group-1",

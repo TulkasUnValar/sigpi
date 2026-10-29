@@ -49,7 +49,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import AdvancesPage from "@/app/projects/[id]/advances/page";
+import AdvancesPage from "@/app/[locale]/projects/[id]/advances/page";
 
 function makeAdvance(id: string, percentage: number) {
   return {

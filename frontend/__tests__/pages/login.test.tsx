@@ -33,7 +33,7 @@ jest.mock("@/components/OIDCButton", () => ({
 }));
 
 import { useAuthStore } from "@/store/auth";
-import LoginPage from "@/app/login/page";
+import LoginPage from "@/app/[locale]/login/page";
 
 const mockedUseAuthStore = useAuthStore as unknown as jest.Mock;
 

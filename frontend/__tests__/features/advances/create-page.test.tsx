@@ -51,7 +51,7 @@ jest.mock("@/lib/api", () => ({
 }));
 
 import * as api from "@/lib/api";
-import NewAdvancePage from "@/app/projects/[id]/advances/new/page";
+import NewAdvancePage from "@/app/[locale]/projects/[id]/advances/new/page";
 
 beforeEach(() => {
   jest.clearAllMocks();
