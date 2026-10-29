@@ -26,5 +26,9 @@
     "signingIn": "Iniciando sesión…",
     "signIn": "Iniciar sesión",
     "signInWithSSO": "Iniciar sesión con SSO (Keycloak)"
+  },
+  "localeSwitcher": {
+    "switchToSpanish": "Cambiar a Español",
+    "switchToEnglish": "Switch to English"
   }
 }

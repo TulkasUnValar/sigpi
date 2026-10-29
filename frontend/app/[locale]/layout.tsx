@@ -7,6 +7,7 @@ import { locales, type Locale } from "@/i18n/config";
 
 import { AppProviders } from "@/components/providers/AppProviders";
 import { Toaster } from "@/components/shared/Toaster";
+import LocaleSwitcher from "@/components/LocaleSwitcher";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -46,6 +47,9 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppProviders>
+            <header className="flex justify-end p-4">
+              <LocaleSwitcher />
+            </header>
             {children}
             <Toaster />
           </AppProviders>
