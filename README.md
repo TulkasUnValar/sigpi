@@ -62,6 +62,19 @@ make check     # ruff check apps/
 make format    # ruff format apps/
 ```
 
+### E2E Testing
+
+Run end-to-end tests with Playwright:
+
+```bash
+cd frontend
+npm run test:e2e        # Run all E2E tests
+npm run test:e2e:ui     # Run with UI mode
+npm run test:e2e:headed # Run with visible browser
+```
+
+E2E tests require both backend (`:8000`) and frontend (`:3000`) running. See `docs/testing/e2e-testing.md` for detailed documentation.
+
 ## Project Structure
 
 ```
