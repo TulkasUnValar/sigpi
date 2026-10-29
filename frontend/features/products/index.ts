@@ -30,11 +30,12 @@ export {
 } from "@/features/products/mutations";
 export { canManageProducts } from "@/features/products/permissions";
 export {
-  PRODUCT_TYPES,
-  PRODUCT_TYPE_OPTIONS,
+  PRODUCT_TYPE_CODES,
   ALLOWED_PROJECT_STATES,
+  getProductTypeOptions,
   getProductTypeLabel,
 } from "@/features/products/constants";
+export type { ProductTypeCode } from "@/features/products/constants";
 export { buildProductPayload, productFormSchema } from "@/features/products/schemas";
 export type { ProductFormValues } from "@/features/products/schemas";
 export type {

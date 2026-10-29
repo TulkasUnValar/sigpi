@@ -424,5 +424,157 @@
       "documentUrlRequired": "Document URL is required.",
       "piRequired": "Principal investigator is required."
     }
+  },
+  "products": {
+    "list": {
+      "title": "Products",
+      "newButton": "New product",
+      "filters": {
+        "type": "Type",
+        "year": "Year",
+        "from": "From",
+        "to": "To",
+        "project": "Project",
+        "researcher": "Researcher",
+        "center": "Center",
+        "group": "Group",
+        "line": "Line"
+      },
+      "all": "All",
+      "table": {
+        "headers": {
+          "title": "Title",
+          "type": "Type",
+          "year": "Year",
+          "project": "Project",
+          "created": "Created"
+        }
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page",
+        "count": "{count} products"
+      },
+      "empty": {
+        "noResults": "No results",
+        "noProducts": "No products",
+        "noMatch": "No products found with the applied filters.",
+        "createFirst": "Create your first product to get started."
+      },
+      "centerFirst": "Select a center first to filter by group.",
+      "groupFirst": "Select a group first to filter by line.",
+      "loading": "Loading products",
+      "tableLabel": "Products list",
+      "sortByTitle": "Sort by title",
+      "sortByYear": "Sort by year",
+      "sortByCreated": "Sort by creation date",
+      "yearExact": "Exact year",
+      "yearFrom": "Year from",
+      "yearTo": "Year to",
+      "productType": "Product type",
+      "yearExample": "E.g. 2024",
+      "yearFromExample": "E.g. 2023",
+      "yearToExample": "E.g. 2025"
+    },
+    "detail": {
+      "tabs": {
+        "summary": "Summary",
+        "authors": "Authors",
+        "attachments": "Attachments"
+      },
+      "fields": {
+        "title": "Title",
+        "type": "Type",
+        "description": "Description",
+        "publicationYear": "Publication year",
+        "project": "Project"
+      }
+    },
+    "form": {
+      "editTitle": "Edit product",
+      "newTitle": "New product",
+      "fields": {
+        "title": "Title",
+        "description": "Description",
+        "type": "Product type",
+        "selectType": "Select the type",
+        "project": "Project",
+        "selectProject": "Select the project",
+        "publicationYear": "Publication year",
+        "institution": "Institution",
+        "createdBy": "Created by",
+        "updatedBy": "Updated by"
+      },
+      "buttons": {
+        "saveChanges": "Save changes",
+        "createProduct": "Create product"
+      },
+      "messages": {
+        "updated": "Product updated.",
+        "created": "Product created.",
+        "invalidValue": "Invalid value.",
+        "noProjects": "No projects available"
+      }
+    },
+    "authors": {
+      "addAuthor": "New author",
+      "researcher": "Researcher",
+      "select": "Select…",
+      "addButton": "Add author",
+      "selectHint": "Select a researcher to add as author.",
+      "empty": "No authors.",
+      "primary": "Primary",
+      "markPrimary": "Mark as primary",
+      "delete": "Delete",
+      "added": "Author added.",
+      "removed": "Author removed.",
+      "alreadyAuthor": "This researcher is already an author of the product.",
+      "primarySwitchError": "There can only be one primary author: unmark the current primary author first, then mark the new one.",
+      "primarySwitchInfo": "To change the primary author, first unmark the current one, then mark the new one (two automatic steps).",
+      "changingPrimary": "Changing primary author…"
+    },
+    "attachments": {
+      "addAttachment": "New attachment",
+      "name": "Name",
+      "nameExample": "E.g. Approval record",
+      "documentType": "Document type",
+      "documentTypePlaceholder": "Free text (max. 50 characters)",
+      "url": "External URL",
+      "urlPlaceholder": "https://…",
+      "addButton": "Add attachment",
+      "empty": "No attachments.",
+      "buttons": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "messages": {
+        "added": "Attachment added.",
+        "updated": "Attachment updated.",
+        "deleted": "Attachment deleted."
+      }
+    },
+    "delete": {
+      "button": "Delete",
+      "confirmTitle": "Delete product?",
+      "confirmMessage": "This action permanently deletes the product and cannot be undone.",
+      "cancel": "Cancel",
+      "deleted": "Product deleted."
+    },
+    "types": {
+      "articulo": "Article",
+      "libro": "Book",
+      "capitulo": "Chapter",
+      "software": "Software",
+      "prototipo": "Prototype",
+      "evento": "Event",
+      "consultoria": "Consultancy",
+      "disenoIndustrial": "Industrial Design",
+      "innovacionProceso": "Process Innovation",
+      "innovacionGestion": "Management Innovation",
+      "carta": "Letter"
+    }
   }
 }

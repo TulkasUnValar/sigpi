@@ -15,6 +15,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -29,18 +30,16 @@ import {
 import type { ProductAuthor } from "@/features/products/types";
 
 /** Toaster message for the duplicate-researcher 400 {researcher}. */
-export const DUPLICATE_RESEARCHER_MESSAGE = "Este investigador ya es autor del producto.";
+export const DUPLICATE_RESEARCHER_MESSAGE_KEY = "alreadyAuthor";
 
 /** Toaster guidance shown when a principal switch violates the invariant. */
-export const PRINCIPAL_SWITCH_GUIDANCE =
-  "Solo puede haber un autor principal: desmarca primero el autor principal actual y luego marca el nuevo.";
+export const PRINCIPAL_SWITCH_GUIDANCE_KEY = "primarySwitchError";
 
 /** Inline two-step guidance shown while a principal switch is possible. */
-export const PRINCIPAL_SWITCH_STEPS =
-  "Para cambiar el autor principal, primero se desmarca el actual y luego se marca el nuevo (dos pasos automáticos).";
+export const PRINCIPAL_SWITCH_STEPS_KEY = "primarySwitchInfo";
 
 /** Status text shown while the two-step switch sequence runs. */
-export const PRINCIPAL_SWITCH_IN_PROGRESS = "Cambiando autor principal…";
+export const PRINCIPAL_SWITCH_IN_PROGRESS_KEY = "changingPrimary";
 
 /** True when the error is a 400 with a `researcher` field error. */
 export function isDuplicateResearcherError(error: unknown): boolean {
@@ -70,6 +69,7 @@ interface AuthorsManagerProps {
 }
 
 export function AuthorsManager({ productId }: AuthorsManagerProps) {
+  const t = useTranslations("products");
   const authorsQuery = useProductAuthors(productId);
   const researchersQuery = useResearchersList();
 
@@ -96,7 +96,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
 
   function handleCreateError(error: unknown) {
     if (isDuplicateResearcherError(error)) {
-      toast.error(DUPLICATE_RESEARCHER_MESSAGE);
+      toast.error(t(`authors.${DUPLICATE_RESEARCHER_MESSAGE_KEY}`));
       return;
     }
     toast.error(getErrorMessage(error));
@@ -104,7 +104,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
 
   function handlePrincipalError(error: unknown) {
     if (isPrincipalInvariantError(error)) {
-      toast.error(PRINCIPAL_SWITCH_GUIDANCE);
+      toast.error(t(`authors.${PRINCIPAL_SWITCH_GUIDANCE_KEY}`));
       return;
     }
     toast.error(getErrorMessage(error));
@@ -121,7 +121,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
       },
       {
         onSuccess: () => {
-          toast.success("Autor añadido.");
+          toast.success(t("authors.added"));
           setResearcherId("");
         },
         onError: handleCreateError,
@@ -170,7 +170,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
 
   function handleDelete(a: ProductAuthor) {
     deleteAuthor.mutate(a.id, {
-      onSuccess: () => toast.success("Autor eliminado."),
+      onSuccess: () => toast.success(t("authors.removed")),
       onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
@@ -178,18 +178,18 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
   return (
     <div className="space-y-6">
       <div className="rounded-lg border p-4">
-        <h3 className="mb-3 text-sm font-semibold">Nuevo autor</h3>
+        <h3 className="mb-3 text-sm font-semibold">{t("authors.addAuthor")}</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <Label htmlFor="author-researcher">Investigador</Label>
+            <Label htmlFor="author-researcher">{t("authors.researcher")}</Label>
             <select
               id="author-researcher"
-              aria-label="Investigador"
+              aria-label={t("authors.researcher")}
               value={researcherId}
               onChange={(e) => setResearcherId(e.target.value)}
               className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">Seleccione…</option>
+              <option value="">{t("authors.select")}</option>
               {researchers.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.full_name}
@@ -204,11 +204,11 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
           onClick={handleCreate}
           disabled={!researcherId || createAuthor.isPending || switching}
         >
-          Añadir autor
+          {t("authors.addButton")}
         </Button>
         {!researcherId ? (
           <p className="mt-2 text-xs text-muted-foreground">
-            Seleccione un investigador para añadirlo como autor.
+            {t("authors.selectHint")}
           </p>
         ) : null}
       </div>
@@ -218,12 +218,12 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
       authors.some((a) => a.is_principal) &&
       authors.some((a) => !a.is_principal) ? (
         <p role="note" className="rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-          {PRINCIPAL_SWITCH_STEPS}
+          {t(`authors.${PRINCIPAL_SWITCH_STEPS_KEY}`)}
         </p>
       ) : null}
 
       {authors.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Sin autores.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{t("authors.empty")}</p>
       ) : (
         <ul className="divide-y">
           {authors.map((a) => (
@@ -233,7 +233,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
                 <span className="font-medium">{researcherName(a.researcher)}</span>
                 {a.is_principal ? (
                   <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
-                    Principal
+                    {t("authors.primary")}
                   </span>
                 ) : null}
               </div>
@@ -244,7 +244,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
                   disabled={a.is_principal || switching}
                   onClick={() => handleSetPrincipal(a)}
                 >
-                  Marcar como principal
+                  {t("authors.markPrimary")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -252,7 +252,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
                   disabled={switching || deleteAuthor.isPending}
                   onClick={() => handleDelete(a)}
                 >
-                  Eliminar
+                  {t("authors.delete")}
                 </Button>
               </div>
             </li>
@@ -262,7 +262,7 @@ export function AuthorsManager({ productId }: AuthorsManagerProps) {
 
       {switching ? (
         <p role="status" className="text-xs text-muted-foreground">
-          {PRINCIPAL_SWITCH_IN_PROGRESS}
+          {t(`authors.${PRINCIPAL_SWITCH_IN_PROGRESS_KEY}`)}
         </p>
       ) : null}
     </div>

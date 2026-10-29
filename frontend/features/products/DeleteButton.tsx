@@ -13,6 +13,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ interface DeleteButtonProps {
 
 export function DeleteButton({ productId }: DeleteButtonProps) {
   const router = useRouter();
+  const t = useTranslations("products");
   const deleteProduct = useDeleteProduct(productId);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -33,7 +35,7 @@ export function DeleteButton({ productId }: DeleteButtonProps) {
   function handleConfirm() {
     deleteProduct.mutate(undefined, {
       onSuccess: () => {
-        toast.success("Producto eliminado.");
+        toast.success(t("delete.deleted"));
         router.push("/products");
       },
       onError: (error) => toast.error(getErrorMessage(error)),
@@ -50,15 +52,15 @@ export function DeleteButton({ productId }: DeleteButtonProps) {
         disabled={deleteProduct.isPending}
       >
         <Trash2 className="mr-1 h-4 w-4" />
-        Eliminar
+        {t("delete.button")}
       </Button>
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="¿Eliminar producto?"
-        description="Esta acción elimina el producto de forma permanente y no se puede deshacer."
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
+        title={t("delete.confirmTitle")}
+        description={t("delete.confirmMessage")}
+        confirmLabel={t("delete.button")}
+        cancelLabel={t("delete.cancel")}
         destructive
         onConfirm={handleConfirm}
       />

@@ -13,6 +13,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ interface AttachmentsManagerProps {
 }
 
 export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
+  const t = useTranslations("products");
   const attachmentsQuery = useProductAttachments(productId);
 
   const [form, setForm] = useState<AttachmentFormValues>(EMPTY_FORM);
@@ -88,7 +90,7 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
     setFieldErrors({});
     createAttachment.mutate(form, {
       onSuccess: () => {
-        toast.success("Adjunto añadido.");
+        toast.success(t("attachments.messages.added"));
         setForm(EMPTY_FORM);
       },
       onError: (error) => toast.error(getErrorMessage(error)),
@@ -112,7 +114,7 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
       { attachmentId: editingId ?? "", payload: editForm },
       {
         onSuccess: () => {
-          toast.success("Adjunto actualizado.");
+          toast.success(t("attachments.messages.updated"));
           setEditingId(null);
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -122,7 +124,7 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
 
   function handleDelete(a: (typeof attachments)[number]) {
     deleteAttachment.mutate(a.id, {
-      onSuccess: () => toast.success("Adjunto eliminado."),
+      onSuccess: () => toast.success(t("attachments.messages.deleted")),
       onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
@@ -135,38 +137,38 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
   return (
     <div className="space-y-6">
       <div className="rounded-lg border p-4">
-        <h3 className="mb-3 text-sm font-semibold">Nuevo adjunto</h3>
+        <h3 className="mb-3 text-sm font-semibold">{t("attachments.addAttachment")}</h3>
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <Label htmlFor="att-name">Nombre</Label>
+            <Label htmlFor="att-name">{t("attachments.name")}</Label>
             <Input
               id="att-name"
               value={form.name}
               onChange={(e) => set("name")(e.target.value)}
-              placeholder="Ej. Acta de aprobación"
+              placeholder={t("attachments.nameExample")}
             />
             {fieldErrors.name ? (
               <p className="mt-1 text-sm text-destructive">{fieldErrors.name}</p>
             ) : null}
           </div>
           <div>
-            <Label htmlFor="att-doc-type">Tipo de documento</Label>
+            <Label htmlFor="att-doc-type">{t("attachments.documentType")}</Label>
             <Input
               id="att-doc-type"
               value={form.doc_type}
               onChange={(e) => set("doc_type")(e.target.value)}
-              placeholder="Texto libre (máx. 50 caracteres)"
+              placeholder={t("attachments.documentTypePlaceholder")}
             />
             {fieldErrors.doc_type ? (
               <p className="mt-1 text-sm text-destructive">{fieldErrors.doc_type}</p>
             ) : null}
           </div>
           <div>
-            <Label htmlFor="att-url">URL externa</Label>
+            <Label htmlFor="att-url">{t("attachments.url")}</Label>
             <Input
               id="att-url"
               type="url"
-              placeholder="https://…"
+              placeholder={t("attachments.urlPlaceholder")}
               value={form.external_url}
               onChange={(e) => set("external_url")(e.target.value)}
             />
@@ -181,19 +183,19 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
           onClick={handleCreate}
           disabled={createAttachment.isPending}
         >
-          Añadir adjunto
+          {t("attachments.addButton")}
         </Button>
       </div>
 
       {attachments.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Sin adjuntos.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{t("attachments.empty")}</p>
       ) : (
         <ul className="divide-y">
           {attachments.map((a) =>
             editingId === a.id ? (
               <li key={a.id} className="grid gap-3 py-3 text-sm sm:grid-cols-3">
                 <div>
-                  <Label htmlFor={`edit-name-${a.id}`}>Nombre</Label>
+                  <Label htmlFor={`edit-name-${a.id}`}>{t("attachments.name")}</Label>
                   <Input
                     id={`edit-name-${a.id}`}
                     value={editForm.name}
@@ -204,7 +206,7 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
                   ) : null}
                 </div>
                 <div>
-                  <Label htmlFor={`edit-doc-type-${a.id}`}>Tipo de documento</Label>
+                  <Label htmlFor={`edit-doc-type-${a.id}`}>{t("attachments.documentType")}</Label>
                   <Input
                     id={`edit-doc-type-${a.id}`}
                     value={editForm.doc_type}
@@ -215,7 +217,7 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
                   ) : null}
                 </div>
                 <div>
-                  <Label htmlFor={`edit-url-${a.id}`}>URL externa</Label>
+                  <Label htmlFor={`edit-url-${a.id}`}>{t("attachments.url")}</Label>
                   <Input
                     id={`edit-url-${a.id}`}
                     type="url"
@@ -228,10 +230,10 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
                 </div>
                 <div className="flex items-center gap-2 sm:col-span-3">
                   <Button size="sm" onClick={handleSaveEdit} disabled={updateAttachment.isPending}>
-                    Guardar
+                    {t("attachments.buttons.save")}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
-                    Cancelar
+                    {t("attachments.buttons.cancel")}
                   </Button>
                 </div>
               </li>
@@ -250,7 +252,7 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => startEdit(a)}>
-                    Editar
+                    {t("attachments.buttons.edit")}
                   </Button>
                   <Button
                     variant="ghost"
@@ -258,7 +260,7 @@ export function AttachmentsManager({ productId }: AttachmentsManagerProps) {
                     disabled={deleteAttachment.isPending}
                     onClick={() => handleDelete(a)}
                   >
-                    Eliminar
+                    {t("attachments.buttons.delete")}
                   </Button>
                 </div>
               </li>

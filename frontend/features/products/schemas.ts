@@ -12,7 +12,7 @@
 
 import { z } from "zod";
 
-import { PRODUCT_TYPES } from "@/features/products/constants";
+import { PRODUCT_TYPE_CODES } from "@/features/products/constants";
 import type { CreateProductPayload, ProductType } from "@/features/products/types";
 
 /** Lower bound for publication_year (backend serializer). */
@@ -22,7 +22,7 @@ export const MIN_PUBLICATION_YEAR = 1900;
 export const MAX_PUBLICATION_YEAR = new Date().getFullYear() + 1;
 
 /** Type codes accepted by the form (the 11 ProductType choices). */
-const PRODUCT_TYPE_VALUES = Object.keys(PRODUCT_TYPES) as [ProductType, ...ProductType[]];
+const PRODUCT_TYPE_VALUES = [...PRODUCT_TYPE_CODES] as [ProductType, ...ProductType[]];
 
 /** Writable product form values. */
 export const productFormSchema = z.object({

@@ -424,5 +424,157 @@
       "documentUrlRequired": "La URL del documento es obligatoria.",
       "piRequired": "El investigador principal es obligatorio."
     }
+  },
+  "products": {
+    "list": {
+      "title": "Productos",
+      "newButton": "Nuevo producto",
+      "filters": {
+        "type": "Tipo",
+        "year": "Año",
+        "from": "Desde",
+        "to": "Hasta",
+        "project": "Proyecto",
+        "researcher": "Investigador",
+        "center": "Centro",
+        "group": "Grupo",
+        "line": "Línea"
+      },
+      "all": "Todos",
+      "table": {
+        "headers": {
+          "title": "Título",
+          "type": "Tipo",
+          "year": "Año",
+          "project": "Proyecto",
+          "created": "Creada"
+        }
+      },
+      "pagination": {
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "page": "Página",
+        "count": "{count} productos"
+      },
+      "empty": {
+        "noResults": "Sin resultados",
+        "noProducts": "No hay productos",
+        "noMatch": "No se encontraron productos con los filtros aplicados.",
+        "createFirst": "Crea tu primer producto para comenzar."
+      },
+      "centerFirst": "Seleccione primero un centro para filtrar por grupo.",
+      "groupFirst": "Seleccione primero un grupo para filtrar por línea.",
+      "loading": "Cargando productos",
+      "tableLabel": "Lista de productos",
+      "sortByTitle": "Ordenar por título",
+      "sortByYear": "Ordenar por año",
+      "sortByCreated": "Ordenar por fecha de creación",
+      "yearExact": "Año exacto",
+      "yearFrom": "Año desde",
+      "yearTo": "Año hasta",
+      "productType": "Tipo de producto",
+      "yearExample": "Ej. 2024",
+      "yearFromExample": "Ej. 2023",
+      "yearToExample": "Ej. 2025"
+    },
+    "detail": {
+      "tabs": {
+        "summary": "Resumen",
+        "authors": "Autores",
+        "attachments": "Adjuntos"
+      },
+      "fields": {
+        "title": "Título",
+        "type": "Tipo",
+        "description": "Descripción",
+        "publicationYear": "Año de publicación",
+        "project": "Proyecto"
+      }
+    },
+    "form": {
+      "editTitle": "Editar producto",
+      "newTitle": "Nuevo producto",
+      "fields": {
+        "title": "Título",
+        "description": "Descripción",
+        "type": "Tipo de producto",
+        "selectType": "Selecciona el tipo",
+        "project": "Proyecto",
+        "selectProject": "Selecciona el proyecto",
+        "publicationYear": "Año de publicación",
+        "institution": "Institución",
+        "createdBy": "Creado por",
+        "updatedBy": "Actualizado por"
+      },
+      "buttons": {
+        "saveChanges": "Guardar cambios",
+        "createProduct": "Crear producto"
+      },
+      "messages": {
+        "updated": "Producto actualizado.",
+        "created": "Producto creado.",
+        "invalidValue": "Valor inválido.",
+        "noProjects": "No hay proyectos disponibles"
+      }
+    },
+    "authors": {
+      "addAuthor": "Nuevo autor",
+      "researcher": "Investigador",
+      "select": "Seleccione…",
+      "addButton": "Añadir autor",
+      "selectHint": "Seleccione un investigador para añadirlo como autor.",
+      "empty": "Sin autores.",
+      "primary": "Principal",
+      "markPrimary": "Marcar como principal",
+      "delete": "Eliminar",
+      "added": "Autor añadido.",
+      "removed": "Autor eliminado.",
+      "alreadyAuthor": "Este investigador ya es autor del producto.",
+      "primarySwitchError": "Solo puede haber un autor principal: desmarca primero el autor principal actual y luego marca el nuevo.",
+      "primarySwitchInfo": "Para cambiar el autor principal, primero se desmarca el actual y luego se marca el nuevo (dos pasos automáticos).",
+      "changingPrimary": "Cambiando autor principal…"
+    },
+    "attachments": {
+      "addAttachment": "Nuevo adjunto",
+      "name": "Nombre",
+      "nameExample": "Ej. Acta de aprobación",
+      "documentType": "Tipo de documento",
+      "documentTypePlaceholder": "Texto libre (máx. 50 caracteres)",
+      "url": "URL externa",
+      "urlPlaceholder": "https://…",
+      "addButton": "Añadir adjunto",
+      "empty": "Sin adjuntos.",
+      "buttons": {
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "edit": "Editar",
+        "delete": "Eliminar"
+      },
+      "messages": {
+        "added": "Adjunto añadido.",
+        "updated": "Adjunto actualizado.",
+        "deleted": "Adjunto eliminado."
+      }
+    },
+    "delete": {
+      "button": "Eliminar",
+      "confirmTitle": "¿Eliminar producto?",
+      "confirmMessage": "Esta acción elimina el producto de forma permanente y no se puede deshacer.",
+      "cancel": "Cancelar",
+      "deleted": "Producto eliminado."
+    },
+    "types": {
+      "articulo": "Artículo",
+      "libro": "Libro",
+      "capitulo": "Capítulo",
+      "software": "Software",
+      "prototipo": "Prototipo",
+      "evento": "Evento",
+      "consultoria": "Consultoría",
+      "diseno_industrial": "Diseño Industrial",
+      "innovacion_proceso": "Innovación de Proceso",
+      "innovacion_gestion": "Innovación de Gestión",
+      "carta": "Carta"
+    }
   }
 }

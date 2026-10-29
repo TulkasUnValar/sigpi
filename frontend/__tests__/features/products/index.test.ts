@@ -9,8 +9,7 @@
 
 import {
   ALLOWED_PROJECT_STATES,
-  PRODUCT_TYPES,
-  PRODUCT_TYPE_OPTIONS,
+  PRODUCT_TYPE_CODES,
   ProductForm,
   ProductList,
   buildProductPayload,
@@ -24,10 +23,11 @@ import {
 
 describe("products feature barrel", () => {
   it("re-exports the constants", () => {
-    expect(Object.keys(PRODUCT_TYPES)).toHaveLength(11);
-    expect(PRODUCT_TYPE_OPTIONS).toHaveLength(11);
+    expect(PRODUCT_TYPE_CODES).toHaveLength(11);
     expect(ALLOWED_PROJECT_STATES).toContain("aprobado");
-    expect(getProductTypeLabel("libro")).toBe("Libro");
+    // Mock translation function for testing
+    const mockT = (key: string) => key.replace("types.", "").replace("_", " ");
+    expect(getProductTypeLabel(mockT, "libro")).toBe("libro");
   });
 
   it("re-exports the schema helpers and permission policy", () => {

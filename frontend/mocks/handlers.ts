@@ -64,7 +64,7 @@ import {
   mockFundingSource,
   mockFundingSource2,
 } from "@/fixtures";
-import { ALLOWED_PROJECT_STATES, PRODUCT_TYPES } from "@/features/products/constants";
+import { ALLOWED_PROJECT_STATES, PRODUCT_TYPE_CODES } from "@/features/products/constants";
 import { REPORT_TYPES } from "@/features/reports/constants";
 
 interface Page<T> {
@@ -266,7 +266,7 @@ const budgetAttachmentsStore: Record<string, Array<typeof mockBudgetAttachment>>
 };
 
 /** Valid type codes mirroring ProductType choices. */
-const VALID_PRODUCT_TYPES = Object.keys(PRODUCT_TYPES);
+const VALID_PRODUCT_TYPES = PRODUCT_TYPE_CODES;
 
 /** Valid report type codes mirroring ReportType choices (reports hub). */
 const VALID_REPORT_TYPES = Object.keys(REPORT_TYPES);
@@ -710,7 +710,7 @@ export const handlers = [
     const body = (await request.json()) as Record<string, unknown>;
 
     const type = String(body.type ?? "");
-    if (!VALID_PRODUCT_TYPES.includes(type)) {
+    if (!(VALID_PRODUCT_TYPES as readonly string[]).includes(type)) {
       return HttpResponse.json({ type: ["Invalid product type."] }, { status: 400 });
     }
     const publicationYear = Number(body.publication_year);
@@ -778,7 +778,7 @@ export const handlers = [
 
     const body = (await request.json()) as Record<string, unknown>;
     const type = body.type !== undefined ? String(body.type) : product.type;
-    if (!VALID_PRODUCT_TYPES.includes(type)) {
+    if (!(VALID_PRODUCT_TYPES as readonly string[]).includes(type)) {
       return HttpResponse.json({ type: ["Invalid product type."] }, { status: 400 });
     }
     if (body.publication_year !== undefined) {

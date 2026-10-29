@@ -4,13 +4,13 @@
  * ProductList — paginated products table with filter bar and ordering.
  *
  * Spec (products-ui list / RF-001):
- *   - Rows render title, Spanish type label, publication_year, project and
+ *   - Rows render title, type label, publication_year, project and
  *     created_at; DRF next/previous links drive pagination (25/page).
  *   - Ordering is offered for title, publication_year and created_at.
  *   - The filter bar covers the 9 backend filters. project/researcher/
  *     center/group/line use selects fed by the projects/researchers/
  *     hierarchy hooks; center→group→line options refresh dependently and
- *     the "Todos" sentinel clears each filter.
+ *     the "All" sentinel clears each filter.
  *   - Filter state round-trips through the URL query string: /products
  *     restores filters from ?type=&year__gte=&page=… and every change
  *     rewrites the URL, so deep links, refresh and back/forward keep
@@ -22,6 +22,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,7 @@ import type { Page, ProductFilter } from "@/features/products/types";
 import { useCenters, useGroups, useLines, useProjectsList } from "@/features/projects/queries";
 import { useResearchersList } from "@/features/researchers/queries";
 import { canManageProducts } from "@/features/products/permissions";
-import { PRODUCT_TYPE_OPTIONS, getProductTypeLabel } from "@/features/products/constants";
+import { getProductTypeOptions, getProductTypeLabel } from "@/features/products/constants";
 
 /** Sentinel for the "Todos" (no filter) option in the Radix Selects. */
 const ALL_FILTER = "all";
@@ -66,6 +67,7 @@ export function toOptionList<T>(data: Page<T> | T[] | undefined): T[] {
 export function ProductList() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations("products");
 
   // Filter state is derived from the URL query string (single source of
   // truth) so deep links, refresh and back/forward round-trip correctly.
@@ -119,6 +121,9 @@ export function ProductList() {
     type || year || yearGte || yearLte || project || researcher || center || group || line,
   );
 
+  // Build translated product type options for the filter select
+  const productTypeOptions = getProductTypeOptions(t);
+
   /** Write the next filter/page/ordering state into the URL (no scroll). */
   function updateParams(changes: Partial<ProductsListParams>) {
     const next: ProductsListParams = {
@@ -170,10 +175,10 @@ export function ProductList() {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Productos</h1>
+        <h1 className="text-2xl font-semibold">{t("list.title")}</h1>
         {canCreate ? (
           <Button asChild>
-            <Link href="/products/new">Nuevo producto</Link>
+            <Link href="/products/new">{t("list.newButton")}</Link>
           </Button>
         ) : null}
       </div>
@@ -182,14 +187,14 @@ export function ProductList() {
       <Card className="mb-6">
         <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
           <div>
-            <Label htmlFor="product-filter-type">Tipo</Label>
+            <Label htmlFor="product-filter-type">{t("list.filters.type")}</Label>
             <Select value={type} onValueChange={changeSelect("type")}>
-              <SelectTrigger id="product-filter-type" aria-label="Tipo de producto">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="product-filter-type" aria-label={t("list.productType")}>
+                <SelectValue placeholder={t("list.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
-                {PRODUCT_TYPE_OPTIONS.map((opt) => (
+                <SelectItem value={ALL_FILTER}>{t("list.all")}</SelectItem>
+                {productTypeOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -198,46 +203,46 @@ export function ProductList() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="product-filter-year">Año</Label>
+            <Label htmlFor="product-filter-year">{t("list.filters.year")}</Label>
             <Input
               id="product-filter-year"
               type="number"
-              aria-label="Año exacto"
-              placeholder="Ej. 2024"
+              aria-label={t("list.yearExact")}
+              placeholder={t("list.yearExample")}
               value={year}
               onChange={changeTextFilter("year")}
             />
           </div>
           <div>
-            <Label htmlFor="product-filter-year-gte">Desde</Label>
+            <Label htmlFor="product-filter-year-gte">{t("list.filters.from")}</Label>
             <Input
               id="product-filter-year-gte"
               type="number"
-              aria-label="Año desde"
-              placeholder="Ej. 2023"
+              aria-label={t("list.yearFrom")}
+              placeholder={t("list.yearFromExample")}
               value={yearGte}
               onChange={changeTextFilter("year__gte")}
             />
           </div>
           <div>
-            <Label htmlFor="product-filter-year-lte">Hasta</Label>
+            <Label htmlFor="product-filter-year-lte">{t("list.filters.to")}</Label>
             <Input
               id="product-filter-year-lte"
               type="number"
-              aria-label="Año hasta"
-              placeholder="Ej. 2025"
+              aria-label={t("list.yearTo")}
+              placeholder={t("list.yearToExample")}
               value={yearLte}
               onChange={changeTextFilter("year__lte")}
             />
           </div>
           <div>
-            <Label htmlFor="product-filter-project">Proyecto</Label>
+            <Label htmlFor="product-filter-project">{t("list.filters.project")}</Label>
             <Select value={project} onValueChange={changeSelect("project")}>
-              <SelectTrigger id="product-filter-project" aria-label="Proyecto">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="product-filter-project" aria-label={t("list.filters.project")}>
+                <SelectValue placeholder={t("list.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
+                <SelectItem value={ALL_FILTER}>{t("list.all")}</SelectItem>
                 {projectOptions.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.title}
@@ -247,13 +252,13 @@ export function ProductList() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="product-filter-researcher">Investigador</Label>
+            <Label htmlFor="product-filter-researcher">{t("list.filters.researcher")}</Label>
             <Select value={researcher} onValueChange={changeSelect("researcher")}>
-              <SelectTrigger id="product-filter-researcher" aria-label="Investigador">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="product-filter-researcher" aria-label={t("list.filters.researcher")}>
+                <SelectValue placeholder={t("list.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
+                <SelectItem value={ALL_FILTER}>{t("list.all")}</SelectItem>
                 {researcherOptions.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
                     {r.full_name}
@@ -263,13 +268,13 @@ export function ProductList() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="product-filter-center">Centro</Label>
+            <Label htmlFor="product-filter-center">{t("list.filters.center")}</Label>
             <Select value={center} onValueChange={changeCenter}>
-              <SelectTrigger id="product-filter-center" aria-label="Centro">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="product-filter-center" aria-label={t("list.filters.center")}>
+                <SelectValue placeholder={t("list.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
+                <SelectItem value={ALL_FILTER}>{t("list.all")}</SelectItem>
                 {centerOptions.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -279,13 +284,13 @@ export function ProductList() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="product-filter-group">Grupo</Label>
+            <Label htmlFor="product-filter-group">{t("list.filters.group")}</Label>
             <Select value={group} onValueChange={changeGroup} disabled={!center && !group}>
-              <SelectTrigger id="product-filter-group" aria-label="Grupo">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="product-filter-group" aria-label={t("list.filters.group")}>
+                <SelectValue placeholder={t("list.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
+                <SelectItem value={ALL_FILTER}>{t("list.all")}</SelectItem>
                 {groupOptions.map((g) => (
                   <SelectItem key={g.id} value={g.id}>
                     {g.name}
@@ -295,18 +300,18 @@ export function ProductList() {
             </Select>
             {!center ? (
               <p className="mt-1 text-xs text-muted-foreground">
-                Seleccione primero un centro para filtrar por grupo.
+                {t("list.centerFirst")}
               </p>
             ) : null}
           </div>
           <div>
-            <Label htmlFor="product-filter-line">Línea</Label>
+            <Label htmlFor="product-filter-line">{t("list.filters.line")}</Label>
             <Select value={line} onValueChange={changeSelect("line")} disabled={!group && !line}>
-              <SelectTrigger id="product-filter-line" aria-label="Línea">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="product-filter-line" aria-label={t("list.filters.line")}>
+                <SelectValue placeholder={t("list.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
+                <SelectItem value={ALL_FILTER}>{t("list.all")}</SelectItem>
                 {lineOptions.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
                     {l.name}
@@ -316,7 +321,7 @@ export function ProductList() {
             </Select>
             {!group ? (
               <p className="mt-1 text-xs text-muted-foreground">
-                Seleccione primero un grupo para filtrar por línea.
+                {t("list.groupFirst")}
               </p>
             ) : null}
           </div>
@@ -324,7 +329,7 @@ export function ProductList() {
       </Card>
 
       {loading ? (
-        <div role="status" aria-label="Cargando productos" className="space-y-2">
+        <div role="status" aria-label={t("list.loading")} className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-12" />
           ))}
@@ -338,52 +343,52 @@ export function ProductList() {
         </div>
       ) : products.length === 0 ? (
         <EmptyState
-          title={hasFilters ? "Sin resultados" : "No hay productos"}
+          title={hasFilters ? t("list.empty.noResults") : t("list.empty.noProducts")}
           description={
             hasFilters
-              ? "No se encontraron productos con los filtros aplicados."
-              : "Crea tu primer producto para comenzar."
+              ? t("list.empty.noMatch")
+              : t("list.empty.createFirst")
           }
           action={
             canCreate ? (
               <Button asChild variant="outline" size="sm">
-                <Link href="/products/new">Nuevo producto</Link>
+                <Link href="/products/new">{t("list.newButton")}</Link>
               </Button>
             ) : undefined
           }
         />
       ) : (
         <div className="overflow-hidden rounded-lg border">
-          <table aria-label="Lista de productos" className="w-full text-sm">
+          <table aria-label={t("list.tableLabel")} className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">
               <tr>
                 <th className="px-4 py-3 font-medium">
                   <button
                     type="button"
-                    aria-label="Ordenar por título"
+                    aria-label={t("list.sortByTitle")}
                     onClick={() => toggleOrdering("title")}
                   >
-                    Título{orderIndicator("title")}
+                    {t("list.table.headers.title")}{orderIndicator("title")}
                   </button>
                 </th>
-                <th className="px-4 py-3 font-medium">Tipo</th>
+                <th className="px-4 py-3 font-medium">{t("list.table.headers.type")}</th>
                 <th className="px-4 py-3 font-medium">
                   <button
                     type="button"
-                    aria-label="Ordenar por año"
+                    aria-label={t("list.sortByYear")}
                     onClick={() => toggleOrdering("publication_year")}
                   >
-                    Año{orderIndicator("publication_year")}
+                    {t("list.table.headers.year")}{orderIndicator("publication_year")}
                   </button>
                 </th>
-                <th className="px-4 py-3 font-medium">Proyecto</th>
+                <th className="px-4 py-3 font-medium">{t("list.table.headers.project")}</th>
                 <th className="px-4 py-3 font-medium">
                   <button
                     type="button"
-                    aria-label="Ordenar por fecha de creación"
+                    aria-label={t("list.sortByCreated")}
                     onClick={() => toggleOrdering("created_at")}
                   >
-                    Creada{orderIndicator("created_at")}
+                    {t("list.table.headers.created")}{orderIndicator("created_at")}
                   </button>
                 </th>
               </tr>
@@ -396,7 +401,7 @@ export function ProductList() {
                       {p.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">{getProductTypeLabel(p.type)}</td>
+                  <td className="px-4 py-3">{getProductTypeLabel(t, p.type)}</td>
                   <td className="px-4 py-3">{p.publication_year}</td>
                   <td className="px-4 py-3">{p.project}</td>
                   <td className="px-4 py-3">{p.created_at.slice(0, 10)}</td>
@@ -415,11 +420,11 @@ export function ProductList() {
           disabled={!data?.previous || loading}
           onClick={() => updateParams({ page: Math.max(1, page - 1) })}
         >
-          Anterior
+          {t("list.pagination.previous")}
         </Button>
         <span aria-live="polite" className="text-sm text-muted-foreground">
-          Página {page}
-          {data?.count !== undefined ? ` · ${data.count} productos` : ""}
+          {t("list.pagination.page")} {page}
+          {data?.count !== undefined ? ` · ${t("list.pagination.count", { count: data.count })}` : ""}
         </span>
         <Button
           variant="outline"
@@ -427,7 +432,7 @@ export function ProductList() {
           disabled={!data?.next || loading}
           onClick={() => updateParams({ page: page + 1 })}
         >
-          Siguiente
+          {t("list.pagination.next")}
         </Button>
       </div>
     </>

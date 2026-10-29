@@ -34,6 +34,29 @@ jest.mock("next-themes", () => ({
   useTheme: () => ({ theme: "light", setTheme: jest.fn(), themes: [] }),
 }));
 
+jest.mock("next-intl", () => ({
+  useTranslations: () => {
+    const translations: Record<string, string> = {
+      "authors.addAuthor": "Nuevo autor",
+      "authors.researcher": "Investigador",
+      "authors.select": "Seleccione…",
+      "authors.addButton": "Añadir autor",
+      "authors.selectHint": "Seleccione un investigador para añadirlo como autor.",
+      "authors.empty": "Sin autores.",
+      "authors.primary": "Principal",
+      "authors.markPrimary": "Marcar como principal",
+      "authors.delete": "Eliminar",
+      "authors.added": "Autor añadido.",
+      "authors.removed": "Autor eliminado.",
+      "authors.alreadyAuthor": "Este investigador ya es autor del producto.",
+      "authors.primarySwitchError": "Solo puede haber un autor principal: desmarca primero el autor principal actual y luego marca el nuevo.",
+      "authors.primarySwitchInfo": "Para cambiar el autor principal, primero se desmarca el actual y luego se marca el nuevo (dos pasos automáticos).",
+      "authors.changingPrimary": "Cambiando autor principal…",
+    };
+    return (key: string) => translations[key] ?? key;
+  },
+}));
+
 jest.mock("sonner", () => ({
   toast: {
     success: jest.fn(),
@@ -59,10 +82,10 @@ import * as api from "@/lib/api";
 import { ApiError } from "@/lib/errors";
 import {
   AuthorsManager,
-  DUPLICATE_RESEARCHER_MESSAGE,
-  PRINCIPAL_SWITCH_GUIDANCE,
-  PRINCIPAL_SWITCH_IN_PROGRESS,
-  PRINCIPAL_SWITCH_STEPS,
+  DUPLICATE_RESEARCHER_MESSAGE_KEY,
+  PRINCIPAL_SWITCH_GUIDANCE_KEY,
+  PRINCIPAL_SWITCH_IN_PROGRESS_KEY,
+  PRINCIPAL_SWITCH_STEPS_KEY,
 } from "@/features/products/AuthorsManager";
 
 const toastModule = jest.requireMock("sonner") as {
@@ -208,7 +231,7 @@ describe("AuthorsManager — create", () => {
     await user.click(screen.getByRole("button", { name: /añadir autor/i }));
 
     await waitFor(() => {
-      expect(toastModule.toast.error).toHaveBeenCalledWith(DUPLICATE_RESEARCHER_MESSAGE);
+      expect(toastModule.toast.error).toHaveBeenCalledWith(DUPLICATE_RESEARCHER_MESSAGE_KEY);
     });
   });
 });
@@ -282,7 +305,7 @@ describe("AuthorsManager — two-step principal switch", () => {
     );
 
     await waitFor(() => {
-      expect(toastModule.toast.error).toHaveBeenCalledWith(PRINCIPAL_SWITCH_GUIDANCE);
+      expect(toastModule.toast.error).toHaveBeenCalledWith(PRINCIPAL_SWITCH_GUIDANCE_KEY);
     });
   });
 });
@@ -291,7 +314,7 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
   it("shows two-step guidance when a principal and non-principal authors exist", async () => {
     renderManager(defaultGet([author("a1", "r-1", true, 0), author("a2", "r-2", false, 1)]));
 
-    expect(await screen.findByText(PRINCIPAL_SWITCH_STEPS)).toBeInTheDocument();
+    expect(await screen.findByText(PRINCIPAL_SWITCH_STEPS_KEY)).toBeInTheDocument();
   });
 
   it("hides guidance when no principal exists yet", async () => {
@@ -299,7 +322,7 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
     const list = await authorList();
     await within(list).findByText("Ana Pérez");
 
-    expect(screen.queryByText(PRINCIPAL_SWITCH_STEPS)).not.toBeInTheDocument();
+    expect(screen.queryByText(PRINCIPAL_SWITCH_STEPS_KEY)).not.toBeInTheDocument();
   });
 
   it("hides guidance when every author is already principal", async () => {
@@ -307,7 +330,7 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
     const list = await authorList();
     await within(list).findByText("Ana Pérez");
 
-    expect(screen.queryByText(PRINCIPAL_SWITCH_STEPS)).not.toBeInTheDocument();
+    expect(screen.queryByText(PRINCIPAL_SWITCH_STEPS_KEY)).not.toBeInTheDocument();
   });
 
   it("disables switch/delete buttons and shows status while a switch is in flight", async () => {
@@ -339,19 +362,19 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
     within(list)
       .getAllByRole("button", { name: /eliminar/i })
       .forEach((b) => expect(b).toBeDisabled());
-    expect(screen.getByText(PRINCIPAL_SWITCH_IN_PROGRESS)).toBeInTheDocument();
+    expect(screen.getByText(PRINCIPAL_SWITCH_IN_PROGRESS_KEY)).toBeInTheDocument();
 
     await act(async () => {
       resolveUnset({ ok: true });
     });
     // Second step (set) pending: still disabled.
-    expect(screen.getByText(PRINCIPAL_SWITCH_IN_PROGRESS)).toBeInTheDocument();
+    expect(screen.getByText(PRINCIPAL_SWITCH_IN_PROGRESS_KEY)).toBeInTheDocument();
 
     await act(async () => {
       resolveSet({ ok: true });
     });
     await waitFor(() =>
-      expect(screen.queryByText(PRINCIPAL_SWITCH_IN_PROGRESS)).not.toBeInTheDocument(),
+      expect(screen.queryByText(PRINCIPAL_SWITCH_IN_PROGRESS_KEY)).not.toBeInTheDocument(),
     );
     // The in-flight disabling is lifted once the sequence settles: delete
     // buttons are disabled only by the switch state (never by is_principal).

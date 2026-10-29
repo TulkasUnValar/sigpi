@@ -21,6 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import type { Path } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ import { useCreateProduct, useUpdateProduct } from "@/features/products/mutation
 import { useProjectsList } from "@/features/projects/queries";
 import { buildProductPayload, productFormSchema } from "@/features/products/schemas";
 import type { ProductFormValues } from "@/features/products/schemas";
-import { ALLOWED_PROJECT_STATES, PRODUCT_TYPE_OPTIONS } from "@/features/products/constants";
+import { ALLOWED_PROJECT_STATES, getProductTypeOptions } from "@/features/products/constants";
 import type { ResearchProduct } from "@/features/products/types";
 
 /** Form field names accepted by the zod schema (setError targets). */
@@ -79,6 +80,7 @@ interface ProductFormProps {
 export function ProductForm({ product }: ProductFormProps = {}) {
   const router = useRouter();
   const qc = useQueryClient();
+  const t = useTranslations("products");
   const isEdit = Boolean(product);
 
   const createProduct = useCreateProduct();
@@ -122,7 +124,7 @@ export function ProductForm({ product }: ProductFormProps = {}) {
     const payload = buildProductPayload(values);
     const options = {
       onSuccess: (updated: ResearchProduct) => {
-        toast.success(isEdit ? "Producto actualizado." : "Producto creado.");
+        toast.success(isEdit ? t("form.messages.updated") : t("form.messages.created"));
         router.push(`/products/${updated.id}`);
       },
       onError: (error: unknown) => {
@@ -132,7 +134,7 @@ export function ProductForm({ product }: ProductFormProps = {}) {
             if (FIELD_PATHS.includes(field as keyof ProductFormValues)) {
               setError(field as Path<ProductFormValues>, {
                 type: "server",
-                message: messages[0] ?? "Valor inválido.",
+                message: messages[0] ?? t("form.messages.invalidValue"),
               });
             }
           }
@@ -159,12 +161,12 @@ export function ProductForm({ product }: ProductFormProps = {}) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEdit ? "Editar producto" : "Nuevo producto"}</CardTitle>
+        <CardTitle>{isEdit ? t("form.editTitle") : t("form.newTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div>
-            <Label htmlFor="product-title">Título</Label>
+            <Label htmlFor="product-title">{t("form.fields.title")}</Label>
             <Input id="product-title" {...register("title")} />
             {errors.title ? (
               <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
@@ -172,7 +174,7 @@ export function ProductForm({ product }: ProductFormProps = {}) {
           </div>
 
           <div>
-            <Label htmlFor="product-description">Descripción</Label>
+            <Label htmlFor="product-description">{t("form.fields.description")}</Label>
             <textarea
               id="product-description"
               rows={4}
@@ -185,17 +187,17 @@ export function ProductForm({ product }: ProductFormProps = {}) {
           </div>
 
           <div>
-            <Label htmlFor="product-type">Tipo de producto</Label>
+            <Label htmlFor="product-type">{t("form.fields.type")}</Label>
             <Controller
               control={control}
               name="type"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="product-type" aria-label="Tipo de producto">
-                    <SelectValue placeholder="Selecciona el tipo" />
+                  <SelectTrigger id="product-type" aria-label={t("form.fields.type")}>
+                    <SelectValue placeholder={t("form.fields.selectType")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRODUCT_TYPE_OPTIONS.map((opt) => (
+                    {getProductTypeOptions(t).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -210,19 +212,19 @@ export function ProductForm({ product }: ProductFormProps = {}) {
           </div>
 
           <div>
-            <Label htmlFor="product-project">Proyecto</Label>
+            <Label htmlFor="product-project">{t("form.fields.project")}</Label>
             <Controller
               control={control}
               name="project"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="product-project" aria-label="Proyecto">
-                    <SelectValue placeholder="Selecciona el proyecto" />
+                  <SelectTrigger id="product-project" aria-label={t("form.fields.project")}>
+                    <SelectValue placeholder={t("form.fields.selectProject")} />
                   </SelectTrigger>
                   <SelectContent>
                     {projectOptions.length === 0 ? (
                       <SelectItem value="__none__" disabled>
-                        No hay proyectos disponibles
+                        {t("form.messages.noProjects")}
                       </SelectItem>
                     ) : (
                       projectOptions.map((p) => (
@@ -241,7 +243,7 @@ export function ProductForm({ product }: ProductFormProps = {}) {
           </div>
 
           <div>
-            <Label htmlFor="product-publication-year">Año de publicación</Label>
+            <Label htmlFor="product-publication-year">{t("form.fields.publicationYear")}</Label>
             <Input id="product-publication-year" type="number" {...register("publication_year")} />
             {errors.publication_year ? (
               <p className="mt-1 text-sm text-destructive">{errors.publication_year.message}</p>
@@ -251,15 +253,15 @@ export function ProductForm({ product }: ProductFormProps = {}) {
           {isEdit && product ? (
             <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-3">
               <div>
-                <Label htmlFor="product-institution">Institución</Label>
+                <Label htmlFor="product-institution">{t("form.fields.institution")}</Label>
                 <Input id="product-institution" value={product.institution} disabled />
               </div>
               <div>
-                <Label htmlFor="product-created-by">Creado por</Label>
+                <Label htmlFor="product-created-by">{t("form.fields.createdBy")}</Label>
                 <Input id="product-created-by" value={product.created_by ?? "—"} disabled />
               </div>
               <div>
-                <Label htmlFor="product-updated-by">Actualizado por</Label>
+                <Label htmlFor="product-updated-by">{t("form.fields.updatedBy")}</Label>
                 <Input id="product-updated-by" value={product.updated_by ?? "—"} disabled />
               </div>
             </div>
@@ -267,7 +269,7 @@ export function ProductForm({ product }: ProductFormProps = {}) {
 
           <div>
             <Button type="submit" disabled={submitting}>
-              {isEdit ? "Guardar cambios" : "Crear producto"}
+              {isEdit ? t("form.buttons.saveChanges") : t("form.buttons.createProduct")}
             </Button>
           </div>
         </form>
