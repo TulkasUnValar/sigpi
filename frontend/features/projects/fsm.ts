@@ -18,7 +18,7 @@
 export interface ProjectAction {
   /** Endpoint action name, e.g. "approve". */
   name: string;
-  /** Spanish label for the button. */
+  /** Translation key for the button label (resolved via useTranslations('projects')). */
   label: string;
   /** Whether the transition requires a ConfirmDialog. */
   destructive: boolean;
@@ -39,21 +39,21 @@ export const PROJECT_ACTIONS: ProjectAction[] = [
   // Owner actions
   {
     name: "submit",
-    label: "Enviar",
+    label: "fsm.submit",
     destructive: false,
     allowedRoles: [OWNER],
     fromStates: ["borrador"],
   },
   {
     name: "resubmit",
-    label: "Reenviar",
+    label: "fsm.resubmit",
     destructive: false,
     allowedRoles: [OWNER],
     fromStates: ["observado"],
   },
   {
     name: "finalize",
-    label: "Finalizar",
+    label: "fsm.finalize",
     destructive: false,
     allowedRoles: [OWNER],
     fromStates: ["en_ejecucion"],
@@ -61,70 +61,70 @@ export const PROJECT_ACTIONS: ProjectAction[] = [
   // Director actions
   {
     name: "accept_review",
-    label: "Aceptar revisión",
+    label: "fsm.accept_review",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["enviado"],
   },
   {
     name: "approve",
-    label: "Aprobar",
+    label: "fsm.approve",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["en_revision"],
   },
   {
     name: "observe",
-    label: "Observar",
+    label: "fsm.observe",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["en_revision"],
   },
   {
     name: "return_to_draft",
-    label: "Devolver a borrador",
+    label: "fsm.return_to_draft",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["en_revision", "observado"],
   },
   {
     name: "reject",
-    label: "Rechazar",
+    label: "fsm.reject",
     destructive: true,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["en_revision", "observado"],
   },
   {
     name: "start_execution",
-    label: "Iniciar ejecución",
+    label: "fsm.start_execution",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["aprobado"],
   },
   {
     name: "suspend",
-    label: "Suspender",
+    label: "fsm.suspend",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["en_ejecucion"],
   },
   {
     name: "resume",
-    label: "Reanudar",
+    label: "fsm.resume",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["suspendido"],
   },
   {
     name: "initiate_closure",
-    label: "Iniciar cierre",
+    label: "fsm.initiate_closure",
     destructive: false,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["finalizado"],
   },
   {
     name: "close",
-    label: "Cerrar",
+    label: "fsm.close",
     destructive: true,
     allowedRoles: [DIRECTOR, ADMIN],
     fromStates: ["en_cierre"],
@@ -132,7 +132,7 @@ export const PROJECT_ACTIONS: ProjectAction[] = [
   // Admin action
   {
     name: "cancel",
-    label: "Cancelar",
+    label: "fsm.cancel",
     destructive: true,
     allowedRoles: [ADMIN],
     fromStates: [

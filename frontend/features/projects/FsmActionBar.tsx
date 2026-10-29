@@ -13,6 +13,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -31,6 +32,7 @@ interface FsmActionBarProps {
 }
 
 export function FsmActionBar({ projectId, state }: FsmActionBarProps) {
+  const t = useTranslations("projects");
   const roles = useAuthStore((s) => s.roles);
   const transition = useProjectTransition();
   const [confirmAction, setConfirmAction] = useState<ProjectAction | null>(null);
@@ -42,7 +44,7 @@ export function FsmActionBar({ projectId, state }: FsmActionBarProps) {
       { id: projectId, action: action.name },
       {
         onSuccess: () => {
-          toast.success(`Proyecto ${action.label.toLowerCase()}.`);
+          toast.success(t(`fsm.success.${action.name}`));
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
@@ -62,7 +64,7 @@ export function FsmActionBar({ projectId, state }: FsmActionBarProps) {
   if (actions.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-label="Acciones de estado">
+    <div className="flex flex-wrap items-center gap-2" aria-label={t("fsm.actionsLabel")}>
       {actions.map((action) => (
         <Button
           key={action.name}
@@ -71,7 +73,7 @@ export function FsmActionBar({ projectId, state }: FsmActionBarProps) {
           disabled={transition.isPending}
           onClick={() => handleClick(action)}
         >
-          {action.label}
+          {t(action.label)}
         </Button>
       ))}
 
@@ -81,10 +83,10 @@ export function FsmActionBar({ projectId, state }: FsmActionBarProps) {
           onOpenChange={(open) => {
             if (!open) setConfirmAction(null);
           }}
-          title={`¿Confirmar "${confirmAction.label}"?`}
-          description="Esta acción no se puede deshacer."
-          confirmLabel={confirmAction.label}
-          cancelLabel="Cancelar"
+          title={t("fsm.confirmTitle", { action: t(confirmAction.label) })}
+          description={t("fsm.confirmDescription")}
+          confirmLabel={t(confirmAction.label)}
+          cancelLabel={t("fsm.cancel")}
           destructive
           onConfirm={() => runAction(confirmAction)}
         />

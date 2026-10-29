@@ -8,12 +8,14 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Button } from "@/components/ui/button";
 import { AdvanceList, useAdvancesList } from "@/features/advances";
 
 export default function AdvancesPage() {
+  const t = useTranslations("projects");
   const params = useParams<{ id: string }>();
   const projectId = params.id;
 
@@ -28,12 +30,12 @@ export default function AdvancesPage() {
             href={`/projects/${projectId}`}
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Volver al proyecto
+            {t("advances.backToProject")}
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold">Avances</h1>
+          <h1 className="mt-1 text-2xl font-semibold">{t("advances.title")}</h1>
         </div>
         <Button asChild>
-          <Link href={`/projects/${projectId}/advances/new`}>Nuevo avance</Link>
+          <Link href={`/projects/${projectId}/advances/new`}>{t("advances.createNew")}</Link>
         </Button>
       </div>
 

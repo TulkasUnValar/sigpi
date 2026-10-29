@@ -7,6 +7,7 @@
  */
 
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -15,6 +16,7 @@ import { useAuthStore } from "@/store/auth";
 import { AdvanceDetail, useAdvanceDetail } from "@/features/advances";
 
 export default function AdvanceDetailPage() {
+  const t = useTranslations("projects");
   const params = useParams<{ id: string; advanceId: string }>();
   const projectId = params.id;
   const advanceId = params.advanceId;
@@ -35,7 +37,7 @@ export default function AdvanceDetailPage() {
   if (!advance) {
     return (
       <AuthenticatedLayout>
-        <EmptyState title="Avance no encontrado" />
+        <EmptyState title={t("advances.notFound")} />
       </AuthenticatedLayout>
     );
   }

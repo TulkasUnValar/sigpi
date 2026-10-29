@@ -13,6 +13,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,18 +32,18 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useProjectsList, useCenters } from "@/features/projects/queries";
 
 const STATUS_OPTIONS = [
-  { value: "borrador", label: "Borrador" },
-  { value: "enviado", label: "Enviado" },
-  { value: "en_revision", label: "En revisión" },
-  { value: "observado", label: "Observado" },
-  { value: "aprobado", label: "Aprobado" },
-  { value: "en_ejecucion", label: "En ejecución" },
-  { value: "suspendido", label: "Suspendido" },
-  { value: "finalizado", label: "Finalizado" },
-  { value: "en_cierre", label: "En cierre" },
-  { value: "cerrado", label: "Cerrado" },
-  { value: "rechazado", label: "Rechazado" },
-  { value: "cancelado", label: "Cancelado" },
+  { value: "borrador", labelKey: "status.borrador" },
+  { value: "enviado", labelKey: "status.enviado" },
+  { value: "en_revision", labelKey: "status.en_revision" },
+  { value: "observado", labelKey: "status.observado" },
+  { value: "aprobado", labelKey: "status.aprobado" },
+  { value: "en_ejecucion", labelKey: "status.en_ejecucion" },
+  { value: "suspendido", labelKey: "status.suspendido" },
+  { value: "finalizado", labelKey: "status.finalizado" },
+  { value: "en_cierre", labelKey: "status.en_cierre" },
+  { value: "cerrado", labelKey: "status.cerrado" },
+  { value: "rechazado", labelKey: "status.rechazado" },
+  { value: "cancelado", labelKey: "status.cancelado" },
 ];
 
 // The component takes no props (design contract); the empty interface is
@@ -51,6 +52,7 @@ const STATUS_OPTIONS = [
 interface ProjectListProps {}
 
 export function ProjectList(_props: ProjectListProps) {
+  const t = useTranslations("projects");
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [center, setCenter] = useState("");
@@ -69,9 +71,9 @@ export function ProjectList(_props: ProjectListProps) {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Proyectos</h1>
+        <h1 className="text-2xl font-semibold">{t("list.title")}</h1>
         <Button asChild>
-          <Link href="/projects/new">Nuevo proyecto</Link>
+          <Link href="/projects/new">{t("list.createNew")}</Link>
         </Button>
       </div>
 
@@ -79,15 +81,15 @@ export function ProjectList(_props: ProjectListProps) {
       <Card className="mb-6">
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Label htmlFor="filter-status">Estado</Label>
+            <Label htmlFor="filter-status">{t("list.filterStatus")}</Label>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="filter-status" aria-label="Estado">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="filter-status" aria-label={t("list.filterStatus")}>
+                <SelectValue placeholder={t("list.placeholderAll")} />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -95,10 +97,10 @@ export function ProjectList(_props: ProjectListProps) {
           </div>
 
           <div>
-            <Label htmlFor="filter-center">Centro</Label>
+            <Label htmlFor="filter-center">{t("list.filterCenter")}</Label>
             <Select value={center} onValueChange={setCenter}>
-              <SelectTrigger id="filter-center" aria-label="Centro">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="filter-center" aria-label={t("list.filterCenter")}>
+                <SelectValue placeholder={t("list.placeholderAll")} />
               </SelectTrigger>
               <SelectContent>
                 {(centersQuery.data ?? []).map((c) => (
@@ -111,21 +113,21 @@ export function ProjectList(_props: ProjectListProps) {
           </div>
 
           <div>
-            <Label htmlFor="filter-year">Año</Label>
+            <Label htmlFor="filter-year">{t("list.filterYear")}</Label>
             <Input
               id="filter-year"
               type="number"
-              placeholder="2026"
+              placeholder={t("list.placeholderYear")}
               value={year}
               onChange={(e) => setYear(e.target.value)}
             />
           </div>
 
           <div>
-            <Label htmlFor="filter-search">Búsqueda</Label>
+            <Label htmlFor="filter-search">{t("list.filterSearch")}</Label>
             <Input
               id="filter-search"
-              placeholder="Título, resumen…"
+              placeholder={t("list.placeholderSearch")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -141,11 +143,11 @@ export function ProjectList(_props: ProjectListProps) {
         </div>
       ) : projects.length === 0 ? (
         <EmptyState
-          title={hasFilters ? "Sin resultados" : "No hay proyectos"}
+          title={hasFilters ? t("list.noResults") : t("list.noProjects")}
           description={
             hasFilters
-              ? "No se encontraron proyectos con los filtros aplicados."
-              : "Crea tu primer proyecto para comenzar."
+              ? t("list.noResultsDescription")
+              : t("list.noProjectsDescription")
           }
         />
       ) : (
@@ -153,9 +155,9 @@ export function ProjectList(_props: ProjectListProps) {
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">
               <tr>
-                <th className="px-4 py-3 font-medium">Título</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium">Inicio</th>
+                <th className="px-4 py-3 font-medium">{t("table.title")}</th>
+                <th className="px-4 py-3 font-medium">{t("table.status")}</th>
+                <th className="px-4 py-3 font-medium">{t("table.startDate")}</th>
               </tr>
             </thead>
             <tbody>
@@ -185,11 +187,11 @@ export function ProjectList(_props: ProjectListProps) {
           disabled={!data?.previous || loading}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
         >
-          Anterior
+          {t("list.previous")}
         </Button>
         <span className="text-sm text-muted-foreground">
-          Página {page}
-          {data?.count !== undefined ? ` · ${data.count} proyectos` : ""}
+          {t("list.pageInfo", { page })}
+          {data?.count !== undefined ? ` · ${t("list.countInfo", { count: data.count })}` : ""}
         </span>
         <Button
           variant="outline"
@@ -197,7 +199,7 @@ export function ProjectList(_props: ProjectListProps) {
           disabled={!data?.next || loading}
           onClick={() => setPage((p) => p + 1)}
         >
-          Siguiente
+          {t("list.next")}
         </Button>
       </div>
     </>

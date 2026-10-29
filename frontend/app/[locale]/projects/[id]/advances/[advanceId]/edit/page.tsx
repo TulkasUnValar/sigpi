@@ -12,6 +12,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -19,6 +20,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { AdvanceForm, useAdvanceDetail } from "@/features/advances";
 
 export default function EditAdvancePage() {
+  const t = useTranslations("projects");
   const params = useParams<{ id: string; advanceId: string }>();
   const projectId = params.id;
   const advanceId = params.advanceId;
@@ -38,7 +40,7 @@ export default function EditAdvancePage() {
   if (!advance) {
     return (
       <AuthenticatedLayout>
-        <EmptyState title="Avance no encontrado" />
+        <EmptyState title={t("advances.notFound")} />
       </AuthenticatedLayout>
     );
   }
@@ -47,8 +49,8 @@ export default function EditAdvancePage() {
     return (
       <AuthenticatedLayout>
         <EmptyState
-          title="Este avance no se puede editar"
-          description="Solo los avances en borrador son editables."
+          title={t("advances.notEditable")}
+          description={t("advances.notEditableDescription")}
         />
       </AuthenticatedLayout>
     );
@@ -61,7 +63,7 @@ export default function EditAdvancePage() {
           href={`/projects/${projectId}/advances/${advanceId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Volver al avance
+          {t("advances.backToAdvance")}
         </Link>
       </div>
       <AdvanceForm advance={advance} projectId={projectId} />

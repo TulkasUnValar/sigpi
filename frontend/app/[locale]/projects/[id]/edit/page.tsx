@@ -12,6 +12,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -20,6 +21,7 @@ import { useAuthStore } from "@/store/auth";
 import { ProjectForm, canEditProject, useProjectDetail } from "@/features/projects";
 
 export default function EditProjectPage() {
+  const t = useTranslations("projects");
   const params = useParams<{ id: string }>();
   const id = params.id;
   const roles = useAuthStore((s) => s.roles);
@@ -39,7 +41,7 @@ export default function EditProjectPage() {
   if (!project) {
     return (
       <AuthenticatedLayout>
-        <EmptyState title="Proyecto no encontrado" />
+        <EmptyState title={t("pages.edit.notFound")} />
       </AuthenticatedLayout>
     );
   }
@@ -48,8 +50,8 @@ export default function EditProjectPage() {
     return (
       <AuthenticatedLayout>
         <EmptyState
-          title="Este proyecto no se puede editar"
-          description="Los proyectos cerrados, rechazados o cancelados no son editables."
+          title={t("pages.edit.notEditable")}
+          description={t("pages.edit.notEditableDescription")}
         />
       </AuthenticatedLayout>
     );
@@ -59,7 +61,7 @@ export default function EditProjectPage() {
     <AuthenticatedLayout>
       <div className="mb-6">
         <Link href={`/projects/${id}`} className="text-sm text-muted-foreground hover:underline">
-          ← Volver al proyecto
+          {t("pages.edit.backToProject")}
         </Link>
       </div>
       <ProjectForm project={project} />

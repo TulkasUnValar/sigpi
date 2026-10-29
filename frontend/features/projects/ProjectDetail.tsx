@@ -11,6 +11,7 @@
  */
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -32,6 +33,7 @@ interface ProjectDetailProps {
 }
 
 export function ProjectDetail({ id }: ProjectDetailProps) {
+  const t = useTranslations("projects");
   const roles = useAuthStore((s) => s.roles);
   const detailQuery = useProjectDetail(id);
   const observationsQuery = useProjectObservations(id);
@@ -48,7 +50,7 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
 
   const project = detailQuery.data;
   if (!project) {
-    return <EmptyState title="Proyecto no encontrado" />;
+    return <EmptyState title={t("detail.notFound")} />;
   }
 
   const observations = observationsQuery.data?.results ?? [];
@@ -68,11 +70,11 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
         <div className="flex items-center gap-2">
           {canEdit ? (
             <Button asChild variant="outline" size="sm">
-              <Link href={`/projects/${id}/edit`}>Editar</Link>
+              <Link href={`/projects/${id}/edit`}>{t("detail.edit")}</Link>
             </Button>
           ) : null}
           <Button asChild variant="outline" size="sm">
-            <a href={`/projects/${id}/advances`}>Ver avances</a>
+            <a href={`/projects/${id}/advances`}>{t("detail.viewAdvances")}</a>
           </Button>
         </div>
       </div>
@@ -83,40 +85,52 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">Resumen</TabsTrigger>
-          <TabsTrigger value="team">Equipo</TabsTrigger>
-          <TabsTrigger value="documents">Documentos</TabsTrigger>
-          <TabsTrigger value="observations">Observaciones</TabsTrigger>
-          <TabsTrigger value="history">Historial</TabsTrigger>
+          <TabsTrigger value="overview">{t("detail.tabOverview")}</TabsTrigger>
+          <TabsTrigger value="team">{t("detail.tabTeam")}</TabsTrigger>
+          <TabsTrigger value="documents">{t("detail.tabDocuments")}</TabsTrigger>
+          <TabsTrigger value="observations">{t("detail.tabObservations")}</TabsTrigger>
+          <TabsTrigger value="history">{t("detail.tabHistory")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
           <Card>
             <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Resumen</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {t("detail.overviewLabel")}
+                </h3>
                 <p className="mt-1">{project.abstract}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Objetivos</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {t("detail.objectivesLabel")}
+                </h3>
                 <p className="mt-1">{project.objectives}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Metodología</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {t("detail.methodologyLabel")}
+                </h3>
                 <p className="mt-1">{project.methodology}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Resultados esperados</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {t("detail.expectedResultsLabel")}
+                </h3>
                 <p className="mt-1">{project.expected_results}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Fechas</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {t("detail.datesLabel")}
+                </h3>
                 <p className="mt-1">
                   {project.start_date} → {project.estimated_end_date}
                 </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Palabras clave</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {t("detail.keywordsLabel")}
+                </h3>
                 <p className="mt-1">{project.keywords || "—"}</p>
               </div>
             </CardContent>
@@ -125,7 +139,10 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
 
         <TabsContent value="team">
           {project.members.length === 0 ? (
-            <EmptyState title="Sin equipo" description="Aún no hay integrantes." />
+            <EmptyState
+              title={t("detail.noTeam")}
+              description={t("detail.noTeamDescription")}
+            />
           ) : (
             <ul className="space-y-2">
               {project.members.map((m) => (
@@ -140,7 +157,10 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
 
         <TabsContent value="documents">
           {project.documents.length === 0 ? (
-            <EmptyState title="Sin documentos" description="Aún no hay documentos." />
+            <EmptyState
+              title={t("detail.noDocuments")}
+              description={t("detail.noDocumentsDescription")}
+            />
           ) : (
             <ul className="space-y-2">
               {project.documents.map((d) => (
@@ -162,7 +182,7 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
 
         <TabsContent value="observations">
           {observations.length === 0 ? (
-            <EmptyState title="Sin observaciones" />
+            <EmptyState title={t("detail.noObservations")} />
           ) : (
             <ul className="space-y-2">
               {observations.map((o) => (
@@ -177,7 +197,7 @@ export function ProjectDetail({ id }: ProjectDetailProps) {
 
         <TabsContent value="history">
           {history.length === 0 ? (
-            <EmptyState title="Sin historial" />
+            <EmptyState title={t("detail.noHistory")} />
           ) : (
             <ul className="space-y-2">
               {history.map((h) => (

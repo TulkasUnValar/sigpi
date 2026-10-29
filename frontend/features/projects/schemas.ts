@@ -13,27 +13,27 @@ import type { UpdateProjectPayload } from "@/features/projects/types";
 /** Basic info step: title, abstract, objectives, methodology, dates. */
 export const basicStepSchema = z
   .object({
-    title: z.string().min(1, "El título es obligatorio."),
-    abstract: z.string().min(1, "El resumen es obligatorio."),
-    objectives: z.string().min(1, "Los objetivos son obligatorios."),
-    methodology: z.string().min(1, "La metodología es obligatoria."),
-    expected_results: z.string().min(1, "Los resultados esperados son obligatorios."),
+    title: z.string().min(1, "validation.titleRequired"),
+    abstract: z.string().min(1, "validation.abstractRequired"),
+    objectives: z.string().min(1, "validation.objectivesRequired"),
+    methodology: z.string().min(1, "validation.methodologyRequired"),
+    expected_results: z.string().min(1, "validation.expectedResultsRequired"),
     keywords: z.string().optional().default(""),
-    start_date: z.string().min(1, "La fecha de inicio es obligatoria."),
-    estimated_end_date: z.string().min(1, "La fecha de finalización es obligatoria."),
+    start_date: z.string().min(1, "validation.startDateRequired"),
+    estimated_end_date: z.string().min(1, "validation.endDateRequired"),
   })
   .refine(
     (data) =>
       !data.start_date || !data.estimated_end_date || data.estimated_end_date >= data.start_date,
     {
-      message: "La fecha de finalización debe ser posterior a la de inicio.",
+      message: "validation.endDateAfterStart",
       path: ["estimated_end_date"],
     },
   );
 
 /** Classification step: center required; group/line optional. */
 export const classificationStepSchema = z.object({
-  center: z.string().min(1, "El centro es obligatorio."),
+  center: z.string().min(1, "validation.centerRequired"),
   group: z.string().optional().default(""),
   line: z.string().optional().default(""),
 });
@@ -44,7 +44,7 @@ export const teamStepSchema = z.object({
     .array(
       z.object({
         researcher: z.string().min(1),
-        role: z.string().min(1, "El rol del integrante es obligatorio."),
+        role: z.string().min(1, "validation.memberRoleRequired"),
       }),
     )
     .default([]),
@@ -55,9 +55,9 @@ export const documentsStepSchema = z.object({
   documents: z
     .array(
       z.object({
-        name: z.string().min(1, "El nombre del documento es obligatorio."),
+        name: z.string().min(1, "validation.documentNameRequired"),
         doc_type: z.string().min(1),
-        external_url: z.string().min(1, "La URL del documento es obligatoria."),
+        external_url: z.string().min(1, "validation.documentUrlRequired"),
       }),
     )
     .default([]),
@@ -73,24 +73,24 @@ export const documentsStepSchema = z.object({
  */
 export const projectFormSchema = z
   .object({
-    title: z.string().min(1, "El título es obligatorio."),
-    abstract: z.string().min(1, "El resumen es obligatorio."),
-    objectives: z.string().min(1, "Los objetivos son obligatorios."),
-    methodology: z.string().min(1, "La metodología es obligatoria."),
-    expected_results: z.string().min(1, "Los resultados esperados son obligatorios."),
+    title: z.string().min(1, "validation.titleRequired"),
+    abstract: z.string().min(1, "validation.abstractRequired"),
+    objectives: z.string().min(1, "validation.objectivesRequired"),
+    methodology: z.string().min(1, "validation.methodologyRequired"),
+    expected_results: z.string().min(1, "validation.expectedResultsRequired"),
     keywords: z.string(),
-    start_date: z.string().min(1, "La fecha de inicio es obligatoria."),
-    estimated_end_date: z.string().min(1, "La fecha de finalización es obligatoria."),
-    center: z.string().min(1, "El centro es obligatorio."),
+    start_date: z.string().min(1, "validation.startDateRequired"),
+    estimated_end_date: z.string().min(1, "validation.endDateRequired"),
+    center: z.string().min(1, "validation.centerRequired"),
     group: z.string(),
     line: z.string(),
-    principal_investigator: z.string().min(1, "El investigador principal es obligatorio."),
+    principal_investigator: z.string().min(1, "validation.piRequired"),
   })
   .refine(
     (data) =>
       !data.start_date || !data.estimated_end_date || data.estimated_end_date >= data.start_date,
     {
-      message: "La fecha de finalización debe ser posterior a la de inicio.",
+      message: "validation.endDateAfterStart",
       path: ["estimated_end_date"],
     },
   );

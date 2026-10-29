@@ -20,6 +20,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import type { Path } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ project }: ProjectFormProps) {
+  const t = useTranslations("projects");
   const router = useRouter();
   const updateProject = useUpdateProject(project.id);
 
@@ -121,7 +123,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
     const payload = buildUpdatePayload(values);
     updateProject.mutate(payload, {
       onSuccess: () => {
-        toast.success("Proyecto actualizado.");
+        toast.success(t("form.successToast"));
         router.push(`/projects/${project.id}`);
       },
       onError: (error: unknown) => {
@@ -131,7 +133,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
             if (FIELD_PATHS.includes(field as keyof ProjectFormValues)) {
               setError(field as Path<ProjectFormValues>, {
                 type: "server",
-                message: messages[0] ?? "Valor inválido.",
+                message: messages[0] ?? t("form.invalidValue"),
               });
             }
           }
@@ -148,111 +150,119 @@ export function ProjectForm({ project }: ProjectFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Editar proyecto</CardTitle>
+        <CardTitle>{t("form.editTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div>
-            <Label>Título</Label>
+            <Label>{t("form.titleLabel")}</Label>
             <div className="mt-1">
-              <Input aria-label="Título" {...register("title")} />
+              <Input aria-label={t("form.titleLabel")} {...register("title")} />
             </div>
-            {errors.title ? (
-              <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
+            {errors.title?.message ? (
+              <p className="mt-1 text-sm text-destructive">{t(errors.title.message)}</p>
             ) : null}
           </div>
 
           <div>
-            <Label>Resumen</Label>
+            <Label>{t("form.abstractLabel")}</Label>
             <div className="mt-1">
               <textarea
-                aria-label="Resumen"
+                aria-label={t("form.abstractLabel")}
                 className={TEXTAREA_CLASSES}
                 {...register("abstract")}
               />
             </div>
-            {errors.abstract ? (
-              <p className="mt-1 text-sm text-destructive">{errors.abstract.message}</p>
+            {errors.abstract?.message ? (
+              <p className="mt-1 text-sm text-destructive">{t(errors.abstract.message)}</p>
             ) : null}
           </div>
 
           <div>
-            <Label>Objetivos</Label>
+            <Label>{t("form.objectivesLabel")}</Label>
             <div className="mt-1">
               <textarea
-                aria-label="Objetivos"
+                aria-label={t("form.objectivesLabel")}
                 className={TEXTAREA_CLASSES}
                 {...register("objectives")}
               />
             </div>
-            {errors.objectives ? (
-              <p className="mt-1 text-sm text-destructive">{errors.objectives.message}</p>
+            {errors.objectives?.message ? (
+              <p className="mt-1 text-sm text-destructive">{t(errors.objectives.message)}</p>
             ) : null}
           </div>
 
           <div>
-            <Label>Metodología</Label>
+            <Label>{t("form.methodologyLabel")}</Label>
             <div className="mt-1">
               <textarea
-                aria-label="Metodología"
+                aria-label={t("form.methodologyLabel")}
                 className={TEXTAREA_CLASSES}
                 {...register("methodology")}
               />
             </div>
-            {errors.methodology ? (
-              <p className="mt-1 text-sm text-destructive">{errors.methodology.message}</p>
+            {errors.methodology?.message ? (
+              <p className="mt-1 text-sm text-destructive">{t(errors.methodology.message)}</p>
             ) : null}
           </div>
 
           <div>
-            <Label>Resultados esperados</Label>
+            <Label>{t("form.expectedResultsLabel")}</Label>
             <div className="mt-1">
               <textarea
-                aria-label="Resultados esperados"
+                aria-label={t("form.expectedResultsLabel")}
                 className={TEXTAREA_CLASSES}
                 {...register("expected_results")}
               />
             </div>
-            {errors.expected_results ? (
-              <p className="mt-1 text-sm text-destructive">{errors.expected_results.message}</p>
+            {errors.expected_results?.message ? (
+              <p className="mt-1 text-sm text-destructive">
+                {t(errors.expected_results.message)}
+              </p>
             ) : null}
           </div>
 
           <div>
-            <Label>Palabras clave</Label>
+            <Label>{t("form.keywordsLabel")}</Label>
             <div className="mt-1">
-              <Input aria-label="Palabras clave" {...register("keywords")} />
+              <Input aria-label={t("form.keywordsLabel")} {...register("keywords")} />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>Fecha de inicio</Label>
-              <div className="mt-1">
-                <Input type="date" aria-label="Fecha de inicio" {...register("start_date")} />
-              </div>
-              {errors.start_date ? (
-                <p className="mt-1 text-sm text-destructive">{errors.start_date.message}</p>
-              ) : null}
-            </div>
-            <div>
-              <Label>Fecha de finalización</Label>
+              <Label>{t("form.startDateLabel")}</Label>
               <div className="mt-1">
                 <Input
                   type="date"
-                  aria-label="Fecha de finalización"
+                  aria-label={t("form.startDateLabel")}
+                  {...register("start_date")}
+                />
+              </div>
+              {errors.start_date?.message ? (
+                <p className="mt-1 text-sm text-destructive">{t(errors.start_date.message)}</p>
+              ) : null}
+            </div>
+            <div>
+              <Label>{t("form.endDateLabel")}</Label>
+              <div className="mt-1">
+                <Input
+                  type="date"
+                  aria-label={t("form.endDateLabel")}
                   {...register("estimated_end_date")}
                 />
               </div>
-              {errors.estimated_end_date ? (
-                <p className="mt-1 text-sm text-destructive">{errors.estimated_end_date.message}</p>
+              {errors.estimated_end_date?.message ? (
+                <p className="mt-1 text-sm text-destructive">
+                  {t(errors.estimated_end_date.message)}
+                </p>
               ) : null}
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>Centro</Label>
+              <Label>{t("form.centerLabel")}</Label>
               <div className="mt-1">
                 <Controller
                   control={control}
@@ -266,8 +276,8 @@ export function ProjectForm({ project }: ProjectFormProps) {
                         setValue("line", "");
                       }}
                     >
-                      <SelectTrigger aria-label="Centro">
-                        <SelectValue placeholder="Selecciona un centro" />
+                      <SelectTrigger aria-label={t("form.centerLabel")}>
+                        <SelectValue placeholder={t("form.centerPlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
                         {(centersQuery.data ?? []).map((c) => (
@@ -280,13 +290,13 @@ export function ProjectForm({ project }: ProjectFormProps) {
                   )}
                 />
               </div>
-              {errors.center ? (
-                <p className="mt-1 text-sm text-destructive">{errors.center.message}</p>
+              {errors.center?.message ? (
+                <p className="mt-1 text-sm text-destructive">{t(errors.center.message)}</p>
               ) : null}
             </div>
 
             <div>
-              <Label>Grupo</Label>
+              <Label>{t("form.groupLabel")}</Label>
               <div className="mt-1">
                 <Controller
                   control={control}
@@ -300,9 +310,13 @@ export function ProjectForm({ project }: ProjectFormProps) {
                       }}
                       disabled={!centerValue}
                     >
-                      <SelectTrigger aria-label="Grupo">
+                      <SelectTrigger aria-label={t("form.groupLabel")}>
                         <SelectValue
-                          placeholder={centerValue ? "Selecciona un grupo" : "Primero elige centro"}
+                          placeholder={
+                            centerValue
+                              ? t("form.groupPlaceholder")
+                              : t("form.groupRequiresCenter")
+                          }
                         />
                       </SelectTrigger>
                       <SelectContent>
@@ -319,7 +333,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
             </div>
 
             <div>
-              <Label>Línea</Label>
+              <Label>{t("form.lineLabel")}</Label>
               <div className="mt-1">
                 <Controller
                   control={control}
@@ -330,9 +344,13 @@ export function ProjectForm({ project }: ProjectFormProps) {
                       onValueChange={field.onChange}
                       disabled={!groupValue}
                     >
-                      <SelectTrigger aria-label="Línea">
+                      <SelectTrigger aria-label={t("form.lineLabel")}>
                         <SelectValue
-                          placeholder={groupValue ? "Selecciona una línea" : "Primero elige grupo"}
+                          placeholder={
+                            groupValue
+                              ? t("form.linePlaceholder")
+                              : t("form.lineRequiresGroup")
+                          }
                         />
                       </SelectTrigger>
                       <SelectContent>
@@ -349,15 +367,15 @@ export function ProjectForm({ project }: ProjectFormProps) {
             </div>
 
             <div>
-              <Label>Investigador principal</Label>
+              <Label>{t("form.piLabel")}</Label>
               <div className="mt-1">
                 <Controller
                   control={control}
                   name="principal_investigator"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger aria-label="Investigador principal">
-                        <SelectValue placeholder="Selecciona" />
+                      <SelectTrigger aria-label={t("form.piLabel")}>
+                        <SelectValue placeholder={t("form.selectPlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
                         {researcherOptions.map((r) => (
@@ -370,9 +388,9 @@ export function ProjectForm({ project }: ProjectFormProps) {
                   )}
                 />
               </div>
-              {errors.principal_investigator ? (
+              {errors.principal_investigator?.message ? (
                 <p className="mt-1 text-sm text-destructive">
-                  {errors.principal_investigator.message}
+                  {t(errors.principal_investigator.message)}
                 </p>
               ) : null}
             </div>
@@ -380,7 +398,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
           <div className="flex items-center justify-end pt-4">
             <Button type="submit" disabled={submitting}>
-              Guardar cambios
+              {t("form.submit")}
             </Button>
           </div>
         </form>

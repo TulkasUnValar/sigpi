@@ -13,6 +13,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +41,13 @@ import type {
   TeamMemberDraft,
 } from "@/features/projects/types";
 
-const STEPS = ["Información básica", "Centro / Línea", "Equipo", "Documentos", "Revisión"];
+const STEP_KEYS = [
+  "wizard.step1",
+  "wizard.step2",
+  "wizard.step3",
+  "wizard.step4",
+  "wizard.step5",
+];
 
 interface WizardState {
   title: string;
@@ -82,6 +89,7 @@ const initialState: WizardState = {
 interface ProjectWizardProps {}
 
 export function ProjectWizard(_props: ProjectWizardProps) {
+  const t = useTranslations("projects");
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<WizardState>(initialState);
@@ -124,7 +132,7 @@ export function ProjectWizard(_props: ProjectWizardProps) {
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
 
   function next() {
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    setStep((s) => Math.min(s + 1, STEP_KEYS.length - 1));
     setStepErrors({});
   }
 
@@ -166,7 +174,7 @@ export function ProjectWizard(_props: ProjectWizardProps) {
 
     createProject.mutate(payload, {
       onSuccess: (project) => {
-        toast.success("Proyecto creado.");
+        toast.success(t("wizard.successToast"));
         router.push(`/projects/${project.id}`);
       },
       onError: (error) => {
@@ -181,12 +189,12 @@ export function ProjectWizard(_props: ProjectWizardProps) {
 
   return (
     <>
-      <h1 className="mb-6 text-2xl font-semibold">Nuevo proyecto</h1>
+      <h1 className="mb-6 text-2xl font-semibold">{t("wizard.title")}</h1>
 
-      <ol className="mb-6 flex flex-wrap gap-2 text-sm" aria-label="Pasos">
-        {STEPS.map((s, i) => (
+      <ol className="mb-6 flex flex-wrap gap-2 text-sm" aria-label={t("wizard.stepsLabel")}>
+        {STEP_KEYS.map((key, i) => (
           <li
-            key={s}
+            key={key}
             className={
               i === step
                 ? "rounded-md bg-primary px-3 py-1 font-medium text-primary-foreground"
@@ -195,7 +203,7 @@ export function ProjectWizard(_props: ProjectWizardProps) {
                   : "rounded-md bg-muted px-3 py-1 text-muted-foreground opacity-60"
             }
           >
-            {i + 1}. {s}
+            {i + 1}. {t(key)}
           </li>
         ))}
       </ol>
@@ -205,7 +213,7 @@ export function ProjectWizard(_props: ProjectWizardProps) {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (step < STEPS.length - 1) {
+              if (step < STEP_KEYS.length - 1) {
                 validateAndAdvance();
               } else {
                 handleSubmit();
@@ -232,13 +240,13 @@ export function ProjectWizard(_props: ProjectWizardProps) {
 
             <div className="flex items-center justify-between pt-4">
               <Button type="button" variant="outline" onClick={back} disabled={step === 0}>
-                Anterior
+                {t("wizard.previous")}
               </Button>
-              {step < STEPS.length - 1 ? (
-                <Button type="submit">Siguiente</Button>
+              {step < STEP_KEYS.length - 1 ? (
+                <Button type="submit">{t("wizard.next")}</Button>
               ) : (
                 <Button type="submit" disabled={createProject.isPending}>
-                  Crear proyecto
+                  {t("wizard.create")}
                 </Button>
               )}
             </div>
@@ -276,76 +284,95 @@ function BasicFields({
   onChange: (v: Partial<WizardState>) => void;
   errors?: Record<string, string>;
 }) {
+  const t = useTranslations("projects");
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Título" error={errors.title}>
+      <Field label={t("form.titleLabel")} error={errors.title ? t(errors.title) : undefined}>
         <Input
           value={draft.title}
           onChange={(e) => onChange({ title: e.target.value })}
-          aria-label="Título"
+          aria-label={t("form.titleLabel")}
         />
       </Field>
-      <Field label="Palabras clave">
+      <Field label={t("form.keywordsLabel")}>
         <Input
           value={draft.keywords}
           onChange={(e) => onChange({ keywords: e.target.value })}
-          aria-label="Palabras clave"
+          aria-label={t("form.keywordsLabel")}
         />
       </Field>
       <div className="sm:col-span-2">
-        <Field label="Resumen" error={errors.abstract}>
+        <Field
+          label={t("form.abstractLabel")}
+          error={errors.abstract ? t(errors.abstract) : undefined}
+        >
           <textarea
             className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={draft.abstract}
             onChange={(e) => onChange({ abstract: e.target.value })}
-            aria-label="Resumen"
+            aria-label={t("form.abstractLabel")}
           />
         </Field>
       </div>
       <div className="sm:col-span-2">
-        <Field label="Objetivos" error={errors.objectives}>
+        <Field
+          label={t("form.objectivesLabel")}
+          error={errors.objectives ? t(errors.objectives) : undefined}
+        >
           <textarea
             className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={draft.objectives}
             onChange={(e) => onChange({ objectives: e.target.value })}
-            aria-label="Objetivos"
+            aria-label={t("form.objectivesLabel")}
           />
         </Field>
       </div>
       <div className="sm:col-span-2">
-        <Field label="Metodología" error={errors.methodology}>
+        <Field
+          label={t("form.methodologyLabel")}
+          error={errors.methodology ? t(errors.methodology) : undefined}
+        >
           <textarea
             className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={draft.methodology}
             onChange={(e) => onChange({ methodology: e.target.value })}
-            aria-label="Metodología"
+            aria-label={t("form.methodologyLabel")}
           />
         </Field>
       </div>
       <div className="sm:col-span-2">
-        <Field label="Resultados esperados" error={errors.expected_results}>
+        <Field
+          label={t("form.expectedResultsLabel")}
+          error={errors.expected_results ? t(errors.expected_results) : undefined}
+        >
           <textarea
             className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={draft.expected_results}
             onChange={(e) => onChange({ expected_results: e.target.value })}
-            aria-label="Resultados esperados"
+            aria-label={t("form.expectedResultsLabel")}
           />
         </Field>
       </div>
-      <Field label="Fecha de inicio" error={errors.start_date}>
+      <Field
+        label={t("form.startDateLabel")}
+        error={errors.start_date ? t(errors.start_date) : undefined}
+      >
         <Input
           type="date"
           value={draft.start_date}
           onChange={(e) => onChange({ start_date: e.target.value })}
-          aria-label="Fecha de inicio"
+          aria-label={t("form.startDateLabel")}
         />
       </Field>
-      <Field label="Fecha de finalización" error={errors.estimated_end_date}>
+      <Field
+        label={t("form.endDateLabel")}
+        error={errors.estimated_end_date ? t(errors.estimated_end_date) : undefined}
+      >
         <Input
           type="date"
           value={draft.estimated_end_date}
           onChange={(e) => onChange({ estimated_end_date: e.target.value })}
-          aria-label="Fecha de finalización"
+          aria-label={t("form.endDateLabel")}
         />
       </Field>
     </div>
@@ -367,15 +394,16 @@ function ClassificationFields({
   lines: { id: string; name: string }[];
   researchers: { id: string; full_name: string }[];
 }) {
+  const t = useTranslations("projects");
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Centro">
+      <Field label={t("form.centerLabel")}>
         <Select
           value={draft.center}
           onValueChange={(v) => onChange({ center: v, group: "", line: "" })}
         >
-          <SelectTrigger aria-label="Centro">
-            <SelectValue placeholder="Selecciona un centro" />
+          <SelectTrigger aria-label={t("form.centerLabel")}>
+            <SelectValue placeholder={t("form.centerPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {centers.map((c) => (
@@ -386,15 +414,19 @@ function ClassificationFields({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Grupo">
+      <Field label={t("form.groupLabel")}>
         <Select
           value={draft.group}
           onValueChange={(v) => onChange({ group: v, line: "" })}
           disabled={!draft.center}
         >
-          <SelectTrigger aria-label="Grupo">
+          <SelectTrigger aria-label={t("form.groupLabel")}>
             <SelectValue
-              placeholder={draft.center ? "Selecciona un grupo" : "Primero elige centro"}
+              placeholder={
+                draft.center
+                  ? t("form.groupPlaceholder")
+                  : t("form.groupRequiresCenter")
+              }
             />
           </SelectTrigger>
           <SelectContent>
@@ -406,15 +438,19 @@ function ClassificationFields({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Línea">
+      <Field label={t("form.lineLabel")}>
         <Select
           value={draft.line}
           onValueChange={(v) => onChange({ line: v })}
           disabled={!draft.group}
         >
-          <SelectTrigger aria-label="Línea">
+          <SelectTrigger aria-label={t("form.lineLabel")}>
             <SelectValue
-              placeholder={draft.group ? "Selecciona una línea" : "Primero elige grupo"}
+              placeholder={
+                draft.group
+                  ? t("form.linePlaceholder")
+                  : t("form.lineRequiresGroup")
+              }
             />
           </SelectTrigger>
           <SelectContent>
@@ -426,13 +462,13 @@ function ClassificationFields({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Investigador principal">
+      <Field label={t("form.piLabel")}>
         <Select
           value={draft.principal_investigator}
           onValueChange={(v) => onChange({ principal_investigator: v })}
         >
-          <SelectTrigger aria-label="Investigador principal">
-            <SelectValue placeholder="Selecciona" />
+          <SelectTrigger aria-label={t("form.piLabel")}>
+            <SelectValue placeholder={t("form.selectPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {researchers.map((r) => (
@@ -456,6 +492,7 @@ function TeamFields({
   onChange: (v: Partial<WizardState>) => void;
   researchers: { id: string; full_name: string }[];
 }) {
+  const t = useTranslations("projects");
   function addMember() {
     onChange({ members: [...draft.members, { researcher: "", role: "" }] });
   }
@@ -471,18 +508,18 @@ function TeamFields({
   return (
     <div className="space-y-3">
       {draft.members.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Sin integrantes aún (opcional).</p>
+        <p className="text-sm text-muted-foreground">{t("wizard.noTeamYet")}</p>
       ) : (
         draft.members.map((m, i) => (
           <div key={i} className="flex items-end gap-2">
             <div className="flex-1">
-              <Label>Investigador</Label>
+              <Label>{t("wizard.researcherLabel")}</Label>
               <Select
                 value={m.researcher}
                 onValueChange={(v) => updateMember(i, { researcher: v })}
               >
-                <SelectTrigger aria-label={`Investigador ${i + 1}`}>
-                  <SelectValue placeholder="Selecciona" />
+                <SelectTrigger aria-label={`${t("wizard.researcherLabel")} ${i + 1}`}>
+                  <SelectValue placeholder={t("form.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {researchers.map((r) => (
@@ -494,10 +531,10 @@ function TeamFields({
               </Select>
             </div>
             <div className="flex-1">
-              <Label>Rol</Label>
+              <Label>{t("wizard.roleLabel")}</Label>
               <Select value={m.role} onValueChange={(v) => updateMember(i, { role: v })}>
-                <SelectTrigger aria-label={`Rol ${i + 1}`}>
-                  <SelectValue placeholder="Rol" />
+                <SelectTrigger aria-label={`${t("wizard.roleLabel")} ${i + 1}`}>
+                  <SelectValue placeholder={t("wizard.rolePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {["co_investigator", "student", "seedbed", "collaborator"].map((r) => (
@@ -509,13 +546,13 @@ function TeamFields({
               </Select>
             </div>
             <Button type="button" variant="ghost" size="sm" onClick={() => removeMember(i)}>
-              Quitar
+              {t("wizard.removeMember")}
             </Button>
           </div>
         ))
       )}
       <Button type="button" variant="outline" size="sm" onClick={addMember}>
-        Agregar integrante
+        {t("wizard.addMember")}
       </Button>
     </div>
   );
@@ -528,15 +565,16 @@ function DocumentsFields({
   draft: WizardState;
   onChange: (v: Partial<WizardState>) => void;
 }) {
+  const t = useTranslations("projects");
   return (
     <div className="space-y-3">
       {draft.documents.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Sin documentos aún (opcional).</p>
+        <p className="text-sm text-muted-foreground">{t("wizard.noDocumentsYet")}</p>
       ) : (
         draft.documents.map((d, i) => (
           <div key={i} className="grid gap-2 sm:grid-cols-3">
             <Input
-              placeholder="Nombre"
+              placeholder={t("wizard.documentNamePlaceholder")}
               value={d.name}
               onChange={(e) =>
                 onChange({
@@ -547,7 +585,7 @@ function DocumentsFields({
               }
             />
             <Input
-              placeholder="Tipo"
+              placeholder={t("wizard.documentTypePlaceholder")}
               value={d.doc_type}
               onChange={(e) =>
                 onChange({
@@ -558,7 +596,7 @@ function DocumentsFields({
               }
             />
             <Input
-              placeholder="URL"
+              placeholder={t("wizard.documentUrlPlaceholder")}
               value={d.external_url}
               onChange={(e) =>
                 onChange({
@@ -581,21 +619,22 @@ function DocumentsFields({
           })
         }
       >
-        Agregar documento
+        {t("wizard.addDocument")}
       </Button>
     </div>
   );
 }
 
 function ReviewFields({ draft }: { draft: WizardState }) {
+  const t = useTranslations("projects");
   const rows: [string, string][] = [
-    ["Título", draft.title],
-    ["Centro", draft.center],
-    ["Grupo", draft.group],
-    ["Línea", draft.line],
-    ["Fecha inicio", draft.start_date],
-    ["Fecha fin", draft.estimated_end_date],
-    ["Investigador principal", draft.principal_investigator],
+    [t("wizard.reviewTitle"), draft.title],
+    [t("wizard.reviewCenter"), draft.center],
+    [t("wizard.reviewGroup"), draft.group],
+    [t("wizard.reviewLine"), draft.line],
+    [t("wizard.reviewStartDate"), draft.start_date],
+    [t("wizard.reviewEndDate"), draft.estimated_end_date],
+    [t("wizard.reviewPI"), draft.principal_investigator],
   ];
   return (
     <div className="space-y-2">
