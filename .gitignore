@@ -75,6 +75,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# ── Playwright E2E Testing ────────────────────────────────
+frontend/playwright-report/
+frontend/test-results/
+frontend/playwright/.cache/
+
 # ── Docker ────────────────────────────────────────────────
 *.env
 !.env.example

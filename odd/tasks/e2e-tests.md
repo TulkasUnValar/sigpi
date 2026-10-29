@@ -1,0 +1,208 @@
+# ODD: Tests de Integración E2E para SIGPI
+
+## Objetivo
+Implementar tests de integración end-to-end (E2E) para los flujos críticos del sistema SIGPI usando Playwright, mejorando la cobertura de integración más allá de los tests unitarios existentes.
+
+## Problema
+- Tests unitarios extensivos existen para backend y frontend
+- No hay tests E2E completos
+- Cobertura de integración limitada
+- Flujos críticos no validados automáticamente de punta a punta
+
+## Requisitos
+- Usar Playwright (estándar moderno, mejor integración con Next.js)
+- Configurar para ejecutar en CI/CD (GitHub Actions)
+- Tests para flujos críticos:
+  1. Autenticación (login/logout)
+  2. Internacionalización (cambio de idioma)
+  3. Navegación principal
+  4. Flujos de negocio básicos (budgets, projects, products)
+- Tests deben ser rápidos (< 5 min total)
+- Ejecutables en headless mode para CI
+
+## Alcance
+1. Instalar y configurar Playwright
+2. Crear configuración base (playwright.config.ts)
+3. Crear tests para flujos críticos:
+   - Autenticación (login/logout)
+   - Cambio de idioma (ES/EN)
+   - Navegación entre módulos principales
+   - Creación básica de budget
+   - Creación básica de project
+   - Creación básica de product
+4. Agregar scripts en package.json
+5. Integrar con CI/CD (GitHub Actions)
+6. Documentar uso y mantenimiento
+
+## Restricciones
+- No duplicar coverage de tests unitarios
+- Foco en integración, no en validación de UI detallada
+- Usar datos de prueba consistentes
+- No depender de servicios externos en tests
+- Tests deben ser idempotentes
+
+## Checks aplicables
+- `npm run test:e2e` - Todos los tests E2E pasan
+- `npm run test:e2e:ui` - Tests en modo UI (desarrollo)
+- Tests ejecutan en < 5 minutos
+- Coverage de flujos críticos > 80%
+
+## Progreso
+
+### Task 1: Instalar y configurar Playwright
+**Estado:** [x] Completada
+**Checklist:**
+- [x] Instalar Playwright: `npm install -D @playwright/test`
+- [x] Crear `playwright.config.ts` con configuración base
+- [x] Configurar baseURL apuntando a localhost:3000
+- [x] Configurar navegadores: Chromium, Firefox, WebKit
+- [x] Agregar scripts en package.json
+- [x] Agregar entradas a .gitignore
+- [x] Crear tests básicos de smoke (auth.spec.ts, i18n.spec.ts)
+- [ ] Instalar navegadores: `npx playwright install` (requiere ejecución manual)
+- [ ] Commit: `test: add Playwright configuration for E2E testing`
+
+**Evidencia:**
+- Comando ejecutado: npm install -D @playwright/test@latest
+- Resultado observado: Install exitoso (3 min, advertencias WSL no críticas)
+- Commit hash: Pendiente
+
+---
+
+### Task 2: Crear tests de autenticación
+**Estado:** [ ] Pendiente
+**Checklist:**
+- [ ] Crear `e2e/auth.spec.ts`
+- [ ] Test: Login exitoso con credenciales válidas
+- [ ] Test: Login fallido con credenciales inválidas
+- [ ] Test: Logout funcional
+- [ ] Test: Redirección a login cuando no autenticado
+- [ ] Test: Sesión persistente después de refresh
+- [ ] Verificar tests pasan
+- [ ] Commit: `test: add E2E tests for authentication flow`
+
+**Evidencia:**
+- Comando ejecutado:
+- Resultado observado:
+- Commit hash:
+
+---
+
+### Task 3: Crear tests de internacionalización
+**Estado:** [ ] Pendiente
+**Checklist:**
+- [ ] Crear `e2e/i18n.spec.ts`
+- [ ] Test: Cambio de idioma ES → EN
+- [ ] Test: Cambio de idioma EN → ES
+- [ ] Test: URLs con prefijo de locale (/es/, /en/)
+- [ ] Test: Preferencia de idioma persistente
+- [ ] Test: Textos traducidos en login page
+- [ ] Test: Textos traducidos en dashboard
+- [ ] Verificar tests pasan
+- [ ] Commit: `test: add E2E tests for internationalization`
+
+**Evidencia:**
+- Comando ejecutado:
+- Resultado observado:
+- Commit hash:
+
+---
+
+### Task 4: Crear tests de navegación principal
+**Estado:** [ ] Pendiente
+**Checklist:**
+- [ ] Crear `e2e/navigation.spec.ts`
+- [ ] Test: Navegación a Dashboard
+- [ ] Test: Navegación a Budgets
+- [ ] Test: Navegación a Projects
+- [ ] Test: Navegación a Products
+- [ ] Test: Navegación a Reports
+- [ ] Test: Links de navegación funcionan
+- [ ] Verificar tests pasan
+- [ ] Commit: `test: add E2E tests for main navigation`
+
+**Evidencia:**
+- Comando ejecutado:
+- Resultado observado:
+- Commit hash:
+
+---
+
+### Task 5: Crear tests de flujos de negocio básicos
+**Estado:** [ ] Pendiente
+**Checklist:**
+- [ ] Crear `e2e/budgets.spec.ts`
+- [ ] Test: Ver lista de budgets
+- [ ] Test: Crear nuevo budget (básico)
+- [ ] Test: Ver detalle de budget
+- [ ] Crear `e2e/projects.spec.ts`
+- [ ] Test: Ver lista de projects
+- [ ] Test: Crear nuevo project (básico)
+- [ ] Test: Ver detalle de project
+- [ ] Crear `e2e/products.spec.ts`
+- [ ] Test: Ver lista de products
+- [ ] Test: Crear nuevo product (básico)
+- [ ] Test: Ver detalle de product
+- [ ] Verificar tests pasan
+- [ ] Commit: `test: add E2E tests for basic business flows`
+
+**Evidencia:**
+- Comando ejecutado:
+- Resultado observado:
+- Commit hash:
+
+---
+
+### Task 6: Integrar con CI/CD
+**Estado:** [ ] Pendiente
+**Checklist:**
+- [ ] Actualizar `.github/workflows/ci.yml`
+- [ ] Agregar job para E2E tests
+- [ ] Configurar servicios necesarios (backend, frontend)
+- [ ] Ejecutar tests E2E en PRs
+- [ ] Subir reportes de Playwright como artifacts
+- [ ] Verificar CI pasa
+- [ ] Commit: `ci: integrate Playwright E2E tests in GitHub Actions`
+
+**Evidencia:**
+- Comando ejecutado:
+- Resultado observado:
+- Commit hash:
+
+---
+
+### Task 7: Documentación y limpieza
+**Estado:** [ ] Pendiente
+**Checklist:**
+- [ ] Crear `docs/testing/e2e-testing.md`
+- [ ] Documentar cómo ejecutar tests E2E
+- [ ] Documentar estructura de tests
+- [ ] Documentar cómo agregar nuevos tests
+- [ ] Agregar sección en README.md
+- [ ] Limpiar archivos temporales de Playwright
+- [ ] Verificar documentación completa
+- [ ] Commit: `docs: add E2E testing documentation`
+
+**Evidencia:**
+- Comando ejecutado:
+- Resultado observado:
+- Commit hash:
+
+---
+
+## Resumen de verificación
+**Estado general:** [ ] En progreso / [ ] Completado
+
+### Tarea actual
+**Task ID:** 1
+**Estado:** [ ] Pendiente
+
+### Próximo paso
+Instalar Playwright y crear configuración base
+
+### Notas
+- Usar Playwright por su mejor integración con Next.js 15
+- Configurar para ejecutar en headless mode en CI
+- Tests deben ser rápidos y confiables
+- No duplicar coverage de tests unitarios
+- Foco en flujos de integración, no validación de UI detallada
