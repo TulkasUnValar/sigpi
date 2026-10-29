@@ -573,9 +573,9 @@
       "prototipo": "Prototype",
       "evento": "Event",
       "consultoria": "Consultancy",
-      "disenoIndustrial": "Industrial Design",
-      "innovacionProceso": "Process Innovation",
-      "innovacionGestion": "Management Innovation",
+      "diseno_industrial": "Industrial Design",
+      "innovacion_proceso": "Process Innovation",
+      "innovacion_gestion": "Management Innovation",
       "carta": "Letter"
     }
   },
