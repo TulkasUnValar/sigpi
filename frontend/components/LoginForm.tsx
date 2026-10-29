@@ -6,6 +6,7 @@
  */
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
 
 interface FormErrors {
@@ -19,11 +20,12 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  const t = useTranslations("login");
 
   function validate(): FormErrors {
     const e: FormErrors = {};
-    if (!email.trim()) e.email = "Email is required.";
-    if (!password) e.password = "Password is required.";
+    if (!email.trim()) e.email = t("emailRequired");
+    if (!password) e.password = t("passwordRequired");
     return e;
   }
 
@@ -41,7 +43,7 @@ export default function LoginForm() {
       await login(email, password);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Login failed.";
+        err instanceof Error ? err.message : t("loginFailed");
       setErrors({ api: message });
     }
   }
@@ -49,26 +51,26 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div>
-        <label htmlFor="email">Email</label>
+        <label htmlFor="email">{t("emailLabel")}</label>
         <input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="user@example.com"
+          placeholder={t("emailPlaceholder")}
           autoComplete="email"
         />
         {errors.email && <p role="alert">{errors.email}</p>}
       </div>
 
       <div>
-        <label htmlFor="password">Password</label>
+        <label htmlFor="password">{t("passwordLabel")}</label>
         <input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
+          placeholder={t("passwordPlaceholder")}
           autoComplete="current-password"
         />
         {errors.password && <p role="alert">{errors.password}</p>}
@@ -77,7 +79,7 @@ export default function LoginForm() {
       {errors.api && <p role="alert">{errors.api}</p>}
 
       <button type="submit" disabled={isLoading}>
-        {isLoading ? "Signing in…" : "Sign in"}
+        {isLoading ? t("signingIn") : t("signIn")}
       </button>
     </form>
   );

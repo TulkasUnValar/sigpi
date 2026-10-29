@@ -5,9 +5,12 @@
  * The Django backend handles the OIDC flow via mozilla-django-oidc.
  */
 
+import { useTranslations } from "next-intl";
 import { API_BASE } from "@/lib/api";
 
 export default function OIDCButton() {
+  const t = useTranslations("login");
+
   const handleClick = () => {
     window.location.href = `${API_BASE}/auth/keycloak-status/`;
     // In production, this would redirect to Django's OIDC login endpoint.
@@ -21,7 +24,7 @@ export default function OIDCButton() {
       onClick={handleClick}
       data-testid="oidc-button"
     >
-      Sign in with SSO (Keycloak)
+      {t("signInWithSSO")}
     </button>
   );
 }

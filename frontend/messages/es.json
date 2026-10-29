@@ -1,6 +1,6 @@
 {
   "common": {
-    "loading": "Cargando...",
+    "loading": "Cargando…",
     "error": "Error",
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -12,11 +12,19 @@
     "actions": "Acciones"
   },
   "login": {
-    "title": "Iniciar Sesión",
-    "subtitle": "Sistema de Información para la Gestión de Proyectos de Investigación",
-    "email": "Correo electrónico",
-    "password": "Contraseña",
-    "submit": "Ingresar",
-    "error": "Credenciales inválidas"
+    "loading": "Cargando…",
+    "title": "Iniciar sesión en SIGPI",
+    "ssoSection": "Inicio de sesión único",
+    "localSection": "Inicio de sesión local",
+    "emailRequired": "El correo electrónico es obligatorio.",
+    "passwordRequired": "La contraseña es obligatoria.",
+    "loginFailed": "Error de inicio de sesión.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "usuario@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "signingIn": "Iniciando sesión…",
+    "signIn": "Iniciar sesión",
+    "signInWithSSO": "Iniciar sesión con SSO (Keycloak)"
   }
 }

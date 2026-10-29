@@ -1,6 +1,6 @@
 {
   "common": {
-    "loading": "Loading...",
+    "loading": "Loading…",
     "error": "Error",
     "save": "Save",
     "cancel": "Cancel",
@@ -12,11 +12,19 @@
     "actions": "Actions"
   },
   "login": {
-    "title": "Sign In",
-    "subtitle": "Research Project Management Information System",
-    "email": "Email",
-    "password": "Password",
-    "submit": "Sign In",
-    "error": "Invalid credentials"
+    "loading": "Loading…",
+    "title": "Sign in to SIGPI",
+    "ssoSection": "Single Sign-On",
+    "localSection": "Local Login",
+    "emailRequired": "Email is required.",
+    "passwordRequired": "Password is required.",
+    "loginFailed": "Login failed.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "user@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "signingIn": "Signing in…",
+    "signIn": "Sign in",
+    "signInWithSSO": "Sign in with SSO (Keycloak)"
   }
 }
