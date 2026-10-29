@@ -27,6 +27,9 @@ const config = {
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^next-intl$": "<rootDir>/__mocks__/next-intl.js",
+    "^next-intl/middleware$": "<rootDir>/__mocks__/next-intl/middleware.js",
+    "^next-intl/(.*)$": "<rootDir>/__mocks__/next-intl/$1.js",
   },
   testMatch: ["**/__tests__/**/*.test.{ts,tsx}"],
   collectCoverageFrom: [
