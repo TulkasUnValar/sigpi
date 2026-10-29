@@ -1,54 +1,61 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 
 /** Semantic variant used by the badge. */
 export type StatusVariant = BadgeProps["variant"];
 
-/** Status metadata: Spanish label + badge variant. */
+/** Status metadata: badge variant only (labels come from translations). */
 export interface StatusMeta {
-  label: string;
   variant: StatusVariant;
 }
 
-const STATUS_META: Record<string, StatusMeta> = {
+const VARIANT_META: Record<string, StatusMeta> = {
   // Institution hierarchy statuses (institutions feature)
-  active: { label: "Activa", variant: "success" },
-  deactivated: { label: "Desactivada", variant: "warning" },
-  archived: { label: "Archivada", variant: "secondary" },
+  active: { variant: "success" },
+  deactivated: { variant: "warning" },
+  archived: { variant: "secondary" },
   // Researcher lifecycle (researchers feature — is_active derived status)
-  inactive: { label: "Inactivo", variant: "warning" },
+  inactive: { variant: "warning" },
   // Project / advance statuses
-  borrador: { label: "Borrador", variant: "secondary" },
-  enviado: { label: "Enviado", variant: "info" },
-  en_revision: { label: "En revisión", variant: "warning" },
-  observado: { label: "Observado", variant: "warning" },
-  aprobado: { label: "Aprobado", variant: "success" },
-  en_ejecucion: { label: "En ejecución", variant: "success" },
-  suspendido: { label: "Suspendido", variant: "warning" },
-  finalizado: { label: "Finalizado", variant: "success" },
-  en_cierre: { label: "En cierre", variant: "info" },
-  cerrado: { label: "Cerrado", variant: "secondary" },
-  rechazado: { label: "Rechazado", variant: "destructive" },
-  cancelado: { label: "Cancelado", variant: "destructive" },
+  borrador: { variant: "secondary" },
+  enviado: { variant: "info" },
+  en_revision: { variant: "warning" },
+  observado: { variant: "warning" },
+  aprobado: { variant: "success" },
+  en_ejecucion: { variant: "success" },
+  suspendido: { variant: "warning" },
+  finalizado: { variant: "success" },
+  en_cierre: { variant: "info" },
+  cerrado: { variant: "secondary" },
+  rechazado: { variant: "destructive" },
+  cancelado: { variant: "destructive" },
   // Call FSM statuses (calls feature)
-  abierta: { label: "Abierta", variant: "success" },
-  cerrada: { label: "Cerrada", variant: "secondary" },
-  en_evaluacion: { label: "En evaluación", variant: "warning" },
-  resultados_publicados: { label: "Resultados publicados", variant: "info" },
-  archivada: { label: "Archivada", variant: "secondary" },
+  abierta: { variant: "success" },
+  cerrada: { variant: "secondary" },
+  en_evaluacion: { variant: "warning" },
+  resultados_publicados: { variant: "info" },
+  archivada: { variant: "secondary" },
   // Report lifecycle statuses (reports feature — UI projection)
-  not_generated: { label: "No generado", variant: "secondary" },
-  generated: { label: "Generado", variant: "info" },
-  approved: { label: "Aprobado", variant: "success" },
+  not_generated: { variant: "secondary" },
+  generated: { variant: "info" },
+  approved: { variant: "success" },
 };
 
 /**
- * Resolve a DRF status value into label + badge variant (Spanish copy).
- * Unknown statuses fall back to a neutral "Estado desconocido" badge
- * (institutions-ui: status values are consumed verbatim; badge mapping
- * covers known values with a fallback for unknown ones).
+ * Resolve a DRF status value into label + badge variant using translations.
+ * Unknown statuses fall back to a neutral variant with "Unknown status" label.
  */
-export function getStatusMeta(status: string): StatusMeta {
-  return STATUS_META[status] ?? { label: "Estado desconocido", variant: "secondary" };
+export function getStatusMeta(
+  t: (key: string) => string,
+  status: string
+): { label: string; variant: StatusVariant } {
+  const meta = VARIANT_META[status];
+  const variant = meta?.variant ?? "secondary";
+  const labelKey = VARIANT_META[status] ? status : "unknown";
+  const label = t(`statuses.${labelKey}`);
+  return { label, variant };
 }
 
 interface StatusBadgeProps {
@@ -57,9 +64,10 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-/** Badge rendering a project/advance status with Spanish copy. */
+/** Badge rendering a project/advance status with translated labels. */
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const meta = getStatusMeta(status);
+  const t = useTranslations();
+  const meta = getStatusMeta(t, status);
   return (
     <Badge variant={meta.variant} className={className}>
       {meta.label}

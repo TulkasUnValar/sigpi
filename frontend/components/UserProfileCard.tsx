@@ -5,10 +5,12 @@
  * email, auth source, active institution, role, and centers.
  */
 
+import { useTranslations } from "next-intl";
 import { roleSlugToLabel, useAuthStore } from "@/store/auth";
 
 export default function UserProfileCard() {
   const { user, activeInstitution, roles, centers } = useAuthStore();
+  const t = useTranslations("common");
 
   if (!user) {
     return <p>No user data available.</p>;
@@ -26,13 +28,13 @@ export default function UserProfileCard() {
         <dd>{user.auth_source}</dd>
 
         <dt>Active Institution</dt>
-        <dd>{activeInstitution?.name ?? "None"}</dd>
+        <dd>{activeInstitution?.name ?? t("none")}</dd>
 
         <dt>Active Role</dt>
-        <dd>{roles.length > 0 ? roles.map((slug) => roleSlugToLabel(slug)).join(", ") : "None"}</dd>
+        <dd>{roles.length > 0 ? roles.map((slug) => roleSlugToLabel(slug)).join(", ") : t("none")}</dd>
 
         <dt>Centers</dt>
-        <dd>{centers.length > 0 ? centers.map((c) => c.name).join(", ") : "None"}</dd>
+        <dd>{centers.length > 0 ? centers.map((c) => c.name).join(", ") : t("none")}</dd>
       </dl>
     </div>
   );

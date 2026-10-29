@@ -9,7 +9,9 @@
     "create": "Create",
     "search": "Search",
     "filter": "Filter",
-    "actions": "Actions"
+    "actions": "Actions",
+    "none": "None",
+    "activeInstitution": "Active institution"
   },
   "login": {
     "loading": "Loading…",
@@ -576,5 +578,32 @@
       "innovacionGestion": "Management Innovation",
       "carta": "Letter"
     }
+  },
+  "statuses": {
+    "active": "Active",
+    "deactivated": "Deactivated",
+    "archived": "Archived",
+    "inactive": "Inactive",
+    "borrador": "Draft",
+    "enviado": "Submitted",
+    "en_revision": "In review",
+    "observado": "Observed",
+    "aprobado": "Approved",
+    "en_ejecucion": "In execution",
+    "suspendido": "Suspended",
+    "finalizado": "Finalized",
+    "en_cierre": "Closing",
+    "cerrado": "Closed",
+    "rechazado": "Rejected",
+    "cancelado": "Cancelled",
+    "abierta": "Open",
+    "cerrada": "Closed",
+    "en_evaluacion": "In evaluation",
+    "resultados_publicados": "Results published",
+    "archivada": "Archived",
+    "not_generated": "Not generated",
+    "generated": "Generated",
+    "approved": "Approved",
+    "unknown": "Unknown status"
   }
 }

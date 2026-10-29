@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 import { locales, type Locale } from "@/i18n/config";
 
@@ -8,6 +8,7 @@ export default function LocaleSwitcher() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("localeSwitcher");
 
   function handleLocaleChange(newLocale: Locale) {
     // Replace current locale in pathname
@@ -27,7 +28,7 @@ export default function LocaleSwitcher() {
               ? "bg-blue-500 text-white"
               : "bg-gray-200 hover:bg-gray-300"
           }`}
-          aria-label={`Switch to ${l === "es" ? "Spanish" : "English"}`}
+          aria-label={l === "es" ? t("switchToSpanish") : t("switchToEnglish")}
         >
           {l === "es" ? "ES" : "EN"}
         </button>

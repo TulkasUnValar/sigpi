@@ -9,7 +9,9 @@
     "create": "Crear",
     "search": "Buscar",
     "filter": "Filtrar",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "none": "Ninguno",
+    "activeInstitution": "Institución activa"
   },
   "login": {
     "loading": "Cargando…",
@@ -576,5 +578,32 @@
       "innovacion_gestion": "Innovación de Gestión",
       "carta": "Carta"
     }
+  },
+  "statuses": {
+    "active": "Activa",
+    "deactivated": "Desactivada",
+    "archived": "Archivada",
+    "inactive": "Inactivo",
+    "borrador": "Borrador",
+    "enviado": "Enviado",
+    "en_revision": "En revisión",
+    "observado": "Observado",
+    "aprobado": "Aprobado",
+    "en_ejecucion": "En ejecución",
+    "suspendido": "Suspendido",
+    "finalizado": "Finalizado",
+    "en_cierre": "En cierre",
+    "cerrado": "Cerrado",
+    "rechazado": "Rechazado",
+    "cancelado": "Cancelado",
+    "abierta": "Abierta",
+    "cerrada": "Cerrada",
+    "en_evaluacion": "En evaluación",
+    "resultados_publicados": "Resultados publicados",
+    "archivada": "Archivada",
+    "not_generated": "No generado",
+    "generated": "Generado",
+    "approved": "Aprobado",
+    "unknown": "Estado desconocido"
   }
 }
