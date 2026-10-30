@@ -1,13 +1,9 @@
 // Mock for next-intl
 // This mock loads real translations from messages files for testing
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const fs = require('fs');
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load translations based on locale (default to English for tests)
+// Load translations based on locale (default to Spanish for tests)
 let translationsCache = null;
 
 function loadTranslations(locale = 'es') {

@@ -13,7 +13,13 @@ import { api } from "@/lib/api";
 import type { Page, Budget, BudgetListItem, BudgetLine, BudgetSummary as BudgetSummaryType } from "@/features/budgets/types";
 
 jest.mock("@/lib/api");
-jest.mock("@/store/auth");
+jest.mock("@/store/auth", () => ({
+  useAuthStore: jest.fn((selector) => selector({
+    activeInstitution: { id: "inst-1", name: "Test Institution" },
+    roles: [],
+    user: null,
+  })),
+}));
 
 const mockApi = api as jest.Mocked<typeof api>;
 const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;
@@ -32,9 +38,11 @@ function createWrapper() {
 describe("useBudgets", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseAuthStore.mockReturnValue({
+    mockUseAuthStore.mockImplementation((selector: any) => selector({
       activeInstitution: { id: "inst-1", name: "Test Institution" },
-    } as any);
+      roles: [],
+      user: null,
+    }));
   });
 
   it("fetches budgets list", async () => {
@@ -67,9 +75,11 @@ describe("useBudgets", () => {
   });
 
   it("does not fetch when institutionId is null", async () => {
-    mockUseAuthStore.mockReturnValue({
+    mockUseAuthStore.mockImplementation((selector: any) => selector({
       activeInstitution: null,
-    } as any);
+      roles: [],
+      user: null,
+    }));
 
     const { result } = renderHook(() => useBudgets(), { wrapper: createWrapper() });
 

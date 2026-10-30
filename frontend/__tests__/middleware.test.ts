@@ -1,7 +1,7 @@
 /**
- * Tests for middleware.ts — Next.js Auth Middleware.
+ * Tests for middleware.ts — Next.js Auth Middleware + i18n.
  *
- * Tests the middleware function by mocking next/server.
+ * Tests the middleware function by mocking next/server and next-intl/middleware.
  */
 
 interface MockCookie {
@@ -40,6 +40,18 @@ jest.mock("next/server", () => ({
       return { status: 307, headers };
     },
   },
+}));
+
+// ── Mock next-intl/middleware ─────────
+jest.mock("next-intl/middleware", () => ({
+  __esModule: true,
+  default: () => () => ({ status: 200, headers: new Map() }),
+}));
+
+// ── Mock i18n config ─────────
+jest.mock("../i18n/config", () => ({
+  locales: ["es", "en"],
+  defaultLocale: "es",
 }));
 
 import { middleware } from "@/middleware";

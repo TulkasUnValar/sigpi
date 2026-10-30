@@ -176,7 +176,7 @@ describe("BudgetLinesManager", () => {
         "/api/budgets/budget-1/lines/",
         expect.objectContaining({
           name: "Nuevo Rubro",
-          approved_amount: "3000.00",
+          approved_amount: "3000",
         })
       );
     });
@@ -302,7 +302,7 @@ describe("FundingSourcesManager", () => {
         "/api/projects/project-1/funding-sources/",
         expect.objectContaining({
           name: "Nueva Fuente",
-          amount: "5000.00",
+          amount: "5000",
         })
       );
     });

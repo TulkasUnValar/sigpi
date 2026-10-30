@@ -231,7 +231,7 @@ describe("AuthorsManager — create", () => {
     await user.click(screen.getByRole("button", { name: /añadir autor/i }));
 
     await waitFor(() => {
-      expect(toastModule.toast.error).toHaveBeenCalledWith(DUPLICATE_RESEARCHER_MESSAGE_KEY);
+      expect(toastModule.toast.error).toHaveBeenCalledWith("Este investigador ya es autor del producto.");
     });
   });
 });
@@ -305,7 +305,7 @@ describe("AuthorsManager — two-step principal switch", () => {
     );
 
     await waitFor(() => {
-      expect(toastModule.toast.error).toHaveBeenCalledWith(PRINCIPAL_SWITCH_GUIDANCE_KEY);
+      expect(toastModule.toast.error).toHaveBeenCalledWith("Solo puede haber un autor principal: desmarca primero el autor principal actual y luego marca el nuevo.");
     });
   });
 });
@@ -314,7 +314,7 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
   it("shows two-step guidance when a principal and non-principal authors exist", async () => {
     renderManager(defaultGet([author("a1", "r-1", true, 0), author("a2", "r-2", false, 1)]));
 
-    expect(await screen.findByText(PRINCIPAL_SWITCH_STEPS_KEY)).toBeInTheDocument();
+    expect(await screen.findByText("Para cambiar el autor principal, primero se desmarca el actual y luego se marca el nuevo (dos pasos automáticos).")).toBeInTheDocument();
   });
 
   it("hides guidance when no principal exists yet", async () => {
@@ -322,7 +322,7 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
     const list = await authorList();
     await within(list).findByText("Ana Pérez");
 
-    expect(screen.queryByText(PRINCIPAL_SWITCH_STEPS_KEY)).not.toBeInTheDocument();
+    expect(screen.queryByText("Para cambiar el autor principal, primero se desmarca el actual y luego se marca el nuevo (dos pasos automáticos).")).not.toBeInTheDocument();
   });
 
   it("hides guidance when every author is already principal", async () => {
@@ -330,7 +330,7 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
     const list = await authorList();
     await within(list).findByText("Ana Pérez");
 
-    expect(screen.queryByText(PRINCIPAL_SWITCH_STEPS_KEY)).not.toBeInTheDocument();
+    expect(screen.queryByText("Para cambiar el autor principal, primero se desmarca el actual y luego se marca el nuevo (dos pasos automáticos).")).not.toBeInTheDocument();
   });
 
   it("disables switch/delete buttons and shows status while a switch is in flight", async () => {
@@ -362,13 +362,13 @@ describe("AuthorsManager — principal switch UX polish (PR3)", () => {
     within(list)
       .getAllByRole("button", { name: /eliminar/i })
       .forEach((b) => expect(b).toBeDisabled());
-    expect(screen.getByText(PRINCIPAL_SWITCH_IN_PROGRESS_KEY)).toBeInTheDocument();
+    expect(screen.getByText("Cambiando autor principal…")).toBeInTheDocument();
 
     await act(async () => {
       resolveUnset({ ok: true });
     });
     // Second step (set) pending: still disabled.
-    expect(screen.getByText(PRINCIPAL_SWITCH_IN_PROGRESS_KEY)).toBeInTheDocument();
+    expect(screen.getByText("Cambiando autor principal…")).toBeInTheDocument();
 
     await act(async () => {
       resolveSet({ ok: true });

@@ -197,7 +197,9 @@ describe("/budgets/new — create route", () => {
     await userEvent.selectOptions(projectSelect, "project-1");
 
     await userEvent.type(screen.getByLabelText(/nombre/i), "Presupuesto 2027");
-    await userEvent.type(screen.getByLabelText(/monto aprobado/i), "15000.00");
+    const amountInput = screen.getByLabelText(/monto aprobado/i);
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "15000.00");
 
     fireEvent.click(screen.getByRole("button", { name: /crear presupuesto/i }));
 
@@ -227,7 +229,9 @@ describe("/budgets/new — create route", () => {
     await userEvent.selectOptions(projectSelect, "project-1");
 
     await userEvent.type(screen.getByLabelText(/nombre/i), "Presupuesto 2027");
-    await userEvent.type(screen.getByLabelText(/monto aprobado/i), "15000.00");
+    const amountInput = screen.getByLabelText(/monto aprobado/i);
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "15000.00");
 
     fireEvent.click(screen.getByRole("button", { name: /crear presupuesto/i }));
 
