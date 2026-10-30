@@ -57,7 +57,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(
-      screen.getByRole("heading", { name: /sign in/i }),
+      screen.getByRole("heading", { name: /iniciar sesión/i }),
     ).toBeInTheDocument();
   });
 
@@ -80,6 +80,6 @@ describe("LoginPage", () => {
 
     render(<LoginPage />);
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByText(/cargando/i)).toBeInTheDocument();
   });
 });

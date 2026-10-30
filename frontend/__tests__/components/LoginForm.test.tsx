@@ -37,10 +37,10 @@ describe("LoginForm", () => {
   it("renders email and password inputs and a submit button", () => {
     render(<LoginForm />);
 
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /sign in/i }),
+      screen.getByRole("button", { name: /iniciar sesión/i }),
     ).toBeInTheDocument();
   });
 
@@ -50,9 +50,9 @@ describe("LoginForm", () => {
 
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email/i), "test@example.com");
-    await user.type(screen.getByLabelText(/password/i), "secure123");
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.type(screen.getByLabelText(/correo electrónico/i), "test@example.com");
+    await user.type(screen.getByLabelText(/contraseña/i), "secure123");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith("test@example.com", "secure123");
@@ -68,16 +68,16 @@ describe("LoginForm", () => {
 
     render(<LoginForm />);
 
-    expect(screen.getByRole("button", { name: /signing in/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /iniciando sesión/i })).toBeDisabled();
   });
 
   it("shows validation error when email is empty on submit", async () => {
     render(<LoginForm />);
 
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/correo electrónico es obligatorio/i)).toBeInTheDocument();
     });
   });
 
@@ -85,11 +85,11 @@ describe("LoginForm", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email/i), "test@example.com");
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.type(screen.getByLabelText(/correo electrónico/i), "test@example.com");
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/contraseña es obligatoria/i)).toBeInTheDocument();
     });
   });
 
@@ -99,9 +99,9 @@ describe("LoginForm", () => {
 
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email/i), "test@example.com");
-    await user.type(screen.getByLabelText(/password/i), "badpass");
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.type(screen.getByLabelText(/correo electrónico/i), "test@example.com");
+    await user.type(screen.getByLabelText(/contraseña/i), "badpass");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();

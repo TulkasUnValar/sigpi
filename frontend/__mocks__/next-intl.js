@@ -1,82 +1,69 @@
 // Mock for next-intl
-// This mock provides realistic translations for testing
+// This mock loads real translations from messages files for testing
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const translations = {
-  common: {
-    loading: "Loading…",
-    error: "Error",
-    save: "Save",
-    cancel: "Cancel",
-    delete: "Delete",
-    edit: "Edit",
-    create: "Create",
-    search: "Search",
-    filter: "Filter",
-    actions: "Actions",
-  },
-  login: {
-    loading: "Loading…",
-    title: "Sign in to SIGPI",
-    ssoSection: "Single Sign-On",
-    localSection: "Local Login",
-    emailRequired: "Email is required.",
-    passwordRequired: "Password is required.",
-    loginFailed: "Login failed.",
-    emailLabel: "Email",
-    emailPlaceholder: "user@example.com",
-    passwordLabel: "Password",
-    passwordPlaceholder: "••••••••",
-    signingIn: "Signing in…",
-    signIn: "Sign in",
-    signInWithSSO: "Sign in with SSO",
-  },
-  budgets: {
-    title: "Budgets",
-    createNew: "Create new budget",
-    // Add more as needed
-  },
-  projects: {
-    title: "Projects",
-    createNew: "Create new project",
-    // Add more as needed
-  },
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load translations based on locale (default to English for tests)
+let translationsCache = null;
+
+function loadTranslations(locale = 'es') {
+  if (translationsCache) return translationsCache;
+
+  try {
+    const messagesPath = path.join(__dirname, '..', 'messages', `${locale}.json`);
+    const content = fs.readFileSync(messagesPath, 'utf-8');
+    translationsCache = JSON.parse(content);
+    return translationsCache;
+  } catch (error) {
+    console.warn('Could not load translations, using empty object:', error.message);
+    return {};
+  }
+}
+
+// Get a value from nested object using dot notation
+function getNestedValue(obj, keyPath) {
+  return keyPath.split('.').reduce((current, key) => {
+    return current && current[key] !== undefined ? current[key] : undefined;
+  }, obj);
+}
+
+// Substitute parameters in translation string
+function substituteParams(template, params) {
+  if (!params || typeof template !== 'string') return template;
+
+  return template.replace(/\{(\w+)\}/g, (match, paramName) => {
+    return params[paramName] !== undefined ? String(params[paramName]) : match;
+  });
+}
 
 module.exports = {
   useTranslations: (namespace) => {
+    const translations = loadTranslations('es');
+
     return (key, params) => {
-      const keys = key.split(".");
-      let value = translations;
-      
-      // Try to find the translation in the namespace
-      if (namespace && translations[namespace]) {
-        value = translations[namespace];
+      // Build full key path
+      const fullPath = namespace ? `${namespace}.${key}` : key;
+
+      // Try to find the translation
+      const value = getNestedValue(translations, fullPath);
+
+      if (value !== undefined) {
+        return substituteParams(value, params);
       }
-      
-      // Navigate through nested keys
-      for (const k of keys) {
-        if (value && typeof value === "object" && k in value) {
-          value = value[k];
-        } else {
-          // If not found, return the full key
-          return namespace ? `${namespace}.${key}` : key;
-        }
-      }
-      
-      // Handle parameter substitution
-      if (params && typeof value === "string") {
-        return value.replace(/\{(\w+)\}/g, (match, paramName) => {
-          return params[paramName] !== undefined ? String(params[paramName]) : match;
-        });
-      }
-      
-      return typeof value === "string" ? value : (namespace ? `${namespace}.${key}` : key);
+
+      // If not found, return just the key (without namespace) for better test compatibility
+      console.warn(`Translation not found: ${fullPath}`);
+      return key;
     };
   },
 
-  useLocale: () => "en",
+  useLocale: () => "es",
 
-  useMessages: () => translations,
+  useMessages: () => loadTranslations('es'),
 
   useNow: () => new Date(),
 
@@ -92,10 +79,15 @@ module.exports = {
   NextIntlClientProvider: ({ children }) => children,
 
   createTranslator: ({ messages, locale }) => {
+    const translations = messages || loadTranslations(locale || 'es');
+
     return (key, params) => {
-      if (params) {
-        return `${key}:${JSON.stringify(params)}`;
+      const value = getNestedValue(translations, key);
+
+      if (value !== undefined) {
+        return substituteParams(value, params);
       }
+
       return key;
     };
   },

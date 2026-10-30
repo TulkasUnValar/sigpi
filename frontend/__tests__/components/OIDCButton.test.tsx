@@ -31,13 +31,13 @@ describe("OIDCButton", () => {
   it("renders the SSO button text", () => {
     render(<OIDCButton />);
     expect(
-      screen.getByRole("button", { name: /sign in with sso/i }),
+      screen.getByRole("button", { name: /iniciar sesión con sso/i }),
     ).toBeInTheDocument();
   });
 
   it("sets window.location.href on click", () => {
     render(<OIDCButton />);
-    fireEvent.click(screen.getByRole("button", { name: /sign in with sso/i }));
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión con sso/i }));
     expect(window.location.href).toBe(
       "http://localhost:8000/auth/login/?provider=keycloak",
     );

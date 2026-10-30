@@ -31,7 +31,11 @@ const spanishT = (key: string) => {
     "types.innovacion_gestion": "Innovación de Gestión",
     "types.carta": "Carta",
   };
-  return labels[key] ?? key;
+  const translation = labels[key];
+  if (translation) return translation;
+  // For unknown keys, return just the last part (after the last dot)
+  const parts = key.split('.');
+  return parts[parts.length - 1];
 };
 
 describe("PRODUCT_TYPE_CODES", () => {

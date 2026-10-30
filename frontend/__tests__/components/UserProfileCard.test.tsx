@@ -52,7 +52,7 @@ describe("UserProfileCard", () => {
     expect(screen.getByText("Centro A, Centro B")).toBeInTheDocument();
   });
 
-  it("shows 'None' for missing institution and roles", () => {
+  it("shows 'Ninguno' for missing institution and roles", () => {
     mockedStore.mockReturnValue({
       user: {
         id: "u1",
@@ -72,8 +72,8 @@ describe("UserProfileCard", () => {
     render(<UserProfileCard />);
 
     expect(screen.getByText("empty@example.com")).toBeInTheDocument();
-    // Should show "None" for empty fields
-    const noneTexts = screen.getAllByText("None");
+    // Should show "Ninguno" for empty fields (translated from "None")
+    const noneTexts = screen.getAllByText("Ninguno");
     expect(noneTexts.length).toBeGreaterThanOrEqual(2);
   });
 
