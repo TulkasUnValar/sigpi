@@ -17,7 +17,7 @@ import {
 const mockT = (key: string) => key;
 
 // Mock translation function that returns Spanish labels (simulating real i18n)
-const spanishT = (key: string) => {
+const spanishT = (key: string): string => {
   const labels: Record<string, string> = {
     "types.articulo": "Artículo",
     "types.libro": "Libro",
@@ -35,7 +35,8 @@ const spanishT = (key: string) => {
   if (translation) return translation;
   // For unknown keys, return just the last part (after the last dot)
   const parts = key.split('.');
-  return parts[parts.length - 1];
+  const lastPart = parts[parts.length - 1];
+  return lastPart ?? key;
 };
 
 describe("PRODUCT_TYPE_CODES", () => {

@@ -82,10 +82,7 @@ import * as api from "@/lib/api";
 import { ApiError } from "@/lib/errors";
 import {
   AuthorsManager,
-  DUPLICATE_RESEARCHER_MESSAGE_KEY,
-  PRINCIPAL_SWITCH_GUIDANCE_KEY,
   PRINCIPAL_SWITCH_IN_PROGRESS_KEY,
-  PRINCIPAL_SWITCH_STEPS_KEY,
 } from "@/features/products/AuthorsManager";
 
 const toastModule = jest.requireMock("sonner") as {
