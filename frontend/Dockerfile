@@ -8,9 +8,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install from the lockfile first so the layer caches across source changes.
+# Install dependencies - use npm install instead of npm ci for flexibility across npm versions
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 COPY . .
 
