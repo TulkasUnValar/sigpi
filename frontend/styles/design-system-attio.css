@@ -1,6 +1,6 @@
 /**
  * SIGPI Design System — Attio Style Adaptation
- * 
+ *
  * Principios Attio aplicados:
  * - Paleta monocromática con acento azul→púrpura sutil
  * - Tipografía Inter con tracking negativo en headlines
@@ -19,35 +19,35 @@
 :root {
   /* Canvas (fondo principal) — blanco puro Attio */
   --canvas: 0 0% 100%;
-  
+
   /* Ink (texto primario) — near-black Attio */
   --ink-900: 0 0% 11%;
   --ink-800: 0 0% 13%;
   --ink-700: 0 0% 15%;
   --ink-600: 210 9% 20%;
-  
+
   /* Gray (texto secundario/terciario) */
   --gray-600: 0 0% 32%;
   --gray-500: 210 4% 38%;
   --gray-400: 210 4% 48%;
   --gray-350: 215 5% 65%;
   --gray-300: 210 6% 75%;
-  
+
   /* Border (bordes hairline) */
   --border-strong: 210 6% 78%;
   --border-default: 210 6% 85%;
   --border-subtle: 210 11% 91%;
-  
+
   /* Surface (fondos de paneles) */
   --surface-200: 210 9% 94%;
   --surface-100: 210 9% 96%;
   --surface-50: 210 11% 98%;
   --white: 0 0% 100%;
-  
+
   /* Acento brand (azul→púrpura) — usado SOLO en interactivos */
   --accent-blue: 221 83% 53%;
   --accent-purple: 262 83% 58%;
-  
+
   /* Status colors (muted para no competir con datos) */
   --status-draft: 215 16% 47%;
   --status-submitted: 217 91% 60%;
@@ -60,7 +60,7 @@
   --status-closed: 262 70% 50%;
   --status-rejected: 0 84% 60%;
   --status-cancelled: 0 0% 60%;
-  
+
   /* Semantic tokens (mapeo a sistema existente) */
   --background: var(--canvas);
   --foreground: var(--ink-900);
@@ -80,12 +80,12 @@
   --input: var(--border-strong);
   --ring: var(--accent-blue);
   --radius: 0.5rem;
-  
+
   /* Brand legacy */
   --brand-blue: var(--accent-blue);
   --brand-purple: var(--accent-purple);
   --brand-gradient: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-  
+
   /* Monospace para IDs/códigos */
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
@@ -144,15 +144,26 @@
   font-feature-settings: "ss03";
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
 
-h1 { letter-spacing: -0.025em; }
-h2 { letter-spacing: -0.02em; }
-h3 { letter-spacing: -0.015em; }
+h1 {
+  letter-spacing: -0.025em;
+}
+h2 {
+  letter-spacing: -0.02em;
+}
+h3 {
+  letter-spacing: -0.015em;
+}
 
 .font-mono-attio {
   font-family: var(--font-mono);
@@ -228,7 +239,9 @@ h3 { letter-spacing: -0.015em; }
   border: 1px solid hsl(var(--border-strong));
   background-color: hsl(var(--white));
   border-radius: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .input-attio:focus {
@@ -275,8 +288,12 @@ h3 { letter-spacing: -0.015em; }
    ======================================== */
 
 @keyframes shimmer {
-  from { background-position: -200% 0; }
-  to { background-position: 200% 0; }
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
 
 .animate-shimmer {
@@ -294,17 +311,50 @@ h3 { letter-spacing: -0.015em; }
    5. STATUS COLORS
    ======================================== */
 
-.bg-status-draft { background-color: hsl(var(--status-draft) / 0.1); color: hsl(var(--status-draft)); }
-.bg-status-submitted { background-color: hsl(var(--status-submitted) / 0.1); color: hsl(var(--status-submitted)); }
-.bg-status-review { background-color: hsl(var(--status-review) / 0.1); color: hsl(var(--status-review)); }
-.bg-status-observed { background-color: hsl(var(--status-observed) / 0.1); color: hsl(var(--status-observed)); }
-.bg-status-approved { background-color: hsl(var(--status-approved) / 0.1); color: hsl(var(--status-approved)); }
-.bg-status-execution { background-color: hsl(var(--status-execution) / 0.1); color: hsl(var(--status-execution)); }
-.bg-status-suspended { background-color: hsl(var(--status-suspended) / 0.1); color: hsl(var(--status-suspended)); }
-.bg-status-finalized { background-color: hsl(var(--status-finalized) / 0.1); color: hsl(var(--status-finalized)); }
-.bg-status-closed { background-color: hsl(var(--status-closed) / 0.1); color: hsl(var(--status-closed)); }
-.bg-status-rejected { background-color: hsl(var(--status-rejected) / 0.1); color: hsl(var(--status-rejected)); }
-.bg-status-cancelled { background-color: hsl(var(--status-cancelled) / 0.1); color: hsl(var(--status-cancelled)); }
+.bg-status-draft {
+  background-color: hsl(var(--status-draft) / 0.1);
+  color: hsl(var(--status-draft));
+}
+.bg-status-submitted {
+  background-color: hsl(var(--status-submitted) / 0.1);
+  color: hsl(var(--status-submitted));
+}
+.bg-status-review {
+  background-color: hsl(var(--status-review) / 0.1);
+  color: hsl(var(--status-review));
+}
+.bg-status-observed {
+  background-color: hsl(var(--status-observed) / 0.1);
+  color: hsl(var(--status-observed));
+}
+.bg-status-approved {
+  background-color: hsl(var(--status-approved) / 0.1);
+  color: hsl(var(--status-approved));
+}
+.bg-status-execution {
+  background-color: hsl(var(--status-execution) / 0.1);
+  color: hsl(var(--status-execution));
+}
+.bg-status-suspended {
+  background-color: hsl(var(--status-suspended) / 0.1);
+  color: hsl(var(--status-suspended));
+}
+.bg-status-finalized {
+  background-color: hsl(var(--status-finalized) / 0.1);
+  color: hsl(var(--status-finalized));
+}
+.bg-status-closed {
+  background-color: hsl(var(--status-closed) / 0.1);
+  color: hsl(var(--status-closed));
+}
+.bg-status-rejected {
+  background-color: hsl(var(--status-rejected) / 0.1);
+  color: hsl(var(--status-rejected));
+}
+.bg-status-cancelled {
+  background-color: hsl(var(--status-cancelled) / 0.1);
+  color: hsl(var(--status-cancelled));
+}
 
 /* ========================================
    6. DENSIDAD

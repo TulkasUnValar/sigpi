@@ -54,50 +54,116 @@
 }
 
 /* Status badge backgrounds (alpha/0.1) */
-.bg-status-draft { background-color: hsl(var(--status-draft) / 0.1); }
-.bg-status-submitted { background-color: hsl(var(--status-submitted) / 0.1); }
-.bg-status-review { background-color: hsl(var(--status-review) / 0.1); }
-.bg-status-observed { background-color: hsl(var(--status-observed) / 0.1); }
-.bg-status-approved { background-color: hsl(var(--status-approved) / 0.1); }
-.bg-status-execution { background-color: hsl(var(--status-execution) / 0.1); }
-.bg-status-suspended { background-color: hsl(var(--status-suspended) / 0.1); }
-.bg-status-finalized { background-color: hsl(var(--status-finalized) / 0.1); }
-.bg-status-closed { background-color: hsl(var(--status-closed) / 0.1); }
-.bg-status-rejected { background-color: hsl(var(--status-rejected) / 0.1); }
-.bg-status-cancelled { background-color: hsl(var(--status-cancelled) / 0.1); }
+.bg-status-draft {
+  background-color: hsl(var(--status-draft) / 0.1);
+}
+.bg-status-submitted {
+  background-color: hsl(var(--status-submitted) / 0.1);
+}
+.bg-status-review {
+  background-color: hsl(var(--status-review) / 0.1);
+}
+.bg-status-observed {
+  background-color: hsl(var(--status-observed) / 0.1);
+}
+.bg-status-approved {
+  background-color: hsl(var(--status-approved) / 0.1);
+}
+.bg-status-execution {
+  background-color: hsl(var(--status-execution) / 0.1);
+}
+.bg-status-suspended {
+  background-color: hsl(var(--status-suspended) / 0.1);
+}
+.bg-status-finalized {
+  background-color: hsl(var(--status-finalized) / 0.1);
+}
+.bg-status-closed {
+  background-color: hsl(var(--status-closed) / 0.1);
+}
+.bg-status-rejected {
+  background-color: hsl(var(--status-rejected) / 0.1);
+}
+.bg-status-cancelled {
+  background-color: hsl(var(--status-cancelled) / 0.1);
+}
 
 /* Status text colors */
-.text-status-draft { color: hsl(var(--status-draft)); }
-.text-status-submitted { color: hsl(var(--status-submitted)); }
-.text-status-review { color: hsl(var(--status-review)); }
-.text-status-observed { color: hsl(var(--status-observed)); }
-.text-status-approved { color: hsl(var(--status-approved)); }
-.text-status-execution { color: hsl(var(--status-execution)); }
-.text-status-suspended { color: hsl(var(--status-suspended)); }
-.text-status-finalized { color: hsl(var(--status-finalized)); }
-.text-status-closed { color: hsl(var(--status-closed)); }
-.text-status-rejected { color: hsl(var(--status-rejected)); }
-.text-status-cancelled { color: hsl(var(--status-cancelled)); }
+.text-status-draft {
+  color: hsl(var(--status-draft));
+}
+.text-status-submitted {
+  color: hsl(var(--status-submitted));
+}
+.text-status-review {
+  color: hsl(var(--status-review));
+}
+.text-status-observed {
+  color: hsl(var(--status-observed));
+}
+.text-status-approved {
+  color: hsl(var(--status-approved));
+}
+.text-status-execution {
+  color: hsl(var(--status-execution));
+}
+.text-status-suspended {
+  color: hsl(var(--status-suspended));
+}
+.text-status-finalized {
+  color: hsl(var(--status-finalized));
+}
+.text-status-closed {
+  color: hsl(var(--status-closed));
+}
+.text-status-rejected {
+  color: hsl(var(--status-rejected));
+}
+.text-status-cancelled {
+  color: hsl(var(--status-cancelled));
+}
 
 /* Priority colors */
-.text-priority-critical { color: hsl(var(--priority-critical)); }
-.text-priority-high { color: hsl(var(--priority-high)); }
-.text-priority-medium { color: hsl(var(--priority-medium)); }
-.text-priority-low { color: hsl(var(--priority-low)); }
+.text-priority-critical {
+  color: hsl(var(--priority-critical));
+}
+.text-priority-high {
+  color: hsl(var(--priority-high));
+}
+.text-priority-medium {
+  color: hsl(var(--priority-medium));
+}
+.text-priority-low {
+  color: hsl(var(--priority-low));
+}
 
 /* Budget colors */
-.bg-budget-committed { background-color: hsl(var(--budget-committed) / 0.1); }
-.bg-budget-executed { background-color: hsl(var(--budget-executed) / 0.1); }
-.bg-budget-available { background-color: hsl(var(--budget-available) / 0.1); }
-.bg-budget-overrun { background-color: hsl(var(--budget-overrun) / 0.1); }
+.bg-budget-committed {
+  background-color: hsl(var(--budget-committed) / 0.1);
+}
+.bg-budget-executed {
+  background-color: hsl(var(--budget-executed) / 0.1);
+}
+.bg-budget-available {
+  background-color: hsl(var(--budget-available) / 0.1);
+}
+.bg-budget-overrun {
+  background-color: hsl(var(--budget-overrun) / 0.1);
+}
 
 /* Tabular nums for data tables */
-.tabular-nums { font-variant-numeric: tabular-nums; }
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
 
 /* Skeleton loading shimmer */
 @keyframes shimmer {
-  from { background-position: -200% 0; }
-  to { background-position: 200% 0; }
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
 
 .animate-shimmer {

@@ -8,6 +8,9 @@
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface FormErrors {
   email?: string;
@@ -49,38 +52,62 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <div>
-        <label htmlFor="email">{t("emailLabel")}</label>
-        <input
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">{t("emailLabel")}</Label>
+        <Input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("emailPlaceholder")}
           autoComplete="email"
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? "email-error" : undefined}
         />
-        {errors.email && <p role="alert">{errors.email}</p>}
+        {errors.email && (
+          <p
+            id="email-error"
+            role="alert"
+            className="text-sm text-destructive"
+          >
+            {errors.email}
+          </p>
+        )}
       </div>
 
-      <div>
-        <label htmlFor="password">{t("passwordLabel")}</label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="password">{t("passwordLabel")}</Label>
+        <Input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder={t("passwordPlaceholder")}
           autoComplete="current-password"
+          aria-invalid={!!errors.password}
+          aria-describedby={errors.password ? "password-error" : undefined}
         />
-        {errors.password && <p role="alert">{errors.password}</p>}
+        {errors.password && (
+          <p
+            id="password-error"
+            role="alert"
+            className="text-sm text-destructive"
+          >
+            {errors.password}
+          </p>
+        )}
       </div>
 
-      {errors.api && <p role="alert">{errors.api}</p>}
+      {errors.api && (
+        <p role="alert" className="text-sm text-destructive text-center">
+          {errors.api}
+        </p>
+      )}
 
-      <button type="submit" disabled={isLoading}>
+      <Button type="submit" className="w-full btn-primary-attio" disabled={isLoading}>
         {isLoading ? t("signingIn") : t("signIn")}
-      </button>
+      </Button>
     </form>
   );
 }

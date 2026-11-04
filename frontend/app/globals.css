@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "../styles/design-system-attio.css";
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -12,8 +10,6 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
@@ -32,9 +28,6 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
-    --brand-blue: 221.2 83.2% 53.3%;
-    --brand-purple: 262 83% 58%;
-    --brand-gradient: linear-gradient(135deg, hsl(221.2 83.2% 53.3%), hsl(262 83% 58%));
   }
 
   .dark {
@@ -44,8 +37,6 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -63,9 +54,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
-    --brand-blue: 217.2 91.2% 59.8%;
-    --brand-purple: 263 70% 50.4%;
-    --brand-gradient: linear-gradient(135deg, hsl(217.2 91.2% 59.8%), hsl(263 70% 50.4%));
   }
 }
 
@@ -79,111 +67,29 @@
 }
 
 @layer utilities {
-  /* Custom animations */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+  @keyframes slideInRight { from { opacity: 0; transform: translateX(10px) } to { opacity: 1; transform: translateX(0) } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.95) } to { opacity: 1; transform: scale(1) } }
 
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+  .animate-fade-in { animation: fadeIn 0.3s ease-out }
+  .animate-slide-up { animation: slideUp 0.4s ease-out }
+  .animate-slide-in-right { animation: slideInRight 0.3s ease-out }
+  .animate-scale-in { animation: scaleIn 0.2s ease-out }
 
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
+  .bg-brand-gradient { background: linear-gradient(135deg, hsl(221.2 83.2% 53.3%), hsl(262 83% 58%)) }
+  .text-brand-gradient { background: linear-gradient(135deg, hsl(221.2 83.2% 53.3%), hsl(262 83% 58%)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text }
 
-  @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
+  .shadow-elevated { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) }
+  .shadow-card { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) }
 
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5) }
 
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out;
-  }
-
-  .animate-slide-in-right {
-    animation: slideInRight 0.3s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.2s ease-out;
-  }
-
-  /* Gradient utilities */
-  .bg-brand-gradient {
-    background: var(--brand-gradient);
-  }
-
-  .text-brand-gradient {
-    background: var(--brand-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* Shadow utilities */
-  .shadow-elevated {
-    box-shadow:
-      0 4px 6px -1px rgb(0 0 0 / 0.1),
-      0 2px 4px -2px rgb(0 0 0 / 0.1);
-  }
-
-  .shadow-card {
-    box-shadow:
-      0 1px 3px 0 rgb(0 0 0 / 0.1),
-      0 1px 2px -1px rgb(0 0 0 / 0.1);
-  }
-
-  /* Scrollbar styling */
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
-  }
-
-  /* Focus visible improvements */
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-  }
+  .focus-ring { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 }
 }
+
+/* Attio design system — MUST be last so tokens override shadcn defaults */
+@import "../styles/design-system-attio.css";

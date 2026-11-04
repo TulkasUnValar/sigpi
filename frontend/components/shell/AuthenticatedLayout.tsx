@@ -17,7 +17,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar — hidden below lg */}
-      <aside className="hidden w-64 shrink-0 border-r lg:block">
+      <aside className="hidden w-64 shrink-0 lg:block">
         <div className="sticky top-0 h-screen">
           <Sidebar />
         </div>
@@ -25,14 +25,14 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b px-2 lg:hidden">
+        <div className="flex items-center gap-2 border-b border-border-subtle px-2 lg:hidden dark:border-border-default">
           <Drawer />
           <Topbar />
         </div>
         <div className="hidden lg:block">
           <Topbar />
         </div>
-        <main className="flex-1 p-6">{children}</main>
+        <main id="main-content" className="flex-1 bg-surface-50 p-8 dark:bg-canvas">{children}</main>
       </div>
     </div>
   );

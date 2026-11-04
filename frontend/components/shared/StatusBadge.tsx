@@ -23,7 +23,7 @@ const statusBadgeVariants = cva(
     defaultVariants: {
       variant: "draft",
     },
-  }
+  },
 );
 
 const dotVariants = cva("h-1.5 w-1.5 rounded-full", {
@@ -48,24 +48,19 @@ const dotVariants = cva("h-1.5 w-1.5 rounded-full", {
 });
 
 export interface StatusBadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof statusBadgeVariants> {
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof statusBadgeVariants> {
   showDot?: boolean;
 }
 
 const StatusBadge = React.forwardRef<HTMLSpanElement, StatusBadgeProps>(
   ({ className, variant, showDot = true, children, ...props }, ref) => {
     return (
-      <span
-        ref={ref}
-        className={cn(statusBadgeVariants({ variant }), className)}
-        {...props}
-      >
+      <span ref={ref} className={cn(statusBadgeVariants({ variant }), className)} {...props}>
         {showDot && <span className={cn(dotVariants({ variant }))} aria-hidden="true" />}
         {children}
       </span>
     );
-  }
+  },
 );
 StatusBadge.displayName = "StatusBadge";
 

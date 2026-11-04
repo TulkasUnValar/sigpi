@@ -2,11 +2,46 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { FlaskConical } from "lucide-react";
 
 const proyectos = [
-  { id: "PRY-2026-001", titulo: "IA aplicada a salud pública", estado: "execution", centro: "Ing. Sistemas", presupuesto: "$125.000.000", ejecutado: "70%" },
-  { id: "PRY-2026-002", titulo: "Biodiversidad amazónica", estado: "approved", centro: "Ciencias", presupuesto: "$98.750.000", ejecutado: "46%" },
-  { id: "PRY-2026-003", titulo: "Energías renovables rural", estado: "review", centro: "Ing. Ambiental", presupuesto: "$210.000.000", ejecutado: "12%" },
-  { id: "PRY-2026-004", titulo: "Patrimonio cultural digital", estado: "draft", centro: "Humanidades", presupuesto: "$45.000.000", ejecutado: "0%" },
-  { id: "PRY-2026-005", titulo: "Materiales nanoestructurados", estado: "rejected", centro: "Ing. Química", presupuesto: "$180.000.000", ejecutado: "0%" },
+  {
+    id: "PRY-2026-001",
+    titulo: "IA aplicada a salud pública",
+    estado: "execution",
+    centro: "Ing. Sistemas",
+    presupuesto: "$125.000.000",
+    ejecutado: "70%",
+  },
+  {
+    id: "PRY-2026-002",
+    titulo: "Biodiversidad amazónica",
+    estado: "approved",
+    centro: "Ciencias",
+    presupuesto: "$98.750.000",
+    ejecutado: "46%",
+  },
+  {
+    id: "PRY-2026-003",
+    titulo: "Energías renovables rural",
+    estado: "review",
+    centro: "Ing. Ambiental",
+    presupuesto: "$210.000.000",
+    ejecutado: "12%",
+  },
+  {
+    id: "PRY-2026-004",
+    titulo: "Patrimonio cultural digital",
+    estado: "draft",
+    centro: "Humanidades",
+    presupuesto: "$45.000.000",
+    ejecutado: "0%",
+  },
+  {
+    id: "PRY-2026-005",
+    titulo: "Materiales nanoestructurados",
+    estado: "rejected",
+    centro: "Ing. Química",
+    presupuesto: "$180.000.000",
+    ejecutado: "0%",
+  },
 ];
 
 const statusLabels: Record<string, string> = {
@@ -36,8 +71,8 @@ export default function AttioStyleDemoPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">01 — Typography</h2>
         <p className="text-gray-500 text-sm">
-          Inter con tracking negativo en headlines. Peso máximo 600 (semibold), nunca bold (700).
-          UI text en weight 500 por defecto.
+          Inter con tracking negativo en headlines. Peso máximo 600 (semibold), nunca bold (700). UI
+          text en weight 500 por defecto.
         </p>
         <div className="space-y-2">
           <h1 className="text-5xl">Headline Display (600, -0.025em)</h1>
@@ -55,7 +90,8 @@ export default function AttioStyleDemoPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">02 — Buttons</h2>
         <p className="text-gray-500 text-sm">
-          Primary: negro sólido (#1c1d1f), no gradiente. Secondary: ghost con borde sutil. Radius 10px.
+          Primary: negro sólido (#1c1d1f), no gradiente. Secondary: ghost con borde sutil. Radius
+          10px.
         </p>
         <div className="flex gap-3 flex-wrap">
           <button className="btn-primary-attio px-4 h-10">Primary Action</button>
@@ -88,8 +124,8 @@ export default function AttioStyleDemoPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">04 — Data Table (Compact)</h2>
         <p className="text-gray-500 text-sm">
-          Bordes hairline en todas las celdas. IDs en monospaced. Row height 32px.
-          Header en uppercase tracking-wider.
+          Bordes hairline en todas las celdas. IDs en monospaced. Row height 32px. Header en
+          uppercase tracking-wider.
         </p>
         <div className="border border-border-subtle rounded-lg overflow-hidden">
           <table className="table-attio table-compact w-full">
@@ -126,7 +162,9 @@ export default function AttioStyleDemoPage() {
       {/* 5. Status Badges */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">05 — Status Badges</h2>
-        <p className="text-gray-500 text-sm">Fondo alpha/0.1, texto color estado. Radius 7px (Attio).</p>
+        <p className="text-gray-500 text-sm">
+          Fondo alpha/0.1, texto color estado. Radius 7px (Attio).
+        </p>
         <div className="flex flex-wrap gap-2">
           {Object.entries(statusLabels).map(([key, label]) => (
             <span key={key} className={`badge-status bg-status-${key}`}>
@@ -144,17 +182,23 @@ export default function AttioStyleDemoPage() {
         </p>
         <div className="grid grid-cols-3 gap-4">
           <div className="card-attio rounded-xl p-6">
-            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Proyectos activos</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+              Proyectos activos
+            </div>
             <div className="text-3xl font-semibold tracking-tight">142</div>
             <div className="text-sm text-gray-500 mt-1">+12 este mes</div>
           </div>
           <div className="card-attio rounded-xl p-6">
-            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Avances pendientes</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+              Avances pendientes
+            </div>
             <div className="text-3xl font-semibold tracking-tight">28</div>
             <div className="text-sm text-gray-500 mt-1">5 vencidos</div>
           </div>
           <div className="card-attio rounded-xl p-6">
-            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Presupuesto ejecutado</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+              Presupuesto ejecutado
+            </div>
             <div className="text-3xl font-semibold tracking-tight">68%</div>
             <div className="text-sm text-gray-500 mt-1">$2.4B / $3.5B</div>
           </div>
@@ -165,8 +209,8 @@ export default function AttioStyleDemoPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">07 — Monospaced IDs</h2>
         <p className="text-gray-500 text-sm">
-          IDs de proyecto, timestamps, códigos de auditoría en monospace.
-          Diferenciación semántica: sistema vs. contenido humano.
+          IDs de proyecto, timestamps, códigos de auditoría en monospace. Diferenciación semántica:
+          sistema vs. contenido humano.
         </p>
         <div className="space-y-2 font-mono-attio">
           <div className="flex gap-4">
