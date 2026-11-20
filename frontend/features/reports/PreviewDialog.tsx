@@ -22,6 +22,7 @@ import { getReportTypeLabel } from "@/features/reports/constants";
 import { useReportPreview } from "@/features/reports/queries";
 import type { ReportTarget } from "@/features/reports/types";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 interface PreviewDialogProps {
   /** Selected report target; null closes the dialog and disables the query. */
@@ -37,6 +38,7 @@ export function PreviewDialog({ target, onClose, onSuccess }: PreviewDialogProps
     target?.type ?? null,
     target?.entityId ?? null,
   );
+  const t = useTranslations("reports");
 
   // Notify parent on successful preview load.
   useEffect(() => {
@@ -46,8 +48,8 @@ export function PreviewDialog({ target, onClose, onSuccess }: PreviewDialogProps
   }, [data, onSuccess]);
 
   const title = target
-    ? `Vista previa — ${getReportTypeLabel(target.type)}`
-    : "Vista previa";
+    ? t("previewDialog.titleWith", { type: getReportTypeLabel(target.type) })
+    : t("previewDialog.title");
 
   return (
     <Dialog
@@ -60,13 +62,15 @@ export function PreviewDialog({ target, onClose, onSuccess }: PreviewDialogProps
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            {target ? `Entidad: ${target.entityName}` : "Previsualización del informe"}
+            {target
+              ? t("previewDialog.entityLabel", { name: target.entityName })
+              : t("previewDialog.description")}
           </DialogDescription>
         </DialogHeader>
 
         {isLoading && (
           <p role="status" className="text-sm text-muted-foreground">
-            Generando vista previa…
+            {t("previewDialog.generating")}
           </p>
         )}
 
@@ -83,7 +87,7 @@ export function PreviewDialog({ target, onClose, onSuccess }: PreviewDialogProps
           <iframe
             sandbox=""
             srcDoc={data.html}
-            title="Vista previa del informe"
+            title={t("previewDialog.iframeTitle")}
             className="h-[60vh] w-full rounded-md border"
           />
         )}

@@ -12,6 +12,7 @@
 
 import Link from "next/link";
 import { Building2, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import type { InstitutionTreeNode } from "@/features/institutions/types";
 export default function InstitutionsPage() {
   const listQuery = useInstitutionsList();
   const institutions = listQuery.data?.results ?? [];
+  const t = useTranslations("institutions");
 
   // Root nodes only — child levels (sedes/facultades/centers) are fetched
   // lazily by the tree when a node expands (PR2, RF-F03).
@@ -41,12 +43,12 @@ export default function InstitutionsPage() {
   return (
     <AuthenticatedLayout>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Estructura institucional</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <RoleGuard allowedRoles={["superadmin"]}>
           <Button asChild>
             <Link href="/institutions/new">
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-              Nueva institución
+              {t("createNew")}
             </Link>
           </Button>
         </RoleGuard>
@@ -61,12 +63,12 @@ export default function InstitutionsPage() {
       ) : institutions.length === 0 ? (
         <EmptyState
           icon={Building2}
-          title="No hay instituciones"
-          description="Crea la primera institución para comenzar a estructurar el sistema."
+          title={t("noInstitutions")}
+          description={t("noInstitutionsDescription")}
           action={
             <RoleGuard allowedRoles={["superadmin"]}>
               <Button asChild>
-                <Link href="/institutions/new">Crear institución</Link>
+                <Link href="/institutions/new">{t("createFirst")}</Link>
               </Button>
             </RoleGuard>
           }

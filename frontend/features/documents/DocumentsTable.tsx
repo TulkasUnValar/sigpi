@@ -1,14 +1,29 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { FileText, Download, Eye } from 'lucide-react';
-import type { Document } from './types';
-import { openPresignedUrl } from '@/lib/download';
-import { api } from '@/lib/api';
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { FileText, Download, Eye } from "lucide-react";
+import type { Document } from "./types";
+import { openPresignedUrl } from "@/lib/download";
+import { api } from "@/lib/api";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -20,22 +35,23 @@ interface DocumentsTableProps {
 const PAGE_SIZE = 25;
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Date(dateString).toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
 export function DocumentsTable({ documents, page, totalCount, onPageChange }: DocumentsTableProps) {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const t = useTranslations("documents");
 
   const handleDownload = async (docId: string) => {
     try {
       const response = await api.get<{ download_url: string }>(`/api/documents/${docId}/download/`);
       openPresignedUrl(response.download_url);
     } catch (error) {
-      console.error('Error downloading document:', error);
+      console.error("Error downloading document:", error);
     }
   };
 
@@ -43,10 +59,8 @@ export function DocumentsTable({ documents, page, totalCount, onPageChange }: Do
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-        <p className="text-lg font-medium">No hay documentos</p>
-        <p className="text-sm text-muted-foreground">
-          Aún no hay documentos subidos. Sube el primero usando el botón &quot;Subir documento&quot;.
-        </p>
+        <p className="text-lg font-medium">{t("table.noDocuments")}</p>
+        <p className="text-sm text-muted-foreground">{t("table.noDocumentsDescription")}</p>
       </div>
     );
   }
@@ -56,12 +70,12 @@ export function DocumentsTable({ documents, page, totalCount, onPageChange }: Do
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Entidad</TableHead>
-            <TableHead>Subido</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            <TableHead>{t("table.name")}</TableHead>
+            <TableHead>{t("table.type")}</TableHead>
+            <TableHead>{t("table.entity")}</TableHead>
+            <TableHead>{t("table.uploaded")}</TableHead>
+            <TableHead>{t("table.status")}</TableHead>
+            <TableHead className="text-right">{t("table.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,7 +83,7 @@ export function DocumentsTable({ documents, page, totalCount, onPageChange }: Do
             <TableRow key={doc.id}>
               <TableCell className="font-medium">{doc.title}</TableCell>
               <TableCell>
-                <Badge variant="outline">{doc.doc_type?.name || 'Sin tipo'}</Badge>
+                <Badge variant="outline">{doc.doc_type?.name || t("table.noType")}</Badge>
               </TableCell>
               <TableCell>
                 {doc.entity_type ? (
@@ -81,9 +95,9 @@ export function DocumentsTable({ documents, page, totalCount, onPageChange }: Do
               <TableCell>{formatDate(doc.created_at)}</TableCell>
               <TableCell>
                 {doc.is_signed ? (
-                  <Badge variant="default">Firmado</Badge>
+                  <Badge variant="default">{t("table.signed")}</Badge>
                 ) : (
-                  <Badge variant="outline">Sin firmar</Badge>
+                  <Badge variant="outline">{t("table.unsigned")}</Badge>
                 )}
               </TableCell>
               <TableCell className="text-right">
@@ -91,16 +105,12 @@ export function DocumentsTable({ documents, page, totalCount, onPageChange }: Do
                   <Button variant="ghost" size="sm" asChild>
                     <Link href={`/documents/${doc.id}`}>
                       <Eye className="h-4 w-4 mr-1" />
-                      Ver
+                      {t("table.view")}
                     </Link>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDownload(doc.id)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => handleDownload(doc.id)}>
                     <Download className="h-4 w-4 mr-1" />
-                    Descargar
+                    {t("table.download")}
                   </Button>
                 </div>
               </TableCell>
@@ -115,18 +125,18 @@ export function DocumentsTable({ documents, page, totalCount, onPageChange }: Do
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => onPageChange(Math.max(1, page - 1))}
-                className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
               />
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink>
-                Página {page} de {totalPages}
-              </PaginationLink>
+              <PaginationLink>{t("table.pageOf", { page, total: totalPages })}</PaginationLink>
             </PaginationItem>
             <PaginationItem>
               <PaginationNext
                 onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-                className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                className={
+                  page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"
+                }
               />
             </PaginationItem>
           </PaginationContent>

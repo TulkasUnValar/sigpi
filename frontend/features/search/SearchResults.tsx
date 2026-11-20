@@ -10,6 +10,7 @@
 
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ function getHitRoute(hit: SearchHit): string {
 }
 
 export function SearchResults({ results, offset, limit, onPageChange }: SearchResultsProps) {
+  const t = useTranslations("search");
   if (!results) return null;
 
   const { hits, estimatedTotalHits, query } = results;
@@ -77,11 +79,14 @@ export function SearchResults({ results, offset, limit, onPageChange }: SearchRe
           {hasResults ? (
             <>
               <span className="font-medium text-foreground">{estimatedTotalHits}</span>{" "}
-              {estimatedTotalHits === 1 ? "resultado" : "resultados"} para{" "}
+              {estimatedTotalHits === 1 ? t("results.result") : t("results.results")}{" "}
+              {t("results.for")}{" "}
               <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>
             </>
           ) : (
-            <>No se encontraron resultados para &ldquo;{query}&rdquo;</>
+            <>
+              {t("results.noResults")} &ldquo;{query}&rdquo;
+            </>
           )}
         </p>
       </div>
@@ -117,9 +122,7 @@ export function SearchResults({ results, offset, limit, onPageChange }: SearchRe
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-12">
             <FileText className="h-12 w-12 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Intenta con otros términos o ajusta los filtros.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("results.tryOther")}</p>
           </CardContent>
         </Card>
       )}
@@ -135,10 +138,11 @@ export function SearchResults({ results, offset, limit, onPageChange }: SearchRe
             data-testid="search-prev"
           >
             <ChevronLeft className="h-4 w-4" />
-            Anterior
+            {t("results.previous")}
           </Button>
           <span className="text-sm text-muted-foreground">
-            {offset + 1}–{Math.min(offset + limit, estimatedTotalHits)} de {estimatedTotalHits}
+            {offset + 1}–{Math.min(offset + limit, estimatedTotalHits)} {t("results.of")}{" "}
+            {estimatedTotalHits}
           </span>
           <Button
             variant="outline"
@@ -147,7 +151,7 @@ export function SearchResults({ results, offset, limit, onPageChange }: SearchRe
             onClick={() => onPageChange(offset + limit)}
             data-testid="search-next"
           >
-            Siguiente
+            {t("results.next")}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

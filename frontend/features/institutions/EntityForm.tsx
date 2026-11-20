@@ -22,6 +22,7 @@ import type { DefaultValues, FieldValues, Path } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 import { ApiError } from "@/lib/errors";
 import type { EntityConfig, EntityField, EntityFieldOption } from "@/features/institutions/types";
 
@@ -101,6 +102,7 @@ export function EntityForm<TForm extends FieldValues>({
     resolver: zodResolver(config.schema),
     defaultValues,
   });
+  const t = useTranslations("institutions");
 
   /** Submit wrapper: 400 field errors map into RHF; others bubble up. */
   async function submit(values: TForm) {
@@ -111,7 +113,7 @@ export function EntityForm<TForm extends FieldValues>({
         for (const [field, messages] of Object.entries(error.fieldErrors)) {
           setError(field as Path<TForm>, {
             type: "server",
-            message: messages[0] ?? "Valor inválido.",
+            message: messages[0] ?? t("form.invalidValue"),
           });
         }
         return;
@@ -126,7 +128,7 @@ export function EntityForm<TForm extends FieldValues>({
     <form onSubmit={handleFormSubmit} className="space-y-4" noValidate>
       {config.fields.map((field) => {
         const error = errors[field.name as Path<TForm>];
-        const errorMessage = error ? String(error.message ?? "Valor inválido.") : null;
+        const errorMessage = error ? String(error.message ?? t("form.invalidValue")) : null;
         return (
           <div key={field.name}>
             <Label htmlFor={`entity-${field.name}`}>{field.label}</Label>
@@ -148,7 +150,7 @@ export function EntityForm<TForm extends FieldValues>({
 
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Guardando…" : submitLabel}
+          {isSubmitting ? t("form.saving") : submitLabel}
         </Button>
       </div>
     </form>

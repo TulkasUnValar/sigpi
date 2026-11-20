@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { ChevronRight, MoreHorizontal, Pencil, Trash2, ExternalLink } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -100,36 +101,37 @@ type ConfirmState =
   | { kind: "fsm"; node: InstitutionTreeNode; action: FsmAction }
   | null;
 
-/** Per-kind UI metadata: label, write-role threshold (RF-F05). */
-const KIND_META: Record<EntityKind, { label: string; deletedLabel: string; minRoles: string[] }> = {
-  institution: {
-    label: "Institución",
-    deletedLabel: "Institución eliminada.",
-    minRoles: ["superadmin"],
-  },
-  sede: { label: "Sede", deletedLabel: "Sede eliminada.", minRoles: ["admin", "superadmin"] },
-  facultad: {
-    label: "Facultad",
-    deletedLabel: "Facultad eliminada.",
-    minRoles: ["admin", "superadmin"],
-  },
-  center: {
-    label: "Centro de investigación",
-    deletedLabel: "Centro de investigación eliminado.",
-    minRoles: ["admin", "superadmin"],
-  },
-  // PR3: groups/lines are directed by directors.
-  group: {
-    label: "Grupo",
-    deletedLabel: "Grupo eliminado.",
-    minRoles: ["director", "admin", "superadmin"],
-  },
-  line: {
-    label: "Línea",
-    deletedLabel: "Línea eliminada.",
-    minRoles: ["director", "admin", "superadmin"],
-  },
-};
+/** Per-kind UI metadata: label key, deleted label key, write-role threshold (RF-F05). */
+const KIND_META: Record<EntityKind, { labelKey: string; deletedKey: string; minRoles: string[] }> =
+  {
+    institution: {
+      labelKey: "institution",
+      deletedKey: "institution",
+      minRoles: ["superadmin"],
+    },
+    sede: { labelKey: "sede", deletedKey: "sede", minRoles: ["admin", "superadmin"] },
+    facultad: {
+      labelKey: "facultad",
+      deletedKey: "facultad",
+      minRoles: ["admin", "superadmin"],
+    },
+    center: {
+      labelKey: "center",
+      deletedKey: "center",
+      minRoles: ["admin", "superadmin"],
+    },
+    // PR3: groups/lines are directed by directors.
+    group: {
+      labelKey: "group",
+      deletedKey: "group",
+      minRoles: ["director", "admin", "superadmin"],
+    },
+    line: {
+      labelKey: "line",
+      deletedKey: "line",
+      minRoles: ["director", "admin", "superadmin"],
+    },
+  };
 
 /**
  * Detail route of a node, derived from its kind and the ancestor chain
@@ -155,20 +157,21 @@ function detailUrl(node: InstitutionTreeNode, ancestors: string[]): string {
 }
 
 /** Per-level empty copy shown when an expanded level has no children. */
-const LEVEL_EMPTY_COPY: Partial<Record<EntityKind, { title: string; description: string }>> = {
-  institution: {
-    title: "No hay dependencias",
-    description: "Crea una sede, facultad o centro para esta institución.",
-  },
-  center: {
-    title: "No hay grupos de investigación",
-    description: "Crea el primer grupo de investigación de este centro.",
-  },
-  group: {
-    title: "No hay líneas de investigación",
-    description: "Crea la primera línea de investigación de este grupo.",
-  },
-};
+const LEVEL_EMPTY_COPY: Partial<Record<EntityKind, { titleKey: string; descriptionKey: string }>> =
+  {
+    institution: {
+      titleKey: "noDependencies",
+      descriptionKey: "noDependenciesDescription",
+    },
+    center: {
+      titleKey: "noGroups",
+      descriptionKey: "noGroupsDescription",
+    },
+    group: {
+      titleKey: "noLines",
+      descriptionKey: "noLinesDescription",
+    },
+  };
 
 /** Recursively merge lazily fetched children into the node's subtree. */
 function mergeLazyChildren(
@@ -190,6 +193,7 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
   /** Levels whose lazy queries already resolved (drives per-level empty states). */
   const [loadedLevels, setLoadedLevels] = useState<Record<string, boolean>>({});
   const nodeRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const t = useTranslations("institutions");
 
   /** Lift lazily fetched children up so keyboard nav sees them. */
   const handleLazyChildren = useCallback((parentId: string, children: InstitutionTreeNode[]) => {
@@ -312,7 +316,7 @@ export function InstitutionTree({ nodes }: InstitutionTreeProps) {
   return (
     <ul
       role="tree"
-      aria-label="Estructura institucional"
+      aria-label={t("tree.ariaLabel")}
       onKeyDown={handleKeyDown}
       className="space-y-1"
     >
@@ -377,6 +381,8 @@ function TreeNode({
   const nodeHref = detailUrl(node, ancestors);
   const emptyCopy = LEVEL_EMPTY_COPY[node.kind];
 
+  const t = useTranslations("institutions");
+
   return (
     <li
       role="treeitem"
@@ -395,7 +401,11 @@ function TreeNode({
         {canExpand ? (
           <button
             type="button"
-            aria-label={isExpanded ? `Contraer ${node.name}` : `Expandir ${node.name}`}
+            aria-label={
+              isExpanded
+                ? t("tree.collapse", { name: node.name })
+                : t("tree.expand", { name: node.name })
+            }
             onClick={(e) => {
               e.stopPropagation();
               onToggle(node.id);
@@ -448,7 +458,12 @@ function TreeNode({
           </ul>
           {emptyCopy && loadedLevels[node.id] && node.children.length === 0 ? (
             <div className="py-2 pl-8 pr-2">
-              <EmptyState title={emptyCopy.title} description={emptyCopy.description} />
+              <EmptyState
+                title={t(`empty.${emptyCopy.titleKey}` as "empty.noDependencies")}
+                description={t(
+                  `empty.${emptyCopy.descriptionKey}` as "empty.noDependenciesDescription",
+                )}
+              />
             </div>
           ) : null}
         </>
@@ -567,6 +582,7 @@ function LazyChildrenLoader({
 /** Per-node action menu: detail/edit links, FSM transitions, delete. */
 function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: string }) {
   const roles = useAuthStore((s) => s.roles);
+  const t = useTranslations("institutions");
   // All transition/delete hooks are registered unconditionally and
   // selected by kind — keeps hook order stable across renders.
   const institutionTransition = useInstitutionTransition();
@@ -584,6 +600,8 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
   const [confirm, setConfirm] = useState<ConfirmState>(null);
 
   const meta = KIND_META[node.kind] ?? KIND_META.institution;
+  const metaLabel = t(`kind.${meta.labelKey}` as "kind.institution");
+  const metaDeleted = t(`deleted.${meta.deletedKey}` as "deleted.institution");
   const fsmActions = getEntityActions(node.status, roles, meta.minRoles);
 
   const transition =
@@ -617,7 +635,7 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
       { id: node.id, action: action.name },
       {
         onSuccess: () => {
-          toast.success(`${meta.label} ${action.label.toLowerCase()}.`);
+          toast.success(`${metaLabel} ${action.label.toLowerCase()}.`);
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
@@ -629,7 +647,7 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
   function runDelete() {
     remove.mutate(node.id, {
       onSuccess: () => {
-        toast.success(meta.deletedLabel);
+        toast.success(metaDeleted);
       },
       onError: (error) => {
         toast.error(getErrorMessage(error));
@@ -645,7 +663,7 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0"
-            aria-label={`Acciones de ${node.name}`}
+            aria-label={t("tree.actions", { name: node.name })}
           >
             <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -656,13 +674,13 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
           <DropdownMenuItem asChild>
             <Link href={nodeHref}>
               <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
-              Ver detalle
+              {t("actions.viewDetail")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={`${nodeHref}/edit`}>
               <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
-              Editar
+              {t("actions.edit")}
             </Link>
           </DropdownMenuItem>
 
@@ -692,7 +710,7 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
             onSelect={() => setConfirm({ kind: "delete", node })}
           >
             <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
-            Eliminar
+            {t("actions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -703,10 +721,10 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
           onOpenChange={(open) => {
             if (!open) setConfirm(null);
           }}
-          title={`¿Eliminar ${meta.label.toLowerCase()}?`}
-          description="Esta acción no se puede deshacer."
-          confirmLabel="Eliminar"
-          cancelLabel="Cancelar"
+          title={t("confirm.deleteTitle", { kind: metaLabel.toLowerCase() })}
+          description={t("confirm.cannotUndo")}
+          confirmLabel={t("confirm.delete")}
+          cancelLabel={t("confirm.cancel")}
           destructive
           onConfirm={runDelete}
         />
@@ -718,10 +736,10 @@ function NodeActions({ node, nodeHref }: { node: InstitutionTreeNode; nodeHref: 
           onOpenChange={(open) => {
             if (!open) setConfirm(null);
           }}
-          title={`¿Confirmar "${confirm.action.label}"?`}
-          description="Esta acción no se puede deshacer."
+          title={t("confirm.actionTitle", { action: confirm.action.label })}
+          description={t("confirm.cannotUndo")}
           confirmLabel={confirm.action.label}
-          cancelLabel="Cancelar"
+          cancelLabel={t("confirm.cancel")}
           destructive
           onConfirm={() => runFsm(confirm.action)}
         />

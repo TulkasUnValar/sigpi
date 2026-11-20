@@ -6,19 +6,16 @@
  */
 
 import { Sidebar } from "@/components/shell/Sidebar";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useTranslations } from "next-intl";
 
 export function Drawer() {
+  const t = useTranslations("drawer");
   return (
     <Sheet>
       <SheetTrigger
         className="inline-flex items-center justify-center rounded-md p-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground lg:hidden"
-        aria-label="Abrir menú"
+        aria-label={t("openMenu")}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +35,7 @@ export function Drawer() {
         </svg>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0">
-        <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
+        <SheetTitle className="sr-only">{t("navigationMenu")}</SheetTitle>
         <div className="pt-10">
           <Sidebar />
         </div>

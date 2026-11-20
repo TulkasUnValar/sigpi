@@ -8,6 +8,7 @@
  */
 
 import { Suspense, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +25,7 @@ const DEFAULT_LIMIT = 25;
 function SearchPageContent() {
   const { roles } = useAuthStore();
   const isSuperadmin = roles.includes("superadmin") || roles.includes("admin");
+  const t = useTranslations("search");
 
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState<SearchIndex | "all">(DEFAULT_SEARCH_INDEX);
@@ -63,10 +65,8 @@ function SearchPageContent() {
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Búsqueda</h1>
-        <p className="mt-1 text-muted-foreground">
-          Busca en proyectos, investigadores, productos, convocatorias y avances.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="mt-1 text-muted-foreground">{t("description")}</p>
       </div>
 
       {/* Search bar */}
@@ -104,9 +104,7 @@ function SearchPageContent() {
           onPageChange={handlePageChange}
         />
       ) : query.length > 0 ? (
-        <p className="text-center text-sm text-muted-foreground">
-          Ingresa al menos 2 caracteres para buscar.
-        </p>
+        <p className="text-center text-sm text-muted-foreground">{t("minChars")}</p>
       ) : null}
     </div>
   );

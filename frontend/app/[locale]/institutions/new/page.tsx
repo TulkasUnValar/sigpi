@@ -12,6 +12,7 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,11 +36,12 @@ const DEFAULT_VALUES: InstitutionFormValues = {
 export default function NewInstitutionPage() {
   const router = useRouter();
   const createInstitution = useCreateInstitution();
+  const t = useTranslations("institutions");
 
   async function handleSubmit(values: InstitutionFormValues) {
     await createInstitution.mutateAsync(values, {
       onSuccess: (institution) => {
-        toast.success("Institución creada.");
+        toast.success(t("toast.created"));
         router.push(`/institutions/${institution.id}`);
       },
       onError: (error) => {
@@ -50,7 +52,7 @@ export default function NewInstitutionPage() {
 
   return (
     <AuthenticatedLayout>
-      <h1 className="mb-6 text-2xl font-semibold">Nueva institución</h1>
+      <h1 className="mb-6 text-2xl font-semibold">{t("createNew")}</h1>
 
       <RoleGuard allowedRoles={institutionConfig.minRoles}>
         <Card>
@@ -58,7 +60,7 @@ export default function NewInstitutionPage() {
             <EntityForm<InstitutionFormValues>
               config={institutionConfig}
               defaultValues={DEFAULT_VALUES}
-              submitLabel="Crear institución"
+              submitLabel={t("createSubmit")}
               onSubmit={handleSubmit}
               onError={(error) => toast.error(getErrorMessage(error))}
             />

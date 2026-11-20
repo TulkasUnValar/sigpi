@@ -9,6 +9,7 @@
 
 import { ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ export interface SearchFiltersProps {
 
 export function SearchFilters({ filters, isSuperadmin, onFilterChange }: SearchFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const t = useTranslations("search");
 
   const handleFilterChange = (key: keyof SearchFiltersModel, value: string) => {
     onFilterChange({
@@ -49,7 +51,7 @@ export function SearchFilters({ filters, isSuperadmin, onFilterChange }: SearchF
         data-testid="filters-toggle"
       >
         <Filter className="h-4 w-4" />
-        Filtros
+        {t("filters.title")}
         {hasActiveFilters && (
           <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
             {Object.values(filters).filter((v) => v !== undefined).length}
@@ -67,16 +69,16 @@ export function SearchFilters({ filters, isSuperadmin, onFilterChange }: SearchF
           {/* Institution filter (superadmin only) */}
           {isSuperadmin && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Institución</label>
+              <label className="text-sm font-medium">{t("filters.institution")}</label>
               <Select
                 value={filters.institution || "all"}
                 onValueChange={(v) => handleFilterChange("institution", v)}
               >
                 <SelectTrigger data-testid="filter-institution">
-                  <SelectValue placeholder="Todas" />
+                  <SelectValue placeholder={t("filters.allFeminine")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="all">{t("filters.allFeminine")}</SelectItem>
                   {/* Institution options would come from a hook — placeholder for now */}
                 </SelectContent>
               </Select>
@@ -85,16 +87,16 @@ export function SearchFilters({ filters, isSuperadmin, onFilterChange }: SearchF
 
           {/* Center filter */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Centro</label>
+            <label className="text-sm font-medium">{t("filters.center")}</label>
             <Select
               value={filters.center || "all"}
               onValueChange={(v) => handleFilterChange("center", v)}
             >
               <SelectTrigger data-testid="filter-center">
-                <SelectValue placeholder="Todos" />
+                <SelectValue placeholder={t("filters.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="all">{t("filters.all")}</SelectItem>
                 {/* Center options would come from useCenters hook */}
               </SelectContent>
             </Select>
@@ -102,36 +104,36 @@ export function SearchFilters({ filters, isSuperadmin, onFilterChange }: SearchF
 
           {/* Status filter */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Estado</label>
+            <label className="text-sm font-medium">{t("filters.status")}</label>
             <Select
               value={filters.status || "all"}
               onValueChange={(v) => handleFilterChange("status", v)}
             >
               <SelectTrigger data-testid="filter-status">
-                <SelectValue placeholder="Todos" />
+                <SelectValue placeholder={t("filters.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="draft">Borrador</SelectItem>
-                <SelectItem value="active">Activo</SelectItem>
-                <SelectItem value="completed">Completado</SelectItem>
-                <SelectItem value="archived">Archivado</SelectItem>
+                <SelectItem value="all">{t("filters.all")}</SelectItem>
+                <SelectItem value="draft">{t("filters.draft")}</SelectItem>
+                <SelectItem value="active">{t("filters.active")}</SelectItem>
+                <SelectItem value="completed">{t("filters.completed")}</SelectItem>
+                <SelectItem value="archived">{t("filters.archived")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Year filter */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Año</label>
+            <label className="text-sm font-medium">{t("filters.year")}</label>
             <Select
               value={filters.year || "all"}
               onValueChange={(v) => handleFilterChange("year", v)}
             >
               <SelectTrigger data-testid="filter-year">
-                <SelectValue placeholder="Todos" />
+                <SelectValue placeholder={t("filters.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="all">{t("filters.all")}</SelectItem>
                 {Array.from({ length: 10 }, (_, i) => {
                   const year = new Date().getFullYear() - i;
                   return (
@@ -146,20 +148,20 @@ export function SearchFilters({ filters, isSuperadmin, onFilterChange }: SearchF
 
           {/* Type filter */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Tipo</label>
+            <label className="text-sm font-medium">{t("filters.type")}</label>
             <Select
               value={filters.type || "all"}
               onValueChange={(v) => handleFilterChange("type", v)}
             >
               <SelectTrigger data-testid="filter-type">
-                <SelectValue placeholder="Todos" />
+                <SelectValue placeholder={t("filters.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="article">Artículo</SelectItem>
-                <SelectItem value="book">Libro</SelectItem>
-                <SelectItem value="thesis">Tesis</SelectItem>
-                <SelectItem value="report">Reporte</SelectItem>
+                <SelectItem value="all">{t("filters.all")}</SelectItem>
+                <SelectItem value="article">{t("filters.article")}</SelectItem>
+                <SelectItem value="book">{t("filters.book")}</SelectItem>
+                <SelectItem value="thesis">{t("filters.thesis")}</SelectItem>
+                <SelectItem value="report">{t("filters.report")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -173,7 +175,7 @@ export function SearchFilters({ filters, isSuperadmin, onFilterChange }: SearchF
                 onClick={() => onFilterChange({})}
                 data-testid="clear-filters"
               >
-                Limpiar filtros
+                {t("filters.clear")}
               </Button>
             </div>
           )}

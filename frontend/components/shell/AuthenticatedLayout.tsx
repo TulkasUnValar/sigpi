@@ -32,7 +32,9 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
         <div className="hidden lg:block">
           <Topbar />
         </div>
-        <main id="main-content" className="flex-1 bg-surface-50 p-8 dark:bg-canvas">{children}</main>
+        <main id="main-content" className="flex-1 bg-surface-50 p-8 dark:bg-canvas">
+          {children}
+        </main>
       </div>
     </div>
   );

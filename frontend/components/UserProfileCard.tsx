@@ -10,31 +10,34 @@ import { roleSlugToLabel, useAuthStore } from "@/store/auth";
 
 export default function UserProfileCard() {
   const { user, activeInstitution, roles, centers } = useAuthStore();
-  const t = useTranslations("common");
+  const t = useTranslations("userProfile");
+  const tc = useTranslations("common");
 
   if (!user) {
-    return <p>No user data available.</p>;
+    return <p>{t("noUser")}</p>;
   }
 
   return (
     <div data-testid="user-profile-card">
-      <h2>Profile</h2>
+      <h2>{t("profile")}</h2>
 
       <dl>
-        <dt>Email</dt>
+        <dt>{t("email")}</dt>
         <dd>{user.email}</dd>
 
-        <dt>Auth Source</dt>
+        <dt>{t("authSource")}</dt>
         <dd>{user.auth_source}</dd>
 
-        <dt>Active Institution</dt>
-        <dd>{activeInstitution?.name ?? t("none")}</dd>
+        <dt>{t("activeInstitution")}</dt>
+        <dd>{activeInstitution?.name ?? tc("none")}</dd>
 
-        <dt>Active Role</dt>
-        <dd>{roles.length > 0 ? roles.map((slug) => roleSlugToLabel(slug)).join(", ") : t("none")}</dd>
+        <dt>{t("activeRole")}</dt>
+        <dd>
+          {roles.length > 0 ? roles.map((slug) => roleSlugToLabel(slug)).join(", ") : tc("none")}
+        </dd>
 
-        <dt>Centers</dt>
-        <dd>{centers.length > 0 ? centers.map((c) => c.name).join(", ") : t("none")}</dd>
+        <dt>{t("centers")}</dt>
+        <dd>{centers.length > 0 ? centers.map((c) => c.name).join(", ") : tc("none")}</dd>
       </dl>
     </div>
   );

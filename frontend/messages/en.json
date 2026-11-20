@@ -11,7 +11,32 @@
     "filter": "Filter",
     "actions": "Actions",
     "none": "None",
-    "activeInstitution": "Active institution"
+    "activeInstitution": "Active institution",
+    "errorBoundary": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred. Please try again.",
+      "tryAgain": "Try again"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Page not found",
+      "description": "The page you're looking for doesn't exist.",
+      "goHome": "Go home"
+    }
+  },
+  "me": {
+    "title": "My Profile",
+    "institutionSection": "Institution",
+    "logout": "Log out"
+  },
+  "logout": {
+    "title": "Logging out",
+    "description": "Please wait while we end your session."
+  },
+  "switchInstitution": {
+    "title": "Switch Institution",
+    "description": "Select the institution you want to work with:",
+    "backToProfile": "Back to profile"
   },
   "login": {
     "loading": "Loading…",
@@ -27,7 +52,13 @@
     "passwordPlaceholder": "••••••••",
     "signingIn": "Signing in…",
     "signIn": "Sign in",
-    "signInWithSSO": "Sign in with SSO (Keycloak)"
+    "signInWithSSO": "Sign in with SSO (Keycloak)",
+    "heroTitle": "Manage your research projects with confidence",
+    "heroSubtitle": "A comprehensive platform for planning, tracking, and reporting on research initiatives.",
+    "featureSecurity": "Secure and compliant with institutional policies",
+    "featureCollaboration": "Collaborate with teams across departments",
+    "featureAnalytics": "Real-time analytics and reporting",
+    "trustedBy": "Trusted by leading research institutions"
   },
   "localeSwitcher": {
     "switchToSpanish": "Cambiar a Español",
@@ -246,6 +277,8 @@
   "projects": {
     "list": {
       "title": "Projects",
+      "description": "Manage and track all research projects across the institution.",
+      "filtersTitle": "Filters",
       "createNew": "New project",
       "filterStatus": "Status",
       "filterCenter": "Center",
@@ -578,6 +611,336 @@
       "innovacion_gestion": "Management Innovation",
       "carta": "Letter"
     }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcomeBack": "Welcome back, {name}! Here's what's happening today.",
+    "kpiSectionTitle": "Key Metrics",
+    "errorTitle": "Error loading dashboard",
+    "errorDescription": "Dashboard data could not be loaded. Try reloading the page.",
+    "kpi": {
+      "totalProjects": "Total projects",
+      "pendingApproval": "Pending approval",
+      "pendingAdvances": "Pending advances",
+      "avgProgress": "Average progress",
+      "completeProjects": "Complete projects",
+      "approvedBudget": "Approved budget",
+      "executedBudget": "Executed budget",
+      "budgetBalance": "Budget balance",
+      "myProjects": "My projects",
+      "externalCalls": "Projects in external calls"
+    },
+    "chart": {
+      "projectsByStatus": "Projects by status",
+      "projectsByCenter": "Projects by center",
+      "budgetExecution": "Budget execution",
+      "progressReports": "Progress reports"
+    },
+    "top": {
+      "projectsWithProducts": "Top projects with most products",
+      "researchersWithProducts": "Top researchers with most products"
+    },
+    "table": {
+      "project": "Project",
+      "products": "Products",
+      "researcher": "Researcher"
+    },
+    "profileCompleteness": {
+      "title": "Complete profiles",
+      "researchers": "{complete} of {total} researchers"
+    }
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "search": "Search",
+    "projects": "Projects",
+    "calls": "Calls",
+    "budgets": "Budgets",
+    "products": "Products",
+    "researchers": "Researchers",
+    "reports": "Reports",
+    "institutions": "Institutional structure",
+    "analytics": "Advanced Analytics",
+    "mainNavigation": "Main navigation",
+    "approvals": "Pending Approvals",
+    "groupManagement": "Management",
+    "groupAnalysis": "Analysis & Reports",
+    "groupAdmin": "Administration"
+  },
+  "drawer": {
+    "openMenu": "Open menu",
+    "navigationMenu": "Navigation menu"
+  },
+  "topbar": {
+    "toggleTheme": "Toggle theme"
+  },
+  "roleGuard": {
+    "noPermission": "You do not have permission to view this content."
+  },
+  "search": {
+    "title": "Search",
+    "description": "Search across projects, researchers, products, calls and advances.",
+    "minChars": "Enter at least 2 characters to search.",
+    "bar": {
+      "placeholder": "Search in SIGPI...",
+      "searching": "Searching",
+      "allIndexes": "All"
+    },
+    "filters": {
+      "title": "Filters",
+      "institution": "Institution",
+      "center": "Center",
+      "status": "Status",
+      "year": "Year",
+      "type": "Type",
+      "clear": "Clear filters",
+      "all": "All",
+      "allFeminine": "All",
+      "draft": "Draft",
+      "active": "Active",
+      "completed": "Completed",
+      "archived": "Archived",
+      "article": "Article",
+      "book": "Book",
+      "thesis": "Thesis",
+      "report": "Report"
+    },
+    "results": {
+      "result": "result",
+      "results": "results",
+      "for": "for",
+      "noResults": "No results found for",
+      "tryOther": "Try different terms or adjust the filters.",
+      "previous": "Previous",
+      "next": "Next",
+      "of": "of"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "description": "Generate, preview and approve PDF reports for projects, researchers, centers and advances.",
+    "generator": "Report generator",
+    "reportType": "Report type",
+    "entity": "Entity",
+    "selectType": "Select a type",
+    "selectEntity": "Select an entity",
+    "noPermission": "You do not have permission to generate reports.",
+    "section": {
+      "projects": "Projects",
+      "researchers": "Researchers",
+      "centers": "Centers",
+      "advances": "Advances"
+    },
+    "loading": "Loading",
+    "noEntities": "No {section} available to generate reports.",
+    "preview": "Preview",
+    "previewDialog": {
+      "title": "Preview",
+      "titleWith": "Preview — {type}",
+      "entityLabel": "Entity: {name}",
+      "description": "Report preview",
+      "generating": "Generating preview…",
+      "iframeTitle": "Report preview"
+    },
+    "approval": {
+      "approve": "Approve",
+      "approving": "Approving…",
+      "approved": "Report approved."
+    },
+    "download": {
+      "download": "Download PDF",
+      "generating": "Generating PDF…"
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "errorLoading": "Error loading documents. Please try again.",
+    "upload": {
+      "button": "Upload document",
+      "dialogTitle": "Upload document",
+      "file": "File",
+      "docType": "Document type",
+      "entityType": "Entity type (optional)",
+      "entityId": "Entity ID (optional)",
+      "selectType": "Select a type",
+      "selectEntity": "Select a type",
+      "entityPlaceholder": "Entity UUID",
+      "upload": "Upload",
+      "uploading": "Uploading...",
+      "fileRequired": "Please select a file",
+      "success": "Document uploaded successfully",
+      "error": "Error uploading document"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Search by name...",
+      "type": "Type",
+      "entity": "Entity",
+      "signed": "Signed",
+      "all": "All",
+      "allFeminine": "All",
+      "signedOnly": "Signed",
+      "unsigned": "Unsigned",
+      "clear": "Clear"
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "entity": "Entity",
+      "uploaded": "Uploaded",
+      "status": "Status",
+      "actions": "Actions",
+      "noType": "No type",
+      "view": "View",
+      "download": "Download",
+      "signed": "Signed",
+      "unsigned": "Unsigned",
+      "noDocuments": "No documents",
+      "noDocumentsDescription": "No documents uploaded yet. Upload the first one using the \"Upload document\" button.",
+      "pageOf": "Page {page} of {total}"
+    }
+  },
+  "institutions": {
+    "title": "Institutional structure",
+    "createFirst": "Create institution",
+    "createNew": "New institution",
+    "createSubmit": "Create institution",
+    "noInstitutions": "No institutions",
+    "noInstitutionsDescription": "Create the first institution to start structuring the system.",
+    "notFound": "Institution not found",
+    "tree": {
+      "ariaLabel": "Institutional structure",
+      "expand": "Expand {name}",
+      "collapse": "Collapse {name}",
+      "actions": "Actions for {name}"
+    },
+    "kind": {
+      "institution": "Institution",
+      "sede": "Campus",
+      "facultad": "Faculty",
+      "center": "Research center",
+      "group": "Group",
+      "line": "Line"
+    },
+    "deleted": {
+      "institution": "Institution deleted.",
+      "sede": "Campus deleted.",
+      "facultad": "Faculty deleted.",
+      "center": "Research center deleted.",
+      "group": "Group deleted.",
+      "line": "Line deleted."
+    },
+    "actions": {
+      "viewDetail": "View detail",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "confirm": {
+      "deleteTitle": "Delete {kind}?",
+      "actionTitle": "Confirm \"{action}\"?",
+      "cannotUndo": "This action cannot be undone.",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "empty": {
+      "noDependencies": "No dependencies",
+      "noDependenciesDescription": "Create a campus, faculty or center for this institution.",
+      "noGroups": "No research groups",
+      "noGroupsDescription": "Create the first research group for this center.",
+      "noLines": "No research lines",
+      "noLinesDescription": "Create the first research line for this group."
+    },
+    "fsm": {
+      "stateActions": "State actions",
+      "confirmTitle": "Confirm \"{action}\"?",
+      "cannotUndo": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "archive": "Archive"
+    },
+    "detail": {
+      "code": "Code",
+      "description": "Description",
+      "address": "Address",
+      "contactEmail": "Contact email",
+      "contactPhone": "Contact phone",
+      "logoUrl": "Logo URL",
+      "created": "Created",
+      "updated": "Updated"
+    },
+    "form": {
+      "saving": "Saving…",
+      "invalidValue": "Invalid value."
+    },
+    "toast": {
+      "created": "Institution created.",
+      "actionSuccess": "{label} {action}."
+    }
+  },
+  "calls": {
+    "title": "Calls",
+    "createNew": "New call",
+    "filters": {
+      "status": "Status",
+      "type": "Type",
+      "all": "All"
+    },
+    "loading": "Loading calls",
+    "noResults": "No results",
+    "noCalls": "No calls",
+    "noResultsDescription": "No calls found with the applied filters.",
+    "noCallsDescription": "Create your first call to get started.",
+    "table": {
+      "title": "Title",
+      "status": "Status",
+      "type": "Type",
+      "created": "Created",
+      "ariaLabel": "Calls list"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}",
+      "count": "{count} calls"
+    }
+  },
+  "researchers": {
+    "title": "Researchers",
+    "createNew": "Create researcher",
+    "noResearchers": "No researchers",
+    "noResearchersDescription": "Create the first researcher to start managing profiles.",
+    "loading": "Loading researchers",
+    "table": {
+      "name": "Name",
+      "status": "Status",
+      "completeness": "Completeness",
+      "actions": "Actions",
+      "edit": "Edit",
+      "ariaLabel": "Researchers list",
+      "page": "Page {page}",
+      "count": "{count} researchers"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "advances": {
+    "cumulativeProgress": "Cumulative project progress",
+    "progressAriaLabel": "Cumulative progress",
+    "noAdvances": "No advances",
+    "noAdvancesDescription": "Register the first advance for this project to get started.",
+    "progressOf": "Progress for advance {id}"
+  },
+  "userProfile": {
+    "profile": "Profile",
+    "email": "Email",
+    "authSource": "Auth Source",
+    "activeInstitution": "Active Institution",
+    "activeRole": "Active Role",
+    "centers": "Centers",
+    "noUser": "No User data available."
   },
   "statuses": {
     "active": "Active",

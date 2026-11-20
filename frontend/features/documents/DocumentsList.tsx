@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useDocuments } from './queries';
-import { DocumentsFilters, type DocumentsFiltersState } from './DocumentsFilters';
-import { DocumentsTable } from './DocumentsTable';
-import { UploadButton } from './UploadButton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FileText } from 'lucide-react';
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { useDocuments } from "./queries";
+import { DocumentsFilters, type DocumentsFiltersState } from "./DocumentsFilters";
+import { DocumentsTable } from "./DocumentsTable";
+import { UploadButton } from "./UploadButton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FileText } from "lucide-react";
 
 export function DocumentsList() {
   const [filters, setFilters] = useState<DocumentsFiltersState>({});
   const [page, setPage] = useState(1);
+  const t = useTranslations("documents");
 
   const { data, isLoading, error } = useDocuments({ ...filters, page });
 
@@ -24,9 +26,7 @@ export function DocumentsList() {
     return (
       <Card>
         <CardContent className="py-8">
-          <div className="text-center text-destructive">
-            Error al cargar los documentos. Por favor intenta de nuevo.
-          </div>
+          <div className="text-center text-destructive">{t("errorLoading")}</div>
         </CardContent>
       </Card>
     );
@@ -38,7 +38,7 @@ export function DocumentsList() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Documentos
+            {t("title")}
           </CardTitle>
           <UploadButton />
         </CardHeader>

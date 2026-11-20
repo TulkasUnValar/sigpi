@@ -8,6 +8,7 @@
  */
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -30,13 +31,14 @@ interface AdvanceListProps {
 
 export function AdvanceList({ advances, isLoading, projectId }: AdvanceListProps) {
   const average = computeCumulativeAverage(advances.map((a) => a.cumulative_percentage));
+  const t = useTranslations("advances");
 
   return (
     <>
       {/* Cumulative progress indicator */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">Progreso acumulado del proyecto</CardTitle>
+          <CardTitle className="text-base">{t("cumulativeProgress")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
@@ -45,7 +47,7 @@ export function AdvanceList({ advances, isLoading, projectId }: AdvanceListProps
               aria-valuenow={average}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label="Progreso acumulado"
+              aria-label={t("progressAriaLabel")}
               className="h-2 flex-1 overflow-hidden rounded-full bg-muted"
             >
               <div
@@ -65,10 +67,7 @@ export function AdvanceList({ advances, isLoading, projectId }: AdvanceListProps
           ))}
         </div>
       ) : advances.length === 0 ? (
-        <EmptyState
-          title="No hay avances"
-          description="Registra el primer avance del proyecto para comenzar."
-        />
+        <EmptyState title={t("noAdvances")} description={t("noAdvancesDescription")} />
       ) : (
         <ul className="space-y-2">
           {advances.map((a) => (
@@ -96,7 +95,7 @@ export function AdvanceList({ advances, isLoading, projectId }: AdvanceListProps
                   aria-valuenow={a.cumulative_percentage}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label={`Progreso del avance ${a.id}`}
+                  aria-label={t("progressOf", { id: a.id })}
                   className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
                 >
                   <div

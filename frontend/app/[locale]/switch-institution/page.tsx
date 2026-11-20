@@ -9,18 +9,29 @@
 import ProtectedRoute from "@/components/ProtectedRoute";
 import InstitutionSelector from "@/components/InstitutionSelector";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SwitchInstitutionPage() {
+  const t = useTranslations("switchInstitution");
+
   return (
     <ProtectedRoute>
-      <main>
-        <h1>Switch Institution</h1>
-        <p>Select the institution you want to work with:</p>
-        <InstitutionSelector />
-        <nav>
-          <Link href="/me">Back to profile</Link>
-        </nav>
-      </main>
+      <div className="container mx-auto max-w-2xl space-y-6 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("title")}</CardTitle>
+            <CardDescription>{t("description")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <InstitutionSelector />
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/me">{t("backToProfile")}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </ProtectedRoute>
   );
 }
