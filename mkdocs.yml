@@ -102,6 +102,9 @@ nav:
     - Requisitos: spec/requirements.md
     - Casos de Uso: spec/use-cases.md
     - Reglas de Negocio: spec/business-rules.md
+  - Investigaciones:
+    - Índice: investigaciones/INDEX.md
+    - Agent Skills en Claude Code: investigaciones/claude-code-agent-skills.md
 
 extra:
   social:
