@@ -1,0 +1,13 @@
+{
+  "edit": {
+    "cmd": "backend/.venv-wsl/bin/ruff format {file} && backend/.venv-wsl/bin/ruff check {file}",
+    "patterns": ["backend/*.py"]
+  },
+  "stop": {
+    "cmd": "cd backend && .venv-wsl/bin/ruff check apps/ && .venv-wsl/bin/ruff format --check apps/ && cd .. && APPS=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | grep -E '^backend/apps/[^/]+/' | cut -d/ -f1-3 | sort -u | tr '\\n' ' ' ) && if [ -n \"$APPS\" ]; then backend/.venv-wsl/bin/pytest -c backend/pyproject.toml -m 'not slow' -q -x -p no:cacheprovider $APPS; rc=$?; [ $rc -eq 0 ] || [ $rc -eq 5 ]; fi",
+    "patterns": ["backend/*.py"]
+  },
+  "commit": {
+    "cmd": "cd backend && .venv-wsl/bin/ruff check apps/ && .venv-wsl/bin/ruff format --check apps/ && cd .. && backend/.venv-wsl/bin/pytest -c backend/pyproject.toml -m 'not slow' -q -x -p no:cacheprovider"
+  }
+}
