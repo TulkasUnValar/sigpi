@@ -24,9 +24,7 @@ export default function LocaleSwitcher() {
           onClick={() => handleLocaleChange(l)}
           disabled={l === locale}
           className={`px-2 py-1 text-sm rounded ${
-            l === locale
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 hover:bg-gray-300"
+            l === locale ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
           }`}
           aria-label={l === "es" ? t("switchToSpanish") : t("switchToEnglish")}
         >

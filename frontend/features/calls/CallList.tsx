@@ -15,6 +15,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,7 @@ export function CallList() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [callType, setCallType] = useState("");
+  const t = useTranslations("calls");
 
   const { roles } = useAuthStore();
   const canCreate = canManageCall(roles);
@@ -78,10 +80,10 @@ export function CallList() {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Convocatorias</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         {canCreate ? (
           <Button asChild>
-            <Link href="/calls/new">Nueva convocatoria</Link>
+            <Link href="/calls/new">{t("createNew")}</Link>
           </Button>
         ) : null}
       </div>
@@ -90,13 +92,13 @@ export function CallList() {
       <Card className="mb-6">
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="call-filter-status">Estado</Label>
+            <Label htmlFor="call-filter-status">{t("filters.status")}</Label>
             <Select value={status} onValueChange={changeStatus}>
-              <SelectTrigger id="call-filter-status" aria-label="Estado">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="call-filter-status" aria-label={t("filters.status")}>
+                <SelectValue placeholder={t("filters.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
+                <SelectItem value={ALL_FILTER}>{t("filters.all")}</SelectItem>
                 {CALL_STATUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -106,13 +108,13 @@ export function CallList() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="call-filter-type">Tipo</Label>
+            <Label htmlFor="call-filter-type">{t("filters.type")}</Label>
             <Select value={callType} onValueChange={changeCallType}>
-              <SelectTrigger id="call-filter-type" aria-label="Tipo de convocatoria">
-                <SelectValue placeholder="Todos" />
+              <SelectTrigger id="call-filter-type" aria-label={t("filters.type")}>
+                <SelectValue placeholder={t("filters.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_FILTER}>Todos</SelectItem>
+                <SelectItem value={ALL_FILTER}>{t("filters.all")}</SelectItem>
                 {CALL_TYPE_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -125,7 +127,7 @@ export function CallList() {
       </Card>
 
       {loading ? (
-        <div role="status" aria-label="Cargando convocatorias" className="space-y-2">
+        <div role="status" aria-label={t("loading")} className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-12" />
           ))}
@@ -139,29 +141,25 @@ export function CallList() {
         </div>
       ) : calls.length === 0 ? (
         <EmptyState
-          title={hasFilters ? "Sin resultados" : "No hay convocatorias"}
-          description={
-            hasFilters
-              ? "No se encontraron convocatorias con los filtros aplicados."
-              : "Crea tu primera convocatoria para comenzar."
-          }
+          title={hasFilters ? t("noResults") : t("noCalls")}
+          description={hasFilters ? t("noResultsDescription") : t("noCallsDescription")}
           action={
             canCreate ? (
               <Button asChild variant="outline" size="sm">
-                <Link href="/calls/new">Nueva convocatoria</Link>
+                <Link href="/calls/new">{t("createNew")}</Link>
               </Button>
             ) : undefined
           }
         />
       ) : (
         <div className="overflow-hidden rounded-lg border">
-          <table aria-label="Lista de convocatorias" className="w-full text-sm">
+          <table aria-label={t("table.ariaLabel")} className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">
               <tr>
-                <th className="px-4 py-3 font-medium">Título</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium">Tipo</th>
-                <th className="px-4 py-3 font-medium">Creada</th>
+                <th className="px-4 py-3 font-medium">{t("table.title")}</th>
+                <th className="px-4 py-3 font-medium">{t("table.status")}</th>
+                <th className="px-4 py-3 font-medium">{t("table.type")}</th>
+                <th className="px-4 py-3 font-medium">{t("table.created")}</th>
               </tr>
             </thead>
             <tbody>
@@ -192,11 +190,11 @@ export function CallList() {
           disabled={!data?.previous || loading}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
         >
-          Anterior
+          {t("pagination.previous")}
         </Button>
         <span aria-live="polite" className="text-sm text-muted-foreground">
-          Página {page}
-          {data?.count !== undefined ? ` · ${data.count} convocatorias` : ""}
+          {t("pagination.page", { page })}
+          {data?.count !== undefined ? ` · ${t("pagination.count", { count: data.count })}` : ""}
         </span>
         <Button
           variant="outline"
@@ -204,7 +202,7 @@ export function CallList() {
           disabled={!data?.next || loading}
           onClick={() => setPage((p) => p + 1)}
         >
-          Siguiente
+          {t("pagination.next")}
         </Button>
       </div>
     </>

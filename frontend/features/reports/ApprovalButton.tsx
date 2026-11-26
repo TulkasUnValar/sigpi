@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/errors";
@@ -33,6 +34,7 @@ export function ApprovalButton({ type, entityId, onSuccess }: ApprovalButtonProp
   const roles = useAuthStore((s) => s.roles);
   const [localPending, setLocalPending] = useState(false);
   const { mutateAsync, isPending } = useApproveReport();
+  const t = useTranslations("reports");
 
   if (!canApproveReport(roles)) {
     return null;
@@ -42,7 +44,7 @@ export function ApprovalButton({ type, entityId, onSuccess }: ApprovalButtonProp
     setLocalPending(true);
     try {
       await mutateAsync({ type, entityId });
-      toast.success("Informe aprobado.");
+      toast.success(t("approval.approved"));
       onSuccess?.();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -54,14 +56,9 @@ export function ApprovalButton({ type, entityId, onSuccess }: ApprovalButtonProp
   const pending = isPending || localPending;
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => void handleApprove()}
-      disabled={pending}
-    >
+    <Button variant="outline" size="sm" onClick={() => void handleApprove()} disabled={pending}>
       <CheckCircle className="h-4 w-4" />
-      {pending ? "Aprobando…" : "Aprobar"}
+      {pending ? t("approval.approving") : t("approval.approve")}
     </Button>
   );
 }

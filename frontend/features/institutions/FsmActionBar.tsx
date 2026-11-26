@@ -15,6 +15,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -68,6 +69,7 @@ export function FsmActionBar({
   const defaultTransition = useInstitutionTransition();
   const activeTransition = transition ?? defaultTransition;
   const [confirmAction, setConfirmAction] = useState<FsmAction | null>(null);
+  const t = useTranslations("institutions");
 
   const actions = getEntityActions(state, roles, minRoles);
 
@@ -96,7 +98,7 @@ export function FsmActionBar({
   if (actions.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-label="Acciones de estado">
+    <div className="flex flex-wrap items-center gap-2" aria-label={t("fsm.stateActions")}>
       {actions.map((action) => (
         <Button
           key={`${action.name}-${action.fromStates.join("|")}`}
@@ -115,10 +117,10 @@ export function FsmActionBar({
           onOpenChange={(open) => {
             if (!open) setConfirmAction(null);
           }}
-          title={`¿Confirmar "${confirmAction.label}"?`}
-          description="Esta acción no se puede deshacer."
+          title={t("fsm.confirmTitle", { action: confirmAction.label })}
+          description={t("fsm.cannotUndo")}
           confirmLabel={confirmAction.label}
-          cancelLabel="Cancelar"
+          cancelLabel={t("fsm.cancel")}
           destructive
           onConfirm={() => runAction(confirmAction)}
         />

@@ -41,9 +41,7 @@ export default function DesignSystemDemoPage() {
 
         {/* Sin dot */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Sin dot (variante compacta)
-          </h3>
+          <h3 className="text-sm font-medium text-muted-foreground">Sin dot (variante compacta)</h3>
           <div className="flex flex-wrap gap-3">
             {statuses.slice(0, 5).map((s) => (
               <StatusBadge key={s.variant} variant={s.variant} showDot={false}>

@@ -11,6 +11,7 @@
  */
 
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -40,14 +41,15 @@ export function ReportGeneratorForm({
   onEntityChange,
 }: ReportGeneratorFormProps) {
   const { options } = useReportEntityOptions(type);
+  const t = useTranslations("reports");
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="space-y-2">
-        <Label htmlFor="report-type">Tipo de informe</Label>
+        <Label htmlFor="report-type">{t("reportType")}</Label>
         <Select value={type} onValueChange={(value) => onTypeChange(value as ReportType)}>
-          <SelectTrigger id="report-type" aria-label="Tipo de informe">
-            <SelectValue placeholder="Seleccione un tipo" />
+          <SelectTrigger id="report-type" aria-label={t("reportType")}>
+            <SelectValue placeholder={t("selectType")} />
           </SelectTrigger>
           <SelectContent>
             {REPORT_TYPE_OPTIONS.map((option) => (
@@ -60,15 +62,15 @@ export function ReportGeneratorForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="report-entity">Entidad</Label>
+        <Label htmlFor="report-entity">{t("entity")}</Label>
         <Select
           key={type}
           value={entityId ?? undefined}
           onValueChange={onEntityChange}
           disabled={options.length === 0}
         >
-          <SelectTrigger id="report-entity" aria-label="Entidad">
-            <SelectValue placeholder="Seleccione una entidad" />
+          <SelectTrigger id="report-entity" aria-label={t("entity")}>
+            <SelectValue placeholder={t("selectEntity")} />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (

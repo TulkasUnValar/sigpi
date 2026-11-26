@@ -12,18 +12,17 @@ import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { ReportHub } from "@/features/reports/ReportHub";
 import { canGenerateReport } from "@/features/reports/permissions";
 import { useAuthStore } from "@/store/auth";
+import { useTranslations } from "next-intl";
 
 export default function ReportsPage() {
   const roles = useAuthStore((s) => s.roles);
+  const t = useTranslations("reports");
 
   if (!canGenerateReport(roles)) {
     return (
       <AuthenticatedLayout>
-        <div
-          role="alert"
-          className="rounded-md border border-destructive p-4 text-sm"
-        >
-          No tiene permisos para generar informes.
+        <div role="alert" className="rounded-md border border-destructive p-4 text-sm">
+          {t("noPermission")}
         </div>
       </AuthenticatedLayout>
     );

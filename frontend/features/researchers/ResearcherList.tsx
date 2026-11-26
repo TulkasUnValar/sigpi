@@ -11,6 +11,7 @@
  */
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -41,26 +42,27 @@ export function ResearcherList({
   hasPrevious,
   onPageChange,
 }: ResearcherListProps) {
+  const t = useTranslations("researchers");
   return (
     <div>
       {researchers.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">No hay investigadores</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">{t("noResearchers")}</p>
       ) : (
         <div className="overflow-hidden rounded-lg border">
-          <table aria-label="Lista de investigadores" className="w-full text-sm">
+          <table aria-label={t("table.ariaLabel")} className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">
               <tr>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Nombre
+                  {t("table.name")}
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Estado
+                  {t("table.status")}
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Completitud
+                  {t("table.completeness")}
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Acciones
+                  {t("table.actions")}
                 </th>
               </tr>
             </thead>
@@ -80,7 +82,7 @@ export function ResearcherList({
                   </td>
                   <td className="px-4 py-3">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/researchers/${r.id}/edit`}>Editar</Link>
+                      <Link href={`/researchers/${r.id}/edit`}>{t("table.edit")}</Link>
                     </Button>
                   </td>
                 </tr>
@@ -97,10 +99,10 @@ export function ResearcherList({
           disabled={!hasPrevious || loading}
           onClick={() => onPageChange(page - 1)}
         >
-          Anterior
+          {t("pagination.previous")}
         </Button>
         <span aria-live="polite" className="text-sm text-muted-foreground">
-          Página {page} · {count} investigadores
+          {t("table.page", { page })} · {t("table.count", { count })}
         </span>
         <Button
           variant="outline"
@@ -108,7 +110,7 @@ export function ResearcherList({
           disabled={!hasNext || loading}
           onClick={() => onPageChange(page + 1)}
         >
-          Siguiente
+          {t("pagination.next")}
         </Button>
       </div>
     </div>

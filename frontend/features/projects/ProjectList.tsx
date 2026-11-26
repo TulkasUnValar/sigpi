@@ -6,14 +6,13 @@
  *
  * Spec (projects-ui list / FR-02):
  *   /projects renders a paginated table (DRF 25/page) with filters and
- *   page controls driven by the DRF `next`/`previous` links. Extracted
- *   from the inline route so the page is a thin adapter (products/
- *   advances pattern); behavior is unchanged.
+ *   page controls driven by the DRF `next`/`previous` links.
  */
 
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { FolderKanban, Plus, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useProjectsList, useCenters } from "@/features/projects/queries";
 
 const STATUS_OPTIONS = [
@@ -69,17 +69,31 @@ export function ProjectList(_props: ProjectListProps) {
   const hasFilters = Boolean(status || center || year || search);
 
   return (
-    <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{t("list.title")}</h1>
-        <Button asChild>
-          <Link href="/projects/new">{t("list.createNew")}</Link>
-        </Button>
-      </div>
+    <div className="animate-fade-in space-y-6">
+      {/* Page header */}
+      <PageHeader
+        title={t("list.title")}
+        description={t("list.description")}
+        icon={FolderKanban}
+        action={
+          <Button asChild>
+            <Link href="/projects/new">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t("list.createNew")}
+            </Link>
+          </Button>
+        }
+      />
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Filters card */}
+      <Card className="shadow-card">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <CardTitle className="text-sm font-medium">{t("list.filtersTitle")}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Label htmlFor="filter-status">{t("list.filterStatus")}</Label>
             <Select value={status} onValueChange={setStatus}>
@@ -135,43 +149,55 @@ export function ProjectList(_props: ProjectListProps) {
         </CardContent>
       </Card>
 
+      {/* Content */}
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-12" />
+            <Skeleton key={i} className="h-14 rounded-lg" />
           ))}
         </div>
       ) : projects.length === 0 ? (
         <EmptyState
           title={hasFilters ? t("list.noResults") : t("list.noProjects")}
           description={
-            hasFilters
-              ? t("list.noResultsDescription")
-              : t("list.noProjectsDescription")
+            hasFilters ? t("list.noResultsDescription") : t("list.noProjectsDescription")
           }
+          icon={FolderKanban}
         />
       ) : (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-xl border bg-card shadow-card">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">
               <tr>
-                <th className="px-4 py-3 font-medium">{t("table.title")}</th>
-                <th className="px-4 py-3 font-medium">{t("table.status")}</th>
-                <th className="px-4 py-3 font-medium">{t("table.startDate")}</th>
+                <th className="px-4 py-3.5 font-medium text-muted-foreground">
+                  {t("table.title")}
+                </th>
+                <th className="px-4 py-3.5 font-medium text-muted-foreground">
+                  {t("table.status")}
+                </th>
+                <th className="px-4 py-3.5 font-medium text-muted-foreground">
+                  {t("table.startDate")}
+                </th>
               </tr>
             </thead>
             <tbody>
               {projects.map((p) => (
-                <tr key={p.id} className="border-b last:border-0">
-                  <td className="px-4 py-3">
-                    <Link href={`/projects/${p.id}`} className="font-medium hover:underline">
+                <tr
+                  key={p.id}
+                  className="border-b transition-colors last:border-0 hover:bg-muted/30"
+                >
+                  <td className="px-4 py-3.5">
+                    <Link
+                      href={`/projects/${p.id}`}
+                      className="font-medium hover:text-primary hover:underline"
+                    >
                       {p.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5">
                     <StatusBadge status={p.status} />
                   </td>
-                  <td className="px-4 py-3">{p.start_date}</td>
+                  <td className="px-4 py-3.5 text-muted-foreground">{p.start_date}</td>
                 </tr>
               ))}
             </tbody>
@@ -179,14 +205,15 @@ export function ProjectList(_props: ProjectListProps) {
         </div>
       )}
 
-      {/* Pagination driven by DRF next/previous links */}
-      <div className="mt-4 flex items-center justify-between">
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
         <Button
           variant="outline"
           size="sm"
           disabled={!data?.previous || loading}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
         >
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           {t("list.previous")}
         </Button>
         <span className="text-sm text-muted-foreground">
@@ -200,8 +227,9 @@ export function ProjectList(_props: ProjectListProps) {
           onClick={() => setPage((p) => p + 1)}
         >
           {t("list.next")}
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
-    </>
+    </div>
   );
 }

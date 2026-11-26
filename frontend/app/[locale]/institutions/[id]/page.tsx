@@ -9,6 +9,7 @@
  */
 
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -20,6 +21,7 @@ import { useInstitutionDetail } from "@/features/institutions/queries";
 export default function InstitutionDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const t = useTranslations("institutions");
 
   const detailQuery = useInstitutionDetail(id);
 
@@ -36,7 +38,7 @@ export default function InstitutionDetailPage() {
   if (!institution) {
     return (
       <AuthenticatedLayout>
-        <EmptyState title="Institución no encontrada" />
+        <EmptyState title={t("notFound")} />
       </AuthenticatedLayout>
     );
   }
@@ -48,14 +50,14 @@ export default function InstitutionDetailPage() {
         status={institution.status}
         actionBar={<FsmActionBar entityId={institution.id} state={institution.status} />}
         fields={[
-          { label: "Código", value: institution.code },
-          { label: "Descripción", value: institution.description },
-          { label: "Dirección", value: institution.address },
-          { label: "Correo de contacto", value: institution.contact_email },
-          { label: "Teléfono de contacto", value: institution.contact_phone },
-          { label: "URL del logo", value: institution.logo_url },
-          { label: "Creada", value: institution.created_at },
-          { label: "Actualizada", value: institution.updated_at },
+          { label: t("detail.code"), value: institution.code },
+          { label: t("detail.description"), value: institution.description },
+          { label: t("detail.address"), value: institution.address },
+          { label: t("detail.contactEmail"), value: institution.contact_email },
+          { label: t("detail.contactPhone"), value: institution.contact_phone },
+          { label: t("detail.logoUrl"), value: institution.logo_url },
+          { label: t("detail.created"), value: institution.created_at },
+          { label: t("detail.updated"), value: institution.updated_at },
         ]}
       />
     </AuthenticatedLayout>

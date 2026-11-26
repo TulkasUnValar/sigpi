@@ -11,7 +11,32 @@
     "filter": "Filtrar",
     "actions": "Acciones",
     "none": "Ninguno",
-    "activeInstitution": "Institución activa"
+    "activeInstitution": "Institución activa",
+    "errorBoundary": {
+      "title": "Algo salió mal",
+      "description": "Ocurrió un error inesperado. Por favor, intenta de nuevo.",
+      "tryAgain": "Intentar de nuevo"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Página no encontrada",
+      "description": "La página que buscas no existe.",
+      "goHome": "Ir al inicio"
+    }
+  },
+  "me": {
+    "title": "Mi Perfil",
+    "institutionSection": "Institución",
+    "logout": "Cerrar sesión"
+  },
+  "logout": {
+    "title": "Cerrando sesión",
+    "description": "Por favor espera mientras finalizamos tu sesión."
+  },
+  "switchInstitution": {
+    "title": "Cambiar Institución",
+    "description": "Selecciona la institución con la que deseas trabajar:",
+    "backToProfile": "Volver al perfil"
   },
   "login": {
     "loading": "Cargando…",
@@ -27,7 +52,13 @@
     "passwordPlaceholder": "••••••••",
     "signingIn": "Iniciando sesión…",
     "signIn": "Iniciar sesión",
-    "signInWithSSO": "Iniciar sesión con SSO (Keycloak)"
+    "signInWithSSO": "Iniciar sesión con SSO (Keycloak)",
+    "heroTitle": "Gestiona tus proyectos de investigación con confianza",
+    "heroSubtitle": "Una plataforma integral para planificar, seguir y reportar iniciativas de investigación.",
+    "featureSecurity": "Seguro y cumple con las políticas institucionales",
+    "featureCollaboration": "Colabora con equipos en todos los departamentos",
+    "featureAnalytics": "Análisis y reportes en tiempo real",
+    "trustedBy": "Confiado por instituciones de investigación líderes"
   },
   "localeSwitcher": {
     "switchToSpanish": "Cambiar a Español",
@@ -246,6 +277,8 @@
   "projects": {
     "list": {
       "title": "Proyectos",
+      "description": "Gestiona y sigue todos los proyectos de investigación de la institución.",
+      "filtersTitle": "Filtros",
       "createNew": "Nuevo proyecto",
       "filterStatus": "Estado",
       "filterCenter": "Centro",
@@ -578,6 +611,336 @@
       "innovacion_gestion": "Innovación de Gestión",
       "carta": "Carta"
     }
+  },
+  "dashboard": {
+    "title": "Panel de control",
+    "welcomeBack": "¡Bienvenido de vuelta, {name}! Esto es lo que está pasando hoy.",
+    "kpiSectionTitle": "Métricas clave",
+    "errorTitle": "Error al cargar el dashboard",
+    "errorDescription": "No se pudieron cargar los datos del dashboard. Intenta recargar la página.",
+    "kpi": {
+      "totalProjects": "Total de proyectos",
+      "pendingApproval": "Pendientes de aprobación",
+      "pendingAdvances": "Avances pendientes",
+      "avgProgress": "Progreso promedio",
+      "completeProjects": "Proyectos completos",
+      "approvedBudget": "Presupuesto aprobado",
+      "executedBudget": "Presupuesto ejecutado",
+      "budgetBalance": "Saldo presupuestal",
+      "myProjects": "Mis proyectos",
+      "externalCalls": "Proyectos en convocatorias externas"
+    },
+    "chart": {
+      "projectsByStatus": "Proyectos por estado",
+      "projectsByCenter": "Proyectos por centro",
+      "budgetExecution": "Ejecución presupuestal",
+      "progressReports": "Informes de avance"
+    },
+    "top": {
+      "projectsWithProducts": "Top proyectos con más productos",
+      "researchersWithProducts": "Top investigadores con más productos"
+    },
+    "table": {
+      "project": "Proyecto",
+      "products": "Productos",
+      "researcher": "Investigador"
+    },
+    "profileCompleteness": {
+      "title": "Perfiles completos",
+      "researchers": "{complete} de {total} investigadores"
+    }
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "search": "Búsqueda",
+    "projects": "Proyectos",
+    "calls": "Convocatorias",
+    "budgets": "Presupuesto",
+    "products": "Productos",
+    "researchers": "Investigadores",
+    "reports": "Informes",
+    "institutions": "Estructura institucional",
+    "analytics": "Análisis Avanzado",
+    "mainNavigation": "Navegación principal",
+    "approvals": "Aprobaciones pendientes",
+    "groupManagement": "Gestión",
+    "groupAnalysis": "Análisis e Informes",
+    "groupAdmin": "Administración"
+  },
+  "drawer": {
+    "openMenu": "Abrir menú",
+    "navigationMenu": "Menú de navegación"
+  },
+  "topbar": {
+    "toggleTheme": "Cambiar tema"
+  },
+  "roleGuard": {
+    "noPermission": "No tiene permisos para ver este contenido."
+  },
+  "search": {
+    "title": "Búsqueda",
+    "description": "Busca en proyectos, investigadores, productos, convocatorias y avances.",
+    "minChars": "Ingresa al menos 2 caracteres para buscar.",
+    "bar": {
+      "placeholder": "Buscar en SIGPI...",
+      "searching": "Buscando",
+      "allIndexes": "Todos"
+    },
+    "filters": {
+      "title": "Filtros",
+      "institution": "Institución",
+      "center": "Centro",
+      "status": "Estado",
+      "year": "Año",
+      "type": "Tipo",
+      "clear": "Limpiar filtros",
+      "all": "Todos",
+      "allFeminine": "Todas",
+      "draft": "Borrador",
+      "active": "Activo",
+      "completed": "Completado",
+      "archived": "Archivado",
+      "article": "Artículo",
+      "book": "Libro",
+      "thesis": "Tesis",
+      "report": "Reporte"
+    },
+    "results": {
+      "result": "resultado",
+      "results": "resultados",
+      "for": "para",
+      "noResults": "No se encontraron resultados para",
+      "tryOther": "Intenta con otros términos o ajusta los filtros.",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "of": "de"
+    }
+  },
+  "reports": {
+    "title": "Informes",
+    "description": "Genere, previsualice y apruebe informes PDF de proyectos, investigadores, centros y avances.",
+    "generator": "Generador de informes",
+    "reportType": "Tipo de informe",
+    "entity": "Entidad",
+    "selectType": "Seleccione un tipo",
+    "selectEntity": "Seleccione una entidad",
+    "noPermission": "No tiene permisos para generar informes.",
+    "section": {
+      "projects": "Proyectos",
+      "researchers": "Investigadores",
+      "centers": "Centros",
+      "advances": "Avances"
+    },
+    "loading": "Cargando",
+    "noEntities": "No hay {section} disponibles para generar informes.",
+    "preview": "Vista previa",
+    "previewDialog": {
+      "title": "Vista previa",
+      "titleWith": "Vista previa — {type}",
+      "entityLabel": "Entidad: {name}",
+      "description": "Previsualización del informe",
+      "generating": "Generando vista previa…",
+      "iframeTitle": "Vista previa del informe"
+    },
+    "approval": {
+      "approve": "Aprobar",
+      "approving": "Aprobando…",
+      "approved": "Informe aprobado."
+    },
+    "download": {
+      "download": "Descargar PDF",
+      "generating": "Generando PDF…"
+    }
+  },
+  "documents": {
+    "title": "Documentos",
+    "errorLoading": "Error al cargar los documentos. Por favor intenta de nuevo.",
+    "upload": {
+      "button": "Subir documento",
+      "dialogTitle": "Subir documento",
+      "file": "Archivo",
+      "docType": "Tipo de documento",
+      "entityType": "Tipo de entidad (opcional)",
+      "entityId": "ID de entidad (opcional)",
+      "selectType": "Selecciona un tipo",
+      "selectEntity": "Selecciona un tipo",
+      "entityPlaceholder": "UUID de la entidad",
+      "upload": "Subir",
+      "uploading": "Subiendo...",
+      "fileRequired": "Por favor selecciona un archivo",
+      "success": "Documento subido exitosamente",
+      "error": "Error al subir el documento"
+    },
+    "filters": {
+      "search": "Buscar",
+      "searchPlaceholder": "Buscar por nombre...",
+      "type": "Tipo",
+      "entity": "Entidad",
+      "signed": "Firmado",
+      "all": "Todos",
+      "allFeminine": "Todas",
+      "signedOnly": "Firmados",
+      "unsigned": "Sin firmar",
+      "clear": "Limpiar"
+    },
+    "table": {
+      "name": "Nombre",
+      "type": "Tipo",
+      "entity": "Entidad",
+      "uploaded": "Subido",
+      "status": "Estado",
+      "actions": "Acciones",
+      "noType": "Sin tipo",
+      "view": "Ver",
+      "download": "Descargar",
+      "signed": "Firmado",
+      "unsigned": "Sin firmar",
+      "noDocuments": "No hay documentos",
+      "noDocumentsDescription": "Aún no hay documentos subidos. Sube el primero usando el botón \"Subir documento\".",
+      "pageOf": "Página {page} de {total}"
+    }
+  },
+  "institutions": {
+    "title": "Estructura institucional",
+    "createFirst": "Crear institución",
+    "createNew": "Nueva institución",
+    "createSubmit": "Crear institución",
+    "noInstitutions": "No hay instituciones",
+    "noInstitutionsDescription": "Crea la primera institución para comenzar a estructurar el sistema.",
+    "notFound": "Institución no encontrada",
+    "tree": {
+      "ariaLabel": "Estructura institucional",
+      "expand": "Expandir {name}",
+      "collapse": "Contraer {name}",
+      "actions": "Acciones de {name}"
+    },
+    "kind": {
+      "institution": "Institución",
+      "sede": "Sede",
+      "facultad": "Facultad",
+      "center": "Centro de investigación",
+      "group": "Grupo",
+      "line": "Línea"
+    },
+    "deleted": {
+      "institution": "Institución eliminada.",
+      "sede": "Sede eliminada.",
+      "facultad": "Facultad eliminada.",
+      "center": "Centro de investigación eliminado.",
+      "group": "Grupo eliminado.",
+      "line": "Línea eliminada."
+    },
+    "actions": {
+      "viewDetail": "Ver detalle",
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "confirm": {
+      "deleteTitle": "¿Eliminar {kind}?",
+      "actionTitle": "¿Confirmar \"{action}\"?",
+      "cannotUndo": "Esta acción no se puede deshacer.",
+      "delete": "Eliminar",
+      "cancel": "Cancelar"
+    },
+    "empty": {
+      "noDependencies": "No hay dependencias",
+      "noDependenciesDescription": "Crea una sede, facultad o centro para esta institución.",
+      "noGroups": "No hay grupos de investigación",
+      "noGroupsDescription": "Crea el primer grupo de investigación de este centro.",
+      "noLines": "No hay líneas de investigación",
+      "noLinesDescription": "Crea la primera línea de investigación de este grupo."
+    },
+    "fsm": {
+      "stateActions": "Acciones de estado",
+      "confirmTitle": "¿Confirmar \"{action}\"?",
+      "cannotUndo": "Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "activate": "Activar",
+      "deactivate": "Desactivar",
+      "archive": "Archivar"
+    },
+    "detail": {
+      "code": "Código",
+      "description": "Descripción",
+      "address": "Dirección",
+      "contactEmail": "Correo de contacto",
+      "contactPhone": "Teléfono de contacto",
+      "logoUrl": "URL del logo",
+      "created": "Creada",
+      "updated": "Actualizada"
+    },
+    "form": {
+      "saving": "Guardando…",
+      "invalidValue": "Valor inválido."
+    },
+    "toast": {
+      "created": "Institución creada.",
+      "actionSuccess": "{label} {action}."
+    }
+  },
+  "calls": {
+    "title": "Convocatorias",
+    "createNew": "Nueva convocatoria",
+    "filters": {
+      "status": "Estado",
+      "type": "Tipo",
+      "all": "Todos"
+    },
+    "loading": "Cargando convocatorias",
+    "noResults": "Sin resultados",
+    "noCalls": "No hay convocatorias",
+    "noResultsDescription": "No se encontraron convocatorias con los filtros aplicados.",
+    "noCallsDescription": "Crea tu primera convocatoria para comenzar.",
+    "table": {
+      "title": "Título",
+      "status": "Estado",
+      "type": "Tipo",
+      "created": "Creada",
+      "ariaLabel": "Lista de convocatorias"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page}",
+      "count": "{count} convocatorias"
+    }
+  },
+  "researchers": {
+    "title": "Investigadores",
+    "createNew": "Crear investigador",
+    "noResearchers": "No hay investigadores",
+    "noResearchersDescription": "Crea el primer investigador para comenzar a gestionar los perfiles.",
+    "loading": "Cargando investigadores",
+    "table": {
+      "name": "Nombre",
+      "status": "Estado",
+      "completeness": "Completitud",
+      "actions": "Acciones",
+      "edit": "Editar",
+      "ariaLabel": "Lista de investigadores",
+      "page": "Página {page}",
+      "count": "{count} investigadores"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Siguiente"
+    }
+  },
+  "advances": {
+    "cumulativeProgress": "Progreso acumulado del proyecto",
+    "progressAriaLabel": "Progreso acumulado",
+    "noAdvances": "No hay avances",
+    "noAdvancesDescription": "Registra el primer avance del proyecto para comenzar.",
+    "progressOf": "Progreso del avance {id}"
+  },
+  "userProfile": {
+    "profile": "Profile",
+    "email": "Email",
+    "authSource": "Auth Source",
+    "activeInstitution": "Active Institution",
+    "activeRole": "Active Role",
+    "centers": "Centers",
+    "noUser": "No User data available."
   },
   "statuses": {
     "active": "Activa",

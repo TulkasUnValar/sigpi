@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, X } from 'lucide-react';
-import { useDocumentTypes } from './queries';
-import { DOCUMENT_ENTITY_TYPES } from './constants';
+import { useTranslations } from "next-intl";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, X } from "lucide-react";
+import { useDocumentTypes } from "./queries";
+import { DOCUMENT_ENTITY_TYPES } from "./constants";
 
 export interface DocumentsFiltersState {
   search?: string;
@@ -21,8 +28,9 @@ interface DocumentsFiltersProps {
 
 export function DocumentsFilters({ filters, onChange }: DocumentsFiltersProps) {
   const { data: documentTypes } = useDocumentTypes();
+  const t = useTranslations("documents");
 
-  const hasActiveFilters = Object.values(filters).some((v) => v !== undefined && v !== '');
+  const hasActiveFilters = Object.values(filters).some((v) => v !== undefined && v !== "");
 
   const handleClear = () => {
     onChange({});
@@ -31,12 +39,12 @@ export function DocumentsFilters({ filters, onChange }: DocumentsFiltersProps) {
   return (
     <div className="flex flex-wrap gap-3 items-end">
       <div className="flex-1 min-w-[200px]">
-        <label className="text-sm font-medium mb-1 block">Buscar</label>
+        <label className="text-sm font-medium mb-1 block">{t("filters.search")}</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nombre..."
-            value={filters.search || ''}
+            placeholder={t("filters.searchPlaceholder")}
+            value={filters.search || ""}
             onChange={(e) => onChange({ ...filters, search: e.target.value || undefined })}
             className="pl-9"
           />
@@ -44,13 +52,13 @@ export function DocumentsFilters({ filters, onChange }: DocumentsFiltersProps) {
       </div>
 
       <div className="w-[200px]">
-        <label className="text-sm font-medium mb-1 block">Tipo</label>
+        <label className="text-sm font-medium mb-1 block">{t("filters.type")}</label>
         <Select
-          value={filters.doc_type || ''}
+          value={filters.doc_type || ""}
           onValueChange={(value) => onChange({ ...filters, doc_type: value || undefined })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Todos" />
+            <SelectValue placeholder={t("filters.all")} />
           </SelectTrigger>
           <SelectContent>
             {documentTypes?.map((type) => (
@@ -63,13 +71,13 @@ export function DocumentsFilters({ filters, onChange }: DocumentsFiltersProps) {
       </div>
 
       <div className="w-[200px]">
-        <label className="text-sm font-medium mb-1 block">Entidad</label>
+        <label className="text-sm font-medium mb-1 block">{t("filters.entity")}</label>
         <Select
-          value={filters.entity_type || ''}
+          value={filters.entity_type || ""}
           onValueChange={(value) => onChange({ ...filters, entity_type: value || undefined })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Todas" />
+            <SelectValue placeholder={t("filters.allFeminine")} />
           </SelectTrigger>
           <SelectContent>
             {DOCUMENT_ENTITY_TYPES.map((type) => (
@@ -82,19 +90,19 @@ export function DocumentsFilters({ filters, onChange }: DocumentsFiltersProps) {
       </div>
 
       <div className="w-[150px]">
-        <label className="text-sm font-medium mb-1 block">Firmado</label>
+        <label className="text-sm font-medium mb-1 block">{t("filters.signed")}</label>
         <Select
-          value={filters.is_signed === undefined ? '' : String(filters.is_signed)}
+          value={filters.is_signed === undefined ? "" : String(filters.is_signed)}
           onValueChange={(value) =>
-            onChange({ ...filters, is_signed: value === '' ? undefined : value === 'true' })
+            onChange({ ...filters, is_signed: value === "" ? undefined : value === "true" })
           }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Todos" />
+            <SelectValue placeholder={t("filters.all")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="true">Firmados</SelectItem>
-            <SelectItem value="false">Sin firmar</SelectItem>
+            <SelectItem value="true">{t("filters.signedOnly")}</SelectItem>
+            <SelectItem value="false">{t("filters.unsigned")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -102,7 +110,7 @@ export function DocumentsFilters({ filters, onChange }: DocumentsFiltersProps) {
       {hasActiveFilters && (
         <Button variant="outline" size="sm" onClick={handleClear}>
           <X className="h-4 w-4 mr-1" />
-          Limpiar
+          {t("filters.clear")}
         </Button>
       )}
     </div>

@@ -20,7 +20,6 @@ import {
   Users,
   Wallet,
   ClipboardCheck,
-  Settings,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -90,7 +89,10 @@ export function Sidebar() {
   }, {});
 
   return (
-    <nav aria-label={t("mainNavigation")} className="flex h-full flex-col border-r border-border-subtle bg-white dark:border-border-default dark:bg-[hsl(0_0%_7%)]">
+    <nav
+      aria-label={t("mainNavigation")}
+      className="flex h-full flex-col border-r border-border-subtle bg-white dark:border-border-default dark:bg-[hsl(0_0%_7%)]"
+    >
       {/* Logo header */}
       <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-4 dark:border-border-default">
         <Logo size="sm" />
@@ -108,8 +110,7 @@ export function Sidebar() {
             <div className="space-y-1">
               {groupItems.map((item) => {
                 const Icon = item.icon;
-                const isActive =
-                  pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <Link
                     key={item.href}
@@ -126,10 +127,7 @@ export function Sidebar() {
                       <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-foreground dark:bg-ink-900" />
                     )}
                     <Icon
-                      className={cn(
-                        "h-4.5 w-4.5 transition-transform",
-                        isActive && "scale-110",
-                      )}
+                      className={cn("h-4.5 w-4.5 transition-transform", isActive && "scale-110")}
                       aria-hidden="true"
                     />
                     <span>{t(item.labelKey as "dashboard")}</span>

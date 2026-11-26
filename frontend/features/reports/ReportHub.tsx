@@ -11,13 +11,9 @@
  */
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ApprovalButton } from "@/features/reports/ApprovalButton";
@@ -27,13 +23,14 @@ import { ReportGeneratorForm } from "@/features/reports/ReportGeneratorForm";
 import { useReportEntityOptions } from "@/features/reports/queries";
 import type { ReportTarget, ReportType, ReportStatus } from "@/features/reports/types";
 
-/** Section titles (Spanish plurals) for each report type. */
-const SECTION_TITLES: Record<ReportType, string> = {
-  project: "Proyectos",
-  researcher: "Investigadores",
-  center: "Centros",
-  advances: "Avances",
-};
+/** Section title keys for each report type (resolved at render time via t()). */
+const SECTION_TITLE_KEYS: Record<ReportType, "projects" | "researchers" | "centers" | "advances"> =
+  {
+    project: "projects",
+    researcher: "researchers",
+    center: "centers",
+    advances: "advances",
+  };
 
 /** Stable key for a target in the status map. */
 function targetKey(type: ReportType, entityId: string) {
@@ -45,6 +42,7 @@ export function ReportHub() {
   const [entityId, setEntityId] = useState<string | null>(null);
   const [previewTarget, setPreviewTarget] = useState<ReportTarget | null>(null);
   const [statusMap, setStatusMap] = useState<Record<string, ReportStatus>>({});
+  const t = useTranslations("reports");
 
   const handleTypeChange = (next: ReportType) => {
     setType(next);
@@ -67,16 +65,13 @@ export function ReportHub() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Informes</h1>
-        <p className="text-sm text-muted-foreground">
-          Genere, previsualice y apruebe informes PDF de proyectos,
-          investigadores, centros y avances.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("description")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Generador de informes</CardTitle>
+          <CardTitle className="text-base">{t("generator")}</CardTitle>
         </CardHeader>
         <CardContent>
           <ReportGeneratorForm
@@ -128,14 +123,16 @@ function ReportEntityList({
   onApproveSuccess,
 }: ReportEntityListProps) {
   const { options, isLoading } = useReportEntityOptions(type);
-  const sectionTitle = SECTION_TITLES[type];
+  const t = useTranslations("reports");
+  const sectionTitleKey = SECTION_TITLE_KEYS[type];
+  const sectionTitle = t(`section.${sectionTitleKey}` as "section.projects");
 
   if (isLoading) {
     return (
       <div
         className="space-y-2"
         role="status"
-        aria-label={`Cargando ${sectionTitle.toLowerCase()}`}
+        aria-label={`${t("loading")} ${sectionTitle.toLowerCase()}`}
       >
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
@@ -147,7 +144,7 @@ function ReportEntityList({
     return (
       <Card>
         <CardContent className="p-6 text-sm text-muted-foreground">
-          No hay {sectionTitle.toLowerCase()} disponibles para generar informes.
+          {t("noEntities", { section: sectionTitle.toLowerCase() })}
         </CardContent>
       </Card>
     );
@@ -162,10 +159,7 @@ function ReportEntityList({
         {options.map((option) => {
           const status = statusMap[targetKey(type, option.id)] ?? "not_generated";
           return (
-            <div
-              key={option.id}
-              className="flex items-center justify-between py-3 gap-4"
-            >
+            <div key={option.id} className="flex items-center justify-between py-3 gap-4">
               <span className="text-sm font-medium">{option.name}</span>
               <div className="flex items-center gap-2">
                 <StatusBadge status={status} />
@@ -179,7 +173,7 @@ function ReportEntityList({
                     })
                   }
                 >
-                  Vista previa
+                  {t("preview")}
                 </button>
                 <DownloadButton
                   type={type}

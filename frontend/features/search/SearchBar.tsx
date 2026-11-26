@@ -9,6 +9,7 @@
 
 import { useMemo, useEffect, useState } from "react";
 import { Loader2, Search as SearchIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -36,6 +37,7 @@ export function SearchBar({
   onQueryChange,
   onIndexChange,
 }: SearchBarProps) {
+  const t = useTranslations("search");
   const [localQuery, setLocalQuery] = useState(query);
 
   // Sync external query changes (e.g. from URL).
@@ -66,8 +68,8 @@ export function SearchBar({
           aria-hidden="true"
         />
         <Input
-          aria-label="Buscar"
-          placeholder="Buscar en SIGPI..."
+          aria-label={t("bar.placeholder")}
+          placeholder={t("bar.placeholder")}
           value={localQuery}
           onChange={handleInput}
           className="pl-9"
@@ -76,17 +78,17 @@ export function SearchBar({
         {isLoading && (
           <Loader2
             className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground"
-            aria-label="Buscando"
+            aria-label={t("bar.searching")}
             data-testid="search-spinner"
           />
         )}
       </div>
       <Select value={index} onValueChange={(v) => onIndexChange(v as SearchIndex | "all")}>
         <SelectTrigger className="w-[180px]" data-testid="search-index-select">
-          <SelectValue placeholder="Todos" />
+          <SelectValue placeholder={t("bar.allIndexes")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todos</SelectItem>
+          <SelectItem value="all">{t("bar.allIndexes")}</SelectItem>
           {SEARCH_INDEXES.map((si) => (
             <SelectItem key={si.value} value={si.value}>
               {si.label}

@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/errors";
@@ -34,6 +35,7 @@ interface DownloadButtonProps {
 export function DownloadButton({ type, entityId, onSuccess }: DownloadButtonProps) {
   const institutionId = useActiveInstitutionId();
   const [pending, setPending] = useState(false);
+  const t = useTranslations("reports");
 
   const handleDownload = async () => {
     setPending(true);
@@ -48,14 +50,9 @@ export function DownloadButton({ type, entityId, onSuccess }: DownloadButtonProp
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => void handleDownload()}
-      disabled={pending}
-    >
+    <Button variant="outline" size="sm" onClick={() => void handleDownload()} disabled={pending}>
       <Download className="h-4 w-4" />
-      {pending ? "Generando PDF…" : "Descargar PDF"}
+      {pending ? t("download.generating") : t("download.download")}
     </Button>
   );
 }

@@ -13,6 +13,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Plus, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { AuthenticatedLayout } from "@/components/shell/AuthenticatedLayout";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const CREATE_ROLES = ["director", "admin", "superadmin"];
 export default function ResearchersPage() {
   const [page, setPage] = useState(1);
   const listQuery = useResearchersList({ page });
+  const t = useTranslations("researchers");
 
   const data = listQuery.data;
   const researchers = data?.results ?? [];
@@ -36,19 +38,19 @@ export default function ResearchersPage() {
   return (
     <AuthenticatedLayout>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Investigadores</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <RoleGuard allowedRoles={CREATE_ROLES}>
           <Button asChild>
             <Link href="/researchers/new">
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-              Crear investigador
+              {t("createNew")}
             </Link>
           </Button>
         </RoleGuard>
       </div>
 
       {loading ? (
-        <div role="status" aria-label="Cargando investigadores" className="space-y-2">
+        <div role="status" aria-label={t("loading")} className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-12" />
           ))}
@@ -56,12 +58,12 @@ export default function ResearchersPage() {
       ) : researchers.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No hay investigadores"
-          description="Crea el primer investigador para comenzar a gestionar los perfiles."
+          title={t("noResearchers")}
+          description={t("noResearchersDescription")}
           action={
             <RoleGuard allowedRoles={CREATE_ROLES}>
               <Button asChild>
-                <Link href="/researchers/new">Crear investigador</Link>
+                <Link href="/researchers/new">{t("createNew")}</Link>
               </Button>
             </RoleGuard>
           }

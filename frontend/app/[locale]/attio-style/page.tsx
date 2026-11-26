@@ -145,7 +145,7 @@ export default function AttioStyleDemoPage() {
                   <td className="font-mono-attio text-gray-600">{p.id}</td>
                   <td className="font-medium">{p.titulo}</td>
                   <td>
-                    <span className={`badge-status bg-status-${p.state}`}>
+                    <span className={`badge-status bg-status-${p.estado}`}>
                       {statusLabels[p.estado]}
                     </span>
                   </td>

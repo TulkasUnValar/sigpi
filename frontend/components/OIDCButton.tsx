@@ -7,6 +7,7 @@
 
 import { useTranslations } from "next-intl";
 import { API_BASE } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 export default function OIDCButton() {
   const t = useTranslations("login");
@@ -19,12 +20,14 @@ export default function OIDCButton() {
   };
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
       onClick={handleClick}
       data-testid="oidc-button"
+      className="w-full"
     >
       {t("signInWithSSO")}
-    </button>
+    </Button>
   );
 }
