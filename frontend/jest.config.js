@@ -44,6 +44,9 @@ const config = {
     "middleware.ts",
     "!**/*.d.ts",
     "!**/node_modules/**",
+    // Barrel files: re-exports only, no logic. ts-jest compiles each re-export
+    // into a getter that is counted as an uncovered function.
+    "!features/*/index.ts",
     // shadcn/ui generated boilerplate not yet exercised by this slice's
     // feature tests — shipped primitives, covered through usage in later PRs.
     "!components/ui/dropdown-menu.tsx",
