@@ -18,6 +18,10 @@ const config = {
           target: "ES2017",
           esModuleInterop: true,
           strict: true,
+          // Transpile only: type-checking every file in every worker made the
+          // suite slow enough to time out under load. Types are enforced by the
+          // `tsc --noEmit` step in CI.
+          isolatedModules: true,
           paths: {
             "@/*": ["./*"],
           },
