@@ -1,4 +1,9 @@
 import "@testing-library/jest-dom";
+import { configure } from "@testing-library/react";
+
+// findBy*/waitFor default to 1000 ms, which page-level suites exceed when all
+// workers are busy. Passing tests do not get slower.
+configure({ asyncUtilTimeout: 5000 });
 
 // ── next-themes / Radix jsdom polyfills ──────────────────
 
